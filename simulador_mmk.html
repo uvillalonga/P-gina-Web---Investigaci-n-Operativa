@@ -90,7 +90,8 @@ input[type=number]:focus{border-color:var(--accent)}
 .meter-status{font-size:.75rem;margin-top:.5rem;text-align:right;font-weight:600}
 
 /* KPI CARDS */
-.kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem}
+@media(max-width:900px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:600px){.kpi-grid{grid-template-columns:1fr}}
 .kpi-card{
   background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);
@@ -332,13 +333,13 @@ function calculate(){
   }
 
   const { rho, P0, Lq, Wq, W, L, ratio } = current;
-  const CT = (Cs * k) + (Cw * Lq);
+  const CT = (Cs * k) + (Cw * L);
 
   // M/M/k+1 comparison
   const next = getMetrics(lambda, mu, k + 1);
   let comparisonHTML = '';
   if(next.stable) {
-    const CT_next = (Cs * (k+1)) + (Cw * next.Lq);
+    const CT_next = (Cs * (k+1)) + (Cw * next.L);
     const diff = CT_next - CT;
     const diffText = diff > 0 ? `Costaría $${fmt(diff,2)} más` : `Ahorrarías $${fmt(Math.abs(diff),2)}`;
     const diffColor = diff > 0 ? 'var(--red)' : 'var(--green)';
@@ -346,7 +347,7 @@ function calculate(){
       <div style="margin-top:1.5rem; padding-top:1.25rem; border-top:1px solid var(--border); text-align:center; background:rgba(0,0,0,0.1); border-radius:var(--radius-sm); padding:1rem;">
         <h4 style="color:var(--text); margin-bottom:0.5rem; font-size:1rem;">Comparativa M/M/${k+1}</h4>
         <p style="margin-bottom:0.75rem; font-size:0.9rem; color:var(--text2);">
-          Si agregamos un canal más (<strong>${k+1} canales</strong>), la cola (Lq) bajaría a ${fmt(next.Lq,2)} y el Costo Total sería de <strong>$${fmt(CT_next,2)}/hora</strong>.
+          Si agregamos un canal más (<strong>${k+1} canales</strong>), el largo del sistema (L) bajaría a ${fmt(next.L,2)} y el Costo Total sería de <strong>$${fmt(CT_next,2)}/hora</strong>.
           <br><span style="color:${diffColor}; font-weight:bold; font-size:1.05rem;">(${diffText})</span>
         </p>
         <button class="btn-secondary" style="width:auto; border-color:var(--accent);" onclick="simulateK(${k+1})">Simular con ${k+1} Canales</button>
@@ -408,11 +409,25 @@ function calculate(){
       <div class="kpi-symbol">Lq</div>
       <div class="kpi-val">${fmt(Lq)}</div>
       <div class="kpi-unit">unidades en fila</div>
+      <div class="kpi-desc">Esperando ser atendidas</div>
     </div>
     <div class="kpi-card green">
       <div class="kpi-symbol">Wq</div>
       <div class="kpi-val">${fmt(Wq)}</div>
       <div class="kpi-unit">horas de espera</div>
+      <div class="kpi-desc">Tiempo promedio en fila</div>
+    </div>
+    <div class="kpi-card purple">
+      <div class="kpi-symbol">L</div>
+      <div class="kpi-val">${fmt(L)}</div>
+      <div class="kpi-unit">unidades en sistema</div>
+      <div class="kpi-desc">Unidades totales en planta</div>
+    </div>
+    <div class="kpi-card orange">
+      <div class="kpi-symbol">W</div>
+      <div class="kpi-val">${fmt(W)}</div>
+      <div class="kpi-unit">horas en sistema</div>
+      <div class="kpi-desc">Tiempo total de ciclo</div>
     </div>
   </div>
 
@@ -449,6 +464,22 @@ function calculate(){
         <div class="step-comment">Cada trabajador en la fila equivale a <strong>${fmt(Wq * 60, 1)} minutos</strong> perdidos de producción.</div>
       </div>
 
+      <div style="margin-bottom:1.5rem;">
+        <strong>Tiempo en el Sistema (W):</strong><br>
+        <div class="math-inline step-calc">
+          W = Wq + <div class="frac"><span>1</span><span>μ</span></div> = ${fmt(Wq,4)} + <div class="frac"><span>1</span><span>${fmt(mu,1)}</span></div> = <strong>${fmt(W, 4)} horas</strong>
+        </div>
+        <div class="step-comment">Cada unidad pasa un total de <strong>${fmt(W, 4)} horas</strong> (o ${fmt(W * 60, 1)} minutos) desde que llega hasta que se va.</div>
+      </div>
+
+      <div style="margin-bottom:1.5rem;">
+        <strong>Largo del Sistema (L):</strong><br>
+        <div class="math-inline step-calc">
+          L = Lq + λ/μ = ${fmt(Lq,3)} + ${fmt(ratio,3)} = <strong>${fmt(L, 3)} unidades</strong>
+        </div>
+        <div class="step-comment">En promedio, hay <strong>${fmt(L, 2)} unidades</strong> inmovilizadas en todo el proceso simultáneamente.</div>
+      </div>
+
       <div>
         <strong>Probabilidades de Estado (Pₙ):</strong><br>
         <div class="math-inline step-calc">${PnCalcStr}</div>
@@ -464,10 +495,10 @@ function calculate(){
         Acá es donde el ingeniero industrial toma la decisión basándose en el Costo Total (CT).
       </p>
       <div class="math-inline step-calc" style="font-size:1.1rem; justify-content:center; padding:1.2rem;">
-        CT = ($${fmt(Cs)} × ${k}) + ($${fmt(Cw)} × ${fmt(Lq, 2)}) = <strong>$${fmt(CT, 2)} / hora</strong>
+        CT = ($${fmt(Cs)} × ${k}) + ($${fmt(Cw)} × ${fmt(L, 2)}) = <strong>$${fmt(CT, 2)} / hora</strong>
       </div>
       <div class="step-comment" style="border-color:var(--green);">
-        Este costo representa la suma de los salarios de los inspectores (<strong>$${fmt(Cs*k, 2)}/h</strong>) más el costo del tiempo improductivo de los obreros haciendo fila (<strong>$${fmt(Cw*Lq, 2)}/h</strong>). Si el costo de espera (Cw) aumenta, tener colas largas se vuelve económicamente inviable.
+        El costo total de <strong>$${fmt(CT, 0)}/hr</strong> refleja tanto el pago al inspector como el costo de oportunidad de las <strong>${fmt(L, 1)} unidades</strong> que permanecen inmovilizadas en el proceso.
       </div>
 
       ${comparisonHTML}
