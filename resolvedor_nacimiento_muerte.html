@@ -1,10 +1,13 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Procesos de Nacimiento y Muerte - Cadenas de Markov</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;800&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;800&family=Fira+Code:wght@400;600&display=swap"
+        rel="stylesheet">
     <style>
         :root {
             --bg-color: #0b0f19;
@@ -18,8 +21,12 @@
             --rose: #f43f5e;
             --amber: #f59e0b;
         }
-        
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
         body {
             font-family: 'Inter', sans-serif;
@@ -29,7 +36,7 @@
             display: flex;
             flex-direction: column;
             overflow-x: hidden;
-            background-image: 
+            background-image:
                 radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.05), transparent 25%),
                 radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.05), transparent 25%);
         }
@@ -56,133 +63,395 @@
             margin-bottom: 0.25rem;
         }
 
-        .header-left p { color: var(--text-muted); font-size: 0.95rem; }
+        .header-left p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
 
-        main { width: 100%; max-width: 1400px; margin: 0 auto; padding: 3rem 2rem; display: flex; flex-direction: column; gap: 3rem; }
+        main {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 3rem;
+        }
 
         .config-panel {
-            background: var(--surface); border: 1px solid var(--border);
-            border-radius: 12px; padding: 2rem; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
             transition: all 0.3s;
         }
 
-        .control-group { margin-bottom: 1.5rem; }
+        .control-group {
+            margin-bottom: 1.5rem;
+        }
+
         .control-group label {
-            display: block; margin-bottom: 0.5rem; color: var(--text-muted);
-            font-weight: 600; font-size: 0.9rem; text-transform: uppercase;
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
         }
 
         .input-num {
-            background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border);
-            color: var(--text-main); padding: 0.6rem 1rem; border-radius: 6px;
-            font-family: 'Fira Code', monospace; font-size: 1.1rem; width: 80px; text-align: center;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 0.6rem 1rem;
+            border-radius: 6px;
+            font-family: 'Fira Code', monospace;
+            font-size: 1.1rem;
+            width: 80px;
+            text-align: center;
         }
-        .input-num:focus { outline: none; border-color: var(--accent); }
+
+        .input-num:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
 
         .btn-primary {
-            background: var(--accent); color: white; border: none; padding: 0.8rem 1.5rem;
-            border-radius: 8px; font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer;
-            transition: all 0.2s; font-size: 1rem; display: inline-flex; align-items: center; gap: 8px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
-        .btn-primary:hover { background: #2563eb; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3); }
+
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
 
         .btn-secondary {
-            background: transparent; color: var(--text-muted); border: 1px solid var(--border);
-            padding: 0.6rem 1rem; border-radius: 8px; cursor: pointer; transition: all 0.2s; font-weight: 600;
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
         }
-        .btn-secondary:hover { color: var(--text-main); background: rgba(255,255,255,0.05); }
+
+        .btn-secondary:hover {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.05);
+        }
 
         /* EDITOR VISUAL EN LÍNEA */
         .editor-container {
-            display: flex; gap: 10px; align-items: center; overflow-x: auto; padding: 2rem 0; min-height: 250px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            overflow-x: auto;
+            padding: 2rem 0;
+            min-height: 250px;
         }
 
         .node-block {
-            display: flex; flex-direction: column; align-items: center; position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
         }
 
         .node-circle {
-            width: 70px; height: 70px; border-radius: 50%; border: 4px solid var(--accent);
-            background: #0b0f19; display: flex; align-items: center; justify-content: center;
-            font-size: 1.5rem; font-weight: 800; font-family: 'Fira Code', monospace;
-            z-index: 2; box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: 4px solid var(--accent);
+            background: #0b0f19;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 800;
+            font-family: 'Fira Code', monospace;
+            z-index: 2;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
             position: relative;
         }
 
         .transitions-block {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            width: 140px; position: relative; height: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 140px;
+            position: relative;
+            height: 100px;
         }
 
-        .edge-right, .edge-left {
-            position: absolute; width: 100%; height: 2px;
-            display: flex; align-items: center; justify-content: center;
+        .edge-right,
+        .edge-left {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        
-        .edge-right { top: 25px; border-top: 3px solid var(--emerald); }
+
+        .edge-right {
+            top: 25px;
+            border-top: 3px solid var(--emerald);
+        }
+
         .edge-right::after {
-            content: "▶"; position: absolute; right: -5px; top: -11px; color: var(--emerald); font-size: 18px;
+            content: "▶";
+            position: absolute;
+            right: -5px;
+            top: -11px;
+            color: var(--emerald);
+            font-size: 18px;
         }
 
-        .edge-left { bottom: 25px; border-bottom: 3px solid var(--rose); }
+        .edge-left {
+            bottom: 25px;
+            border-bottom: 3px solid var(--rose);
+        }
+
         .edge-left::before {
-            content: "◀"; position: absolute; left: -5px; bottom: -11px; color: var(--rose); font-size: 18px;
+            content: "◀";
+            position: absolute;
+            left: -5px;
+            bottom: -11px;
+            color: var(--rose);
+            font-size: 18px;
         }
 
         .rate-input {
-            width: 80px; text-align: center; background: rgba(15, 23, 42, 0.9);
-            border: 1px solid var(--border); color: white; padding: 5px;
-            border-radius: 4px; font-family: 'Fira Code', monospace; z-index: 3;
+            width: 80px;
+            text-align: center;
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid var(--border);
+            color: white;
+            padding: 5px;
+            border-radius: 4px;
+            font-family: 'Fira Code', monospace;
+            z-index: 3;
             font-size: 1.1rem;
         }
-        .rate-input.lambda { color: var(--emerald); border-color: rgba(16, 185, 129, 0.3); margin-top: -30px; }
-        .rate-input.mu { color: var(--rose); border-color: rgba(244, 63, 94, 0.3); margin-bottom: -30px; }
-        
-        .rate-input:focus { outline: none; border-color: currentColor; background: #000; }
+
+        .rate-input.lambda {
+            color: var(--emerald);
+            border-color: rgba(16, 185, 129, 0.3);
+            margin-top: -30px;
+        }
+
+        .rate-input.mu {
+            color: var(--rose);
+            border-color: rgba(244, 63, 94, 0.3);
+            margin-bottom: -30px;
+        }
+
+        .rate-input:focus {
+            outline: none;
+            border-color: currentColor;
+            background: #000;
+        }
 
         .node-value {
-            margin-top: 15px; background: rgba(255,255,255,0.05); padding: 5px 10px;
-            border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 0.85rem; color: var(--text-muted);
-            text-align: center; display: flex; flex-direction: column; align-items: center; gap: 5px;
+            margin-top: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
         }
+
         .node-value input {
-            width: 50px; text-align: center; background: transparent; border: none;
-            border-bottom: 1px dashed var(--text-muted); color: var(--text-main); font-weight: bold;
+            width: 50px;
+            text-align: center;
+            background: transparent;
+            border: none;
+            border-bottom: 1px dashed var(--text-muted);
+            color: var(--text-main);
+            font-weight: bold;
         }
-        .node-value input:focus { outline: none; border-color: var(--accent); }
+
+        .node-value input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
 
         /* RESULT AREA */
-        .results-area { display: none; opacity: 0; transition: opacity 0.5s; }
-        .results-area.show { display: flex; flex-direction: column; gap: 2rem; opacity: 1; }
-        
-        .panels-wrapper { display: flex; gap: 2rem; flex-wrap: wrap; }
-        
-        .methods-panel {
-            background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-            padding: 1.5rem; flex: 1; min-width: 400px;
+        .results-area {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s;
         }
 
-        .panel-title { font-size: 1.2rem; color: var(--text-muted); margin-bottom: 1rem; font-weight: 700; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+        .results-area.show {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            opacity: 1;
+        }
+
+        .panels-wrapper {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .methods-panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            flex: 1;
+            min-width: 400px;
+        }
+
+        .panel-title {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            font-weight: 700;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+        }
 
 
 
-        .method-content { display: none; animation: fadeIn 0.3s ease; }
-        .method-content.active { display: block; }
+        .method-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
 
-        .equations { font-family: 'Fira Code', monospace; background: rgba(15, 23, 42, 0.6); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--border); color: var(--text-main); font-size: 1rem; overflow-x: auto; display: flex; flex-direction: column; gap: 0.8rem; }
-        .eq-line { line-height: 1.6; }
+        .method-content.active {
+            display: block;
+        }
 
-        .math-mat { display: inline-flex; flex-direction: column; align-items: center; margin: 0 5px; vertical-align: middle; border-left: 2px solid var(--text-muted); border-right: 2px solid var(--text-muted); border-radius: 6px; padding: 8px 12px; background: rgba(0,0,0,0.2); }
-        .math-row { padding: 3px 0; display: flex; gap: 15px; }
-        .math-col { text-align: center; min-width: 45px; }
+        .equations {
+            font-family: 'Fira Code', monospace;
+            background: rgba(15, 23, 42, 0.6);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            font-size: 1rem;
+            overflow-x: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .eq-line {
+            line-height: 1.6;
+        }
+
+        .math-mat {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0 5px;
+            vertical-align: middle;
+            border-left: 2px solid var(--text-muted);
+            border-right: 2px solid var(--text-muted);
+            border-radius: 6px;
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .math-row {
+            padding: 3px 0;
+            display: flex;
+            gap: 15px;
+        }
+
+        .math-col {
+            text-align: center;
+            min-width: 45px;
+        }
 
         /* BARS CHART */
-        .chart-container { display: flex; align-items: flex-end; justify-content: space-around; height: 300px; width: 100%; border-bottom: 2px solid var(--border); position: relative; margin-top: 2rem; padding-top: 2rem; background: var(--surface); border-radius: 12px; }
-        .bar-group { display: flex; flex-direction: column; align-items: center; width: 100%; gap: 1rem; }
-        .bar-wrapper { height: 220px; width: 80px; background: rgba(255, 255, 255, 0.03); border-radius: 8px 8px 0 0; position: relative; display: flex; align-items: flex-end; border: 1px dashed rgba(255,255,255,0.1); border-bottom: none; }
-        .bar-fill { width: 100%; height: 0%; transition: height 1s cubic-bezier(0.34, 1.56, 0.64, 1); position: relative; display: flex; justify-content: center; border-radius: 4px 4px 0 0; box-shadow: inset 0 4px 10px rgba(255,255,255,0.2); background-color: var(--accent); }
-        .bar-value { position: absolute; top: -30px; font-size: 1.2rem; font-weight: 800; font-family: 'Fira Code', monospace; color: #ffffff; text-shadow: 0px 2px 4px rgba(0,0,0,0.9); }
-        .bar-label { font-size: 1.2rem; font-weight: bold; text-align: center; color: var(--text-main); }
+        .chart-container {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            height: 300px;
+            width: 100%;
+            border-bottom: 2px solid var(--border);
+            position: relative;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            background: var(--surface);
+            border-radius: 12px;
+        }
+
+        .bar-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            gap: 1rem;
+        }
+
+        .bar-wrapper {
+            height: 220px;
+            width: 80px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px 8px 0 0;
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+            border-bottom: none;
+        }
+
+        .bar-fill {
+            width: 100%;
+            height: 0%;
+            transition: height 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            display: flex;
+            justify-content: center;
+            border-radius: 4px 4px 0 0;
+            box-shadow: inset 0 4px 10px rgba(255, 255, 255, 0.2);
+            background-color: var(--accent);
+        }
+
+        .bar-value {
+            position: absolute;
+            top: -30px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            font-family: 'Fira Code', monospace;
+            color: #ffffff;
+            text-shadow: 0px 2px 4px rgba(0, 0, 0, 0.9);
+        }
+
+        .bar-label {
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-align: center;
+            color: var(--text-main);
+        }
 
 
 
@@ -193,20 +462,43 @@
             border-radius: 8px;
             padding: 1.5rem;
             margin-bottom: 1.5rem;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
+
         .card-step h3 {
             color: var(--accent);
             margin-bottom: 1rem;
             font-size: 1.1rem;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             padding-bottom: 0.5rem;
         }
 
-        .math-fraction { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; font-size: 0.9em; margin: 0 0.5rem; }
-        .math-fraction .num { border-bottom: 1px solid var(--text-main); padding: 0 0.2rem; }
-        .math-fraction .den { padding: 0 0.2rem; }
-        .math-highlight { color: var(--emerald); font-weight: 700; padding: 0.1rem 0.3rem; background: rgba(16, 185, 129, 0.1); border-radius: 4px; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .math-fraction {
+            display: inline-flex;
+            flex-direction: column;
+            vertical-align: middle;
+            text-align: center;
+            font-size: 0.9em;
+            margin: 0 0.5rem;
+        }
+
+        .math-fraction .num {
+            border-bottom: 1px solid var(--text-main);
+            padding: 0 0.2rem;
+        }
+
+        .math-fraction .den {
+            padding: 0 0.2rem;
+        }
+
+        .math-highlight {
+            color: var(--emerald);
+            font-weight: 700;
+            padding: 0.1rem 0.3rem;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 4px;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
 
         .results-grid {
             display: grid;
@@ -214,6 +506,7 @@
             gap: 1rem;
             margin-top: 1rem;
         }
+
         .result-card {
             background: rgba(15, 23, 42, 0.6);
             border: 1px solid var(--border);
@@ -222,12 +515,34 @@
             padding: 1rem;
             text-align: center;
         }
-        .result-value { font-size: 1.2rem; font-weight: bold; color: var(--text-main); margin-bottom: 0.25rem; font-family: 'Fira Code', monospace; }
-        .result-label { font-size: 0.8rem; color: var(--text-muted); }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .result-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--text-main);
+            margin-bottom: 0.25rem;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .result-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
+
 <body>
 
     <header>
@@ -240,19 +555,25 @@
         </div>
     </header>
 
-    <div style="background: rgba(15, 23, 42, 0.8); padding: 12px 5%; display: flex; gap: 25px; border-bottom: 1px solid var(--border); align-items: center; justify-content: center; font-size: 0.95rem;">
-        <span style="color: var(--accent); font-weight: 700;">Herramientas IO:</span>
-        <a href="index.html" style="color: var(--text-muted); text-decoration: none;" onmouseover="this.style.color='var(--text-main)'" onmouseout="this.style.color='var(--text-muted)'">Simulador Markov</a>
-        <a href="ejercicio_call_center.html" style="color: var(--text-muted); text-decoration: none;" onmouseover="this.style.color='var(--text-main)'" onmouseout="this.style.color='var(--text-muted)'">Ejercicio Call Center</a>
-        <a href="resolvedor_markov.html" style="color: var(--text-muted); text-decoration: none;" onmouseover="this.style.color='var(--text-main)'" onmouseout="this.style.color='var(--text-muted)'">Resolvedor Markov</a>
-        <a href="resolvedor_nacimiento_muerte.html" style="color: var(--text-main); text-decoration: none; font-weight: 600; border-bottom: 1px solid var(--accent);">Nacimiento/Muerte</a>
+   <div style="background: rgba(15, 23, 42, 0.9); padding: 12px 5%; display: flex; gap: 15px; border-bottom: 1px solid var(--border); align-items: center; justify-content: center; font-size: 0.9rem; flex-wrap: wrap; position: sticky; top: 0; z-index: 1000;">
+        <span style="color: var(--accent); font-weight: 700;">U1 (Markov):</span>
+        <a href="index.html" style="color: var(--text-muted); text-decoration: none;" onmouseover="this.style.color='var(--text-main)'" onmouseout="if(this.style.fontWeight!='600')this.style.color='var(--text-muted)'">Simulador</a>
+        <a href="ejercicio_call_center.html" style="color: var(--text-muted); text-decoration: none;" onmouseover="this.style.color='var(--text-main)'" onmouseout="if(this.style.fontWeight!='600')this.style.color='var(--text-muted)'">Call Center</a>
+        <a href="resolvedor_markov.html" style="color: var(--text-muted); text-decoration: none;" onmouseover="this.style.color='var(--text-main)'" onmouseout="if(this.style.fontWeight!='600')this.style.color='var(--text-muted)'">Resolvedor</a>
+        <a href="resolvedor_nacimiento_muerte.html" style="color: var(--text-main); text-decoration: none; font-weight: 600; border-bottom: 1px solid var(--accent);" onmouseover="this.style.color='var(--text-main)'" onmouseout="if(this.style.fontWeight!='600')this.style.color='var(--text-muted)'">Nacimiento/Muerte</a>
+        
+        <span style="color: var(--text-muted); margin: 0 10px;">|</span>
+        
+        <span style="color: var(--green); font-weight: 700;">U2 (Colas):</span>
+        <a href="simulador_mmk.html" style="color: var(--text-muted); text-decoration: none;" onmouseover="this.style.color='var(--text-main)'" onmouseout="if(this.style.fontWeight!='600')this.style.color='var(--text-muted)'">Simulador M/M/k</a>
     </div>
     <main>
         <section class="config-panel" id="config-panel">
             <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.5rem;">
                 <div class="control-group" style="margin:0;">
                     <label>Cantidad de Nodos (Estados)</label>
-                    <input type="number" id="num-states" class="input-num" value="4" min="2" max="25" onchange="buildGraphEditor()">
+                    <input type="number" id="num-states" class="input-num" value="4" min="2" max="25"
+                        onchange="buildGraphEditor()">
                 </div>
                 <div style="display:flex; gap: 10px;">
                     <button class="btn-secondary" onclick="loadExample(1)">Ej: Barbería</button>
@@ -266,18 +587,26 @@
 
             <div style="margin-top: 2rem; display: flex; justify-content: flex-end;">
                 <button class="btn-primary" onclick="solve()">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M12 5l7 7-7 7"></path></svg>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M5 12h14"></path>
+                        <path d="M12 5l7 7-7 7"></path>
+                    </svg>
                     Calcular y Resolver Paso a Paso
                 </button>
             </div>
         </section>
 
         <section class="results-area" id="results-area">
-            
-            <div class="methods-panel" style="width: 100%; text-align: center; border-color: var(--accent); background: rgba(15, 23, 42, 0.4);">
-                <div class="panel-title" style="border:none; margin-bottom: 1rem; color:var(--text-main);">Matriz de Intensidad (Q)</div>
-                <div style="color:var(--text-muted); font-size: 0.9rem; margin-bottom:1rem;">Representación matricial de las tasas de transición del sistema.</div>
-                <div style="display:flex; justify-content:center; align-items:center; overflow-x:auto; padding: 1rem;" id="q-matrix-preview">
+
+            <div class="methods-panel"
+                style="width: 100%; text-align: center; border-color: var(--accent); background: rgba(15, 23, 42, 0.4);">
+                <div class="panel-title" style="border:none; margin-bottom: 1rem; color:var(--text-main);">Matriz de
+                    Intensidad (Q)</div>
+                <div style="color:var(--text-muted); font-size: 0.9rem; margin-bottom:1rem;">Representación matricial de
+                    las tasas de transición del sistema.</div>
+                <div style="display:flex; justify-content:center; align-items:center; overflow-x:auto; padding: 1rem;"
+                    id="q-matrix-preview">
                     <!-- Inyectado vía JS -->
                 </div>
             </div>
@@ -291,9 +620,12 @@
                 </div>
             </div>
 
-            <div class="methods-panel" style="width: 100%; border-color: var(--emerald); background: rgba(16, 185, 129, 0.05);">
-                <div class="panel-title" style="text-align: center; border:none; margin-bottom: 1.5rem; color:var(--text-main);">Interpretación Gerencial</div>
-                
+            <div class="methods-panel"
+                style="width: 100%; border-color: var(--emerald); background: rgba(16, 185, 129, 0.05);">
+                <div class="panel-title"
+                    style="text-align: center; border:none; margin-bottom: 1.5rem; color:var(--text-main);">
+                    Interpretación Gerencial</div>
+
                 <div id="gerencial-container" style="display: flex; flex-direction: column; gap: 2rem;">
                     <!-- Inyectado vía JS -->
                 </div>
@@ -310,7 +642,7 @@
         let ratesLambda = []; // rates lambda[i] goes from state i to i+1
         let ratesMu = [];     // rates mu[i] goes from state i to i-1
         let stateValues = []; // Value associated with each node for expectation
-        
+
         let Q = [];
         let steadyState = [];
 
@@ -318,15 +650,15 @@
 
         function buildGraphEditor() {
             let num = parseInt(document.getElementById('num-states').value);
-            if(num < 2) { num = 2; document.getElementById('num-states').value = 2; }
-            if(num > 25) { num = 25; document.getElementById('num-states').value = 25; }
+            if (num < 2) { num = 2; document.getElementById('num-states').value = 2; }
+            if (num > 25) { num = 25; document.getElementById('num-states').value = 25; }
 
             // Preserve old values
             let oldLambda = [...ratesLambda];
             let oldMu = [...ratesMu];
             let oldVals = [...stateValues];
 
-            ratesLambda = Array(Math.max(0, num-1)).fill(0);
+            ratesLambda = Array(Math.max(0, num - 1)).fill(0);
             ratesMu = Array(num).fill(0);
             stateValues = Array(num).fill(0);
 
@@ -366,9 +698,9 @@
                     let transHTML = `
                         <div class="transitions-block">
                             <div class="edge-right"></div>
-                            <input type="number" step="0.01" class="rate-input lambda" id="lam-${i}" value="${ratesLambda[i]}" onchange="updateLambda(${i}, this.value)" title="Tasa de Nacimiento (λ${i}) hacia el nodo ${i+1}">
+                            <input type="number" step="0.01" class="rate-input lambda" id="lam-${i}" value="${ratesLambda[i]}" onchange="updateLambda(${i}, this.value)" title="Tasa de Nacimiento (λ${i}) hacia el nodo ${i + 1}">
                             
-                            <input type="number" step="0.01" class="rate-input mu" id="mu-${i+1}" value="${ratesMu[i+1]}" onchange="updateMu(${i+1}, this.value)" title="Tasa de Muerte (μ${i+1}) hacia el nodo ${i}">
+                            <input type="number" step="0.01" class="rate-input mu" id="mu-${i + 1}" value="${ratesMu[i + 1]}" onchange="updateMu(${i + 1}, this.value)" title="Tasa de Muerte (μ${i + 1}) hacia el nodo ${i}">
                             <div class="edge-left"></div>
                         </div>
                     `;
@@ -392,8 +724,8 @@
             } else if (id === 2) {
                 // Máquinas: λ0=2, λ1=1, μ1=0.5, μ2=0.5, N=3
                 document.getElementById('num-states').value = 3;
-                ratesLambda = [2, 1]; 
-                ratesMu = [0, 0.5, 0.5]; 
+                ratesLambda = [2, 1];
+                ratesMu = [0, 0.5, 0.5];
                 stateValues = [0, 1, 2];
                 buildGraphEditor();
             }
@@ -401,18 +733,18 @@
 
         function solve() {
             const num = parseInt(document.getElementById('num-states').value);
-            
+
             // Build Intensity Matrix Q
             Q = [];
             for (let i = 0; i < num; i++) {
                 let row = Array(num).fill(0);
                 let sum = 0;
                 if (i < num - 1) {
-                    row[i+1] = ratesLambda[i];
+                    row[i + 1] = ratesLambda[i];
                     sum += ratesLambda[i];
                 }
                 if (i > 0) {
-                    row[i-1] = ratesMu[i];
+                    row[i - 1] = ratesMu[i];
                     sum += ratesMu[i];
                 }
                 row[i] = -sum;
@@ -421,15 +753,15 @@
 
             // Exactly solve for steady state probabilities using Gaussian Elimination
             let A = [];
-            for(let i=0; i<num; i++) {
+            for (let i = 0; i < num; i++) {
                 let col = [];
-                for(let j=0; j<num; j++) {
+                for (let j = 0; j < num; j++) {
                     col.push(Q[j][i]);
                 }
                 A.push(col);
             }
-            for(let j=0; j<num; j++) A[num-1][j] = 1;
-            let B = Array(num).fill(0); B[num-1] = 1;
+            for (let j = 0; j < num; j++) A[num - 1][j] = 1;
+            let B = Array(num).fill(0); B[num - 1] = 1;
             steadyState = gaussianElimination(A, B);
 
             // UI Updates
@@ -439,59 +771,59 @@
             renderChart(num, steadyState, stateValues);
 
             document.getElementById('results-area').classList.add('show');
-            setTimeout(() => { document.getElementById('results-area').scrollIntoView({behavior: 'smooth', block: 'start'}); }, 300);
+            setTimeout(() => { document.getElementById('results-area').scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 300);
         }
 
         function gaussianElimination(A, b) {
             let n = A.length;
-            let m = A.map(r => [...r]); 
+            let m = A.map(r => [...r]);
             let bv = [...b];
-            
-            for (let i=0; i<n; i++) m[i].push(bv[i]);
-            
-            for (let i=0; i<n; i++) {
+
+            for (let i = 0; i < n; i++) m[i].push(bv[i]);
+
+            for (let i = 0; i < n; i++) {
                 let maxEl = Math.abs(m[i][i]);
                 let maxRow = i;
-                for (let k=i+1; k<n; k++) {
+                for (let k = i + 1; k < n; k++) {
                     if (Math.abs(m[k][i]) > maxEl) {
                         maxEl = Math.abs(m[k][i]);
                         maxRow = k;
                     }
                 }
                 let tmp = m[maxRow]; m[maxRow] = m[i]; m[i] = tmp;
-                
+
                 let pivot = m[i][i];
-                if (Math.abs(pivot) < 1e-10) continue; 
-                
-                for(let k=i; k<=n; k++) m[i][k] /= pivot;
-                for(let j=0; j<n; j++) {
+                if (Math.abs(pivot) < 1e-10) continue;
+
+                for (let k = i; k <= n; k++) m[i][k] /= pivot;
+                for (let j = 0; j < n; j++) {
                     if (i !== j) {
                         let factor = m[j][i];
-                        for (let k=i; k<=n; k++) m[j][k] -= factor * m[i][k];
+                        for (let k = i; k <= n; k++) m[j][k] -= factor * m[i][k];
                     }
                 }
             }
             return m.map(row => row[n]);
         }
 
-        function createGridMatrix(mat, name="Q") {
+        function createGridMatrix(mat, name = "Q") {
             let html = `<table style="border-collapse: collapse; margin: 10px; font-family: 'Fira Code', monospace; font-size: 1.1rem; color: white;">`;
-            
+
             // Header row
             html += `<tr><td style="padding: 10px 15px; font-weight: 800; font-size: 1.3rem; color: var(--accent); text-align: center; border-right: 1px solid rgba(255,255,255,0.3); border-bottom: 1px solid rgba(255,255,255,0.3);">${name}</td>`;
-            for(let c=0; c<mat[0].length; c++) {
+            for (let c = 0; c < mat[0].length; c++) {
                 html += `<td style="padding: 10px 15px; font-weight: bold; font-size: 1.2rem; color: white; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.3); border-left: 1px solid rgba(255,255,255,0.3);">${c}</td>`;
             }
             html += `</tr>`;
-            
+
             // Data rows
-            for(let r=0; r<mat.length; r++) {
+            for (let r = 0; r < mat.length; r++) {
                 html += `<tr>`;
                 // Row header
                 html += `<td style="padding: 10px 15px; font-weight: bold; font-size: 1.2rem; color: white; text-align: center; border-right: 1px solid rgba(255,255,255,0.3); border-top: 1px solid rgba(255,255,255,0.3);">${r}</td>`;
-                
+
                 // Data cells
-                for(let c=0; c<mat[0].length; c++) {
+                for (let c = 0; c < mat[0].length; c++) {
                     let val = (typeof mat[r][c] === 'number') ? mat[r][c].toFixed(4) : mat[r][c];
                     html += `<td style="padding: 10px 15px; text-align: center; border: 1px solid rgba(255,255,255,0.3);">${val}</td>`;
                 }
@@ -503,9 +835,9 @@
 
         function createMathMatXML(mat) {
             let html = `<div class="math-mat">`;
-            for(let r=0; r<mat.length; r++) {
+            for (let r = 0; r < mat.length; r++) {
                 html += `<div class="math-row">`;
-                for(let c=0; c<mat[0].length; c++) {
+                for (let c = 0; c < mat[0].length; c++) {
                     let val = (typeof mat[r][c] === 'number') ? mat[r][c].toFixed(4) : mat[r][c];
                     html += `<div class="math-col">${val}</div>`;
                 }
@@ -529,13 +861,13 @@
 
         function matrixPower(P, pow) {
             let res = P;
-            for(let i=1; i<pow; i++){ res = multiplyMatrix(res, P); }
+            for (let i = 1; i < pow; i++) { res = multiplyMatrix(res, P); }
             return res;
         }
 
         function generateMethodsSections(N, Q, pi) {
             const container = document.getElementById('methods-container');
-            let pVars = Array.from({length:N}, (_,i)=>`p(${i})`);
+            let pVars = Array.from({ length: N }, (_, i) => `p(${i})`);
             let html = "";
 
             // METODO: FLUJO PROBABILISTICO (BALANCE) - TUTORIAL INTERACTIVO
@@ -548,32 +880,32 @@
                         Esto nos permite expresar cada probabilidad como un múltiplo de p(0).
                     </div>
                     <div class="equations" style="background: transparent; border: none; padding: 0;">`;
-            
+
             let coeffs = [1];
-            for(let i=0; i<N-1; i++) {
+            for (let i = 0; i < N - 1; i++) {
                 let lamb = ratesLambda[i] || 0;
-                let muV = ratesMu[i+1] || 0;
-                let ratio = muV !== 0 ? (lamb/muV) : 0;
+                let muV = ratesMu[i + 1] || 0;
+                let ratio = muV !== 0 ? (lamb / muV) : 0;
                 let newCoeff = coeffs[i] * ratio;
                 coeffs.push(newCoeff);
-                
+
                 html += `<div class="eq-line" style="margin-bottom: 1.2rem; padding-bottom: 1rem; border-bottom: 1px dashed rgba(255,255,255,0.05);">`;
-                html += `<div style="color:var(--text-muted); font-size: 0.85rem; margin-bottom: 0.3rem;">Tramo ${i} ➔ ${i+1}: p(${i}) · ${lamb.toFixed(2)} = p(${i+1}) · ${muV.toFixed(2)}</div>`;
+                html += `<div style="color:var(--text-muted); font-size: 0.85rem; margin-bottom: 0.3rem;">Tramo ${i} ➔ ${i + 1}: p(${i}) · ${lamb.toFixed(2)} = p(${i + 1}) · ${muV.toFixed(2)}</div>`;
                 html += `<div style="display:flex; align-items:center; flex-wrap: wrap; gap:5px;">`;
-                html += `p(${i+1}) = p(${i}) · <div class="math-fraction"><div class="num">${lamb.toFixed(2)}</div><div class="den">${muV.toFixed(2)}</div></div>`;
-                
+                html += `p(${i + 1}) = p(${i}) · <div class="math-fraction"><div class="num">${lamb.toFixed(2)}</div><div class="den">${muV.toFixed(2)}</div></div>`;
+
                 let curCoeffStr = coeffs[i] === 1 ? `p(0)` : `(${coeffs[i].toFixed(4)} · p(0))`;
-                html += ` = ${curCoeffStr} · ${(ratio).toFixed(4)} &nbsp;➔&nbsp; <span class="math-highlight">p(${i+1}) = ${newCoeff.toFixed(4)} · p(0)</span>`;
-                
+                html += ` = ${curCoeffStr} · ${(ratio).toFixed(4)} &nbsp;➔&nbsp; <span class="math-highlight">p(${i + 1}) = ${newCoeff.toFixed(4)} · p(0)</span>`;
+
                 html += `</div></div>`;
             }
             html += `</div></div>`;
 
             let sumCoeffs = coeffs.reduce((acc, c) => acc + c, 0);
             let p0Val = pi[0]; // pi[0] is already calculated precisely via Gaussian
-            
+
             let cierreEqTerms = coeffs.map(c => c.toFixed(4)).join(' + ');
-            
+
             html += `
                 <div class="card-step">
                     <h3>Paso 2: Condición de Normalización (Ecuación de Cierre)</h3>
@@ -595,8 +927,8 @@
                     <h3>Paso 3: Cálculo del Vector Probabilístico Final</h3>
                     <div style="color:var(--text-muted); margin-bottom: 1rem; font-size: 0.95rem;">Multiplicamos cada coeficiente por p(0) para obtener la distribución estacionaria:</div>
                     <div class="results-grid">`;
-            
-            for(let i=0; i<N; i++) {
+
+            for (let i = 0; i < N; i++) {
                 let piPct = (pi[i] * 100).toFixed(2);
                 html += `
                     <div class="result-card">
@@ -604,7 +936,7 @@
                         <div class="result-label">${piPct}% de probabilidad</div>
                     </div>`;
             }
-            
+
             html += `</div></div></div>`;
             container.innerHTML = html;
         }
@@ -612,13 +944,13 @@
         function renderGerencialSection(N, pi, values) {
             const container = document.getElementById('gerencial-container');
             let expectedL = 0;
-            for(let i=0; i<N; i++) expectedL += pi[i] * values[i];
+            for (let i = 0; i < N; i++) expectedL += pi[i] * values[i];
 
             let html = `
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                     <div class="result-card" style="border-left-color: var(--accent); padding: 2rem;">
                         <div style="font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.5rem;">Probabilidad de Sistema Vacío (Ocio)</div>
-                        <div style="font-size: 2.5rem; font-weight: 800; color: var(--accent); font-family: 'Fira Code', monospace;">P(0) = ${(pi[0]*100).toFixed(2)}%</div>
+                        <div style="font-size: 2.5rem; font-weight: 800; color: var(--accent); font-family: 'Fira Code', monospace;">P(0) = ${(pi[0] * 100).toFixed(2)}%</div>
                         <div style="margin-top: 1rem; color: var(--text-muted); font-size: 0.9rem;">Representa el tiempo en que no hay unidades siendo procesadas.</div>
                     </div>
                     <div class="result-card" style="border-left-color: var(--emerald); padding: 2rem;">
@@ -630,13 +962,13 @@
                 <div class="card-step" style="margin: 0; background: rgba(15, 23, 42, 0.2);">
                     <h4 style="margin-bottom: 1rem; color: var(--text-main);">Desglose de Probabilidades por Estado</h4>
                     <div style="display: flex; flex-wrap: wrap; gap: 15px;">`;
-            
-            for(let i=0; i<N; i++) {
+
+            for (let i = 0; i < N; i++) {
                 html += `<div style="background: rgba(255,255,255,0.05); padding: 10px 15px; border-radius: 6px; border: 1px solid var(--border);">
-                    <span style="color: var(--text-muted);">P(${i}):</span> <span style="font-weight:700;">${(pi[i]*100).toFixed(2)}%</span>
+                    <span style="color: var(--text-muted);">P(${i}):</span> <span style="font-weight:700;">${(pi[i] * 100).toFixed(2)}%</span>
                 </div>`;
             }
-            
+
             html += `</div></div>`;
             container.innerHTML = html;
         }
@@ -646,11 +978,11 @@
         function renderChart(N, pi, values) {
             const chartArea = document.getElementById('final-chart');
             chartArea.innerHTML = '';
-            
-            for(let i=0; i<N; i++) {
+
+            for (let i = 0; i < N; i++) {
                 let p = pi[i];
                 let percentStr = (p * 100).toFixed(1) + '%';
-                
+
                 chartArea.innerHTML += `
                     <div class="bar-group">
                         <div class="bar-wrapper">
@@ -665,15 +997,16 @@
                     </div>
                 `;
             }
-            
+
             setTimeout(() => {
-                for(let i=0; i<N; i++) {
+                for (let i = 0; i < N; i++) {
                     let elem = document.getElementById(`final-bar-${i}`);
-                    if(elem) elem.style.height = `${Math.max(1, pi[i] * 100)}%`;
+                    if (elem) elem.style.height = `${Math.max(1, pi[i] * 100)}%`;
                 }
             }, 100);
         }
 
     </script>
 </body>
+
 </html>

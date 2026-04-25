@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Simulador M/M/k – Teoría de Colas</title>
+<meta name="description" content="Simulador interactivo del modelo de colas M/M/k con dashboard gerencial, KPIs y análisis de costos."/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1117;--surface:#161b22;--surface2:#21262d;--border:#30363d;
+  --accent:#58a6ff;--accent2:#bc8cff;--green:#3fb950;--orange:#d29922;--red:#f85149;
+  --text:#e6edf3;--text2:#8b949e;--text3:#6e7681;
+  --card-bg:#1c2128;--radius:12px;--radius-sm:8px;
+  --shadow:0 8px 32px rgba(0,0,0,.45);
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;line-height:1.6}
+
+/* HEADER */
+header{
+  background:linear-gradient(135deg,#0d1117 0%,#1a1f3a 50%,#0d1117 100%);
+  border-bottom:1px solid var(--border);padding:2rem 1.5rem;text-align:center;position:relative;overflow:hidden;
+}
+header::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 50% -20%,rgba(88,166,255,.15),transparent);pointer-events:none;
+}
+header h1{font-size:clamp(1.6rem,4vw,2.4rem);font-weight:800;letter-spacing:-.5px;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+header p{color:var(--text2);margin-top:.4rem;font-size:.95rem}
+.badge{display:inline-block;background:rgba(88,166,255,.12);color:var(--accent);border:1px solid rgba(88,166,255,.3);
+  padding:.2rem .7rem;border-radius:999px;font-size:.75rem;font-weight:600;letter-spacing:.5px;margin-bottom:.8rem}
+
+/* LAYOUT */
+main{max-width:1200px;margin:0 auto;padding:2rem 1.25rem}
+.grid-2{display:grid;grid-template-columns:360px 1fr;gap:1.5rem;align-items:start}
+@media(max-width:900px){.grid-2{grid-template-columns:1fr}}
+
+/* PANEL */
+.panel{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;box-shadow:var(--shadow)}
+.panel-title{font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:1.25rem;display:flex;align-items:center;gap:.5rem}
+.panel-title::before{content:'';width:3px;height:14px;background:var(--accent);border-radius:2px;display:inline-block}
+
+/* INPUTS */
+.input-group{margin-bottom:1.4rem}
+.input-group label{display:flex;justify-content:space-between;align-items:baseline;font-size:.85rem;font-weight:500;color:var(--text2);margin-bottom:.5rem}
+.input-group label span{font-size:1.1rem;font-weight:700;color:var(--text);background:var(--surface2);padding:.1rem .6rem;border-radius:6px;min-width:42px;text-align:center}
+.slider-wrap{display:flex;align-items:center;gap:.75rem}
+input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:3px;background:var(--surface2);outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--accent);cursor:pointer;box-shadow:0 0 0 3px rgba(88,166,255,.25);transition:box-shadow .2s}
+input[type=range]::-webkit-slider-thumb:hover{box-shadow:0 0 0 6px rgba(88,166,255,.2)}
+input[type=number]{width:68px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:var(--radius-sm);padding:.35rem .5rem;font-size:.9rem;font-family:inherit;text-align:center;outline:none;transition:border-color .2s}
+input[type=number]:focus{border-color:var(--accent)}
+.hint{font-size:.72rem;color:var(--text3);margin-top:.3rem}
+
+/* BTNS */
+.btn-calc{
+  width:100%;padding:.85rem;border:none;border-radius:var(--radius-sm);
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;font-size:1rem;font-weight:700;cursor:pointer;
+  letter-spacing:.3px;transition:opacity .2s,transform .15s;margin-top:.5rem;
+}
+.btn-calc:hover{opacity:.9;transform:translateY(-1px)}
+.btn-calc:active{transform:translateY(0)}
+.btn-secondary { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 0.6rem 1rem; border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s; font-weight: 600; width: 100%; margin-top: 0.75rem;}
+.btn-secondary:hover { background: var(--border); border-color: var(--accent); }
+
+/* RESULTS AREA */
+#results-area{display:flex;flex-direction:column;gap:1.25rem}
+
+/* UNSTABLE ALERT */
+.alert-unstable{
+  background:linear-gradient(135deg,rgba(248,81,73,.15),rgba(248,81,73,.05));
+  border:1.5px solid var(--red);border-radius:var(--radius);
+  padding:2rem 1.5rem;text-align:center;animation:fadeIn .4s ease;
+}
+.alert-unstable .icon{font-size:2.8rem;margin-bottom:.75rem}
+.alert-unstable h2{color:var(--red);font-size:1.2rem;font-weight:800;letter-spacing:.5px}
+.alert-unstable p{color:var(--text2);margin-top:.5rem;font-size:.9rem;max-width:380px;margin-left:auto;margin-right:auto}
+
+/* UTIL METER */
+.meter-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem 1.5rem}
+.meter-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:.85rem}
+.meter-label{font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text2)}
+.meter-value{font-size:1.6rem;font-weight:800;transition:color .3s}
+.bar-track{background:var(--surface2);border-radius:999px;height:14px;overflow:hidden}
+.bar-fill{height:100%;border-radius:999px;transition:width .6s cubic-bezier(.4,0,.2,1),background .4s}
+.meter-status{font-size:.75rem;margin-top:.5rem;text-align:right;font-weight:600}
+
+/* KPI CARDS */
+.kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem}
+@media(max-width:600px){.kpi-grid{grid-template-columns:1fr}}
+.kpi-card{
+  background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);
+  padding:1.25rem;position:relative;overflow:hidden;transition:transform .2s,border-color .2s;
+}
+.kpi-card:hover{transform:translateY(-2px);border-color:rgba(88,166,255,.4)}
+.kpi-card::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--radius) var(--radius) 0 0}
+.kpi-card.blue::after{background:linear-gradient(90deg,var(--accent),#79c0ff)}
+.kpi-card.purple::after{background:linear-gradient(90deg,var(--accent2),#d2a8ff)}
+.kpi-card.green::after{background:linear-gradient(90deg,var(--green),#56d364)}
+.kpi-card.orange::after{background:linear-gradient(90deg,var(--orange),#e3b341)}
+.kpi-symbol{font-size:1.6rem;font-weight:800;letter-spacing:-.5px;margin-bottom:.2rem}
+.kpi-card.blue .kpi-symbol{color:var(--accent)}
+.kpi-card.purple .kpi-symbol{color:var(--accent2)}
+.kpi-card.green .kpi-symbol{color:var(--green)}
+.kpi-card.orange .kpi-symbol{color:var(--orange)}
+.kpi-val{font-size:2rem;font-weight:800;color:var(--text);line-height:1.1}
+.kpi-unit{font-size:.75rem;color:var(--text3);margin-top:.15rem}
+.kpi-desc{font-size:.78rem;color:var(--text2);margin-top:.6rem;padding-top:.6rem;border-top:1px solid var(--border)}
+
+/* MATH FRACTIONS & TUTOR */
+.math-inline { display: inline-flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+.frac { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; margin: 0 0.1rem; line-height: 1.2; font-size: 0.9em; }
+.frac > span:first-child { border-bottom: 1px solid currentColor; padding: 0 0.2rem; width: 100%; text-align: center; }
+.frac > span:last-child { padding: 0 0.2rem; width: 100%; text-align: center; }
+
+.tutor-card { background: linear-gradient(135deg, var(--surface2), var(--card-bg)); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-top: 0.5rem; box-shadow: var(--shadow); }
+.tutor-card h3 { color: var(--accent2); margin-bottom: 1.2rem; font-size: 1.2rem; display: flex; align-items: center; gap: 0.6rem; }
+.tutor-card h3::before { content: '🎓'; font-size: 1.4rem; }
+.step-box { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1.25rem; margin-bottom: 1rem; position: relative; overflow: hidden; }
+.step-box::before { content:''; position:absolute; left:0; top:0; bottom:0; width:4px; background: var(--accent); }
+.step-box.cost::before { background: var(--green); }
+.step-title { font-weight: 700; color: var(--text); margin-bottom: 0.8rem; font-size: 1.05rem; }
+.step-calc { font-family: monospace; font-size: 1rem; background: rgba(0,0,0,0.3); padding: 0.8rem; border-radius: 6px; overflow-x: auto; margin: 0.5rem 0; color: var(--accent); border: 1px solid var(--border); }
+.step-comment { font-style: italic; color: var(--text2); font-size: 0.9rem; border-left: 3px solid var(--orange); padding-left: 0.75rem; margin-top: 0.75rem; line-height: 1.5; }
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fadeIn .4s ease}
+
+/* Footer */
+footer{text-align:center;padding:2rem 1rem;color:var(--text3);font-size:.78rem;border-top:1px solid var(--border);margin-top:2rem}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="badge">INVESTIGACIÓN OPERATIVA · UTN</div>
+  <h1>Simulador M/M/k – Teoría de Colas</h1>
+  <p>Dashboard interactivo para el análisis de sistemas de espera y costos operativos</p>
+</header>
+<div style="background: rgba(15, 23, 42, 0.9); padding: 12px 5%; display: flex; gap: 15px; border-bottom: 1px solid var(--border); align-items: center; justify-content: center; font-size: 0.9rem; flex-wrap: wrap; position: sticky; top: 0; z-index: 1000;">
+        <span style="color: var(--accent); font-weight: 700;">U1 (Markov):</span>
+        <a href="index.html" style="color: var(--text-muted); text-decoration: none;" onmouseover="this.style.color='var(--text-main)'" onmouseout="if(this.style.fontWeight!='600')this.style.color='var(--text-muted)'">Simulador</a>
+        <a href="ejercicio_call_center.html" style="color: var(--text-muted); text-decoration: none;" onmouseover="this.style.color='var(--text-main)'" onmouseout="if(this.style.fontWeight!='600')this.style.color='var(--text-muted)'">Call Center</a>
+        <a href="resolvedor_markov.html" style="color: var(--text-muted); text-decoration: none;" onmouseover="this.style.color='var(--text-main)'" onmouseout="if(this.style.fontWeight!='600')this.style.color='var(--text-muted)'">Resolvedor</a>
+        <a href="resolvedor_nacimiento_muerte.html" style="color: var(--text-muted); text-decoration: none;" onmouseover="this.style.color='var(--text-main)'" onmouseout="if(this.style.fontWeight!='600')this.style.color='var(--text-muted)'">Nacimiento/Muerte</a>
+        
+        <span style="color: var(--text-muted); margin: 0 10px;">|</span>
+        
+        <span style="color: var(--green); font-weight: 700;">U2 (Colas):</span>
+        <a href="simulador_mmk.html" style="color: var(--text-main); text-decoration: none; font-weight: 600; border-bottom: 1px solid var(--green);" onmouseover="this.style.color='var(--text-main)'" onmouseout="if(this.style.fontWeight!='600')this.style.color='var(--text-muted)'">Simulador M/M/k</a>
+    </div>
+<main>
+  <div class="grid-2">
+
+    <!-- ── PANEL INPUTS ── -->
+    <div class="panel">
+      <div class="panel-title">Parámetros del Sistema</div>
+
+      <div class="input-group">
+        <label>Tasa de Llegada (λ) <span id="lbl-lambda">30</span></label>
+        <div class="slider-wrap">
+          <input type="range" id="sl-lambda" min="0.1" max="100" step="0.5" value="30" oninput="syncInput('lambda',this.value)">
+          <input type="number" id="in-lambda" min="0.1" max="100" step="0.1" value="30" oninput="syncSlider('lambda',this.value)">
+        </div>
+        <div class="hint">Unidades o personas que arriban por hora</div>
+      </div>
+
+      <div class="input-group">
+        <label>Tasa de Servicio Individual (μ) <span id="lbl-mu">40</span></label>
+        <div class="slider-wrap">
+          <input type="range" id="sl-mu" min="0.1" max="100" step="0.5" value="40" oninput="syncInput('mu',this.value)">
+          <input type="number" id="in-mu" min="0.1" max="100" step="0.1" value="40" oninput="syncSlider('mu',this.value)">
+        </div>
+        <div class="hint">Capacidad de atención de un solo canal por hora</div>
+      </div>
+
+      <div class="input-group">
+        <label>Cantidad de Canales (k) <span id="lbl-k">1</span></label>
+        <div class="slider-wrap">
+          <input type="range" id="sl-k" min="1" max="15" step="1" value="1" oninput="syncInput('k',this.value)">
+          <input type="number" id="in-k" min="1" max="15" step="1" value="1" oninput="syncSlider('k',this.value)">
+        </div>
+        <div class="hint">Número de servidores en paralelo (entero ≥ 1)</div>
+      </div>
+      
+      <div style="height:1px; background:var(--border); margin:1.5rem 0;"></div>
+      
+      <div class="panel-title">Parámetros de Costos</div>
+
+      <div class="input-group">
+        <label>Costo de Espera (Cw) <span id="lbl-cw">500</span></label>
+        <div class="slider-wrap">
+          <input type="range" id="sl-cw" min="0" max="2000" step="10" value="500" oninput="syncInput('cw',this.value)">
+          <input type="number" id="in-cw" min="0" max="10000" step="10" value="500" oninput="syncSlider('cw',this.value)">
+        </div>
+        <div class="hint">Costo horario por cada unidad esperando en fila ($/h)</div>
+      </div>
+
+      <div class="input-group">
+        <label>Costo de Servicio (Cs) <span id="lbl-cs">300</span></label>
+        <div class="slider-wrap">
+          <input type="range" id="sl-cs" min="0" max="2000" step="10" value="300" oninput="syncInput('cs',this.value)">
+          <input type="number" id="in-cs" min="0" max="10000" step="10" value="300" oninput="syncSlider('cs',this.value)">
+        </div>
+        <div class="hint">Costo horario por mantener un canal activo ($/h)</div>
+      </div>
+
+      <button class="btn-calc" onclick="calculate()">⚡ Calcular Sistema</button>
+      <button class="btn-secondary" onclick="loadIndustrialExample()">🏭 Cargar Ejemplo Industrial</button>
+    </div>
+
+    <!-- ── RESULTS ── -->
+    <div id="results-area">
+      <!-- Generated content goes here -->
+    </div>
+
+  </div>
+</main>
+
+<footer>Simulador M/M/k · Investigación Operativa · UTN · 2026</footer>
+
+<script>
+// ── helpers ──────────────────────────────────────────────────────────────
+function fact(n){
+  if(n<=1)return 1;
+  let r=1;for(let i=2;i<=n;i++)r*=i;return r;
+}
+function fmt(v,d=3){return Number(v).toLocaleString('es-AR',{minimumFractionDigits:0,maximumFractionDigits:d})}
+
+// ── sync controls ────────────────────────────────────────────────────────
+function syncInput(id,val){
+  const decimals = (id==='k' || id==='cw' || id==='cs') ? 0 : 1;
+  document.getElementById('lbl-'+id).textContent = Number(val).toFixed(decimals);
+  document.getElementById('in-'+id).value = val;
+}
+function syncSlider(id,val){
+  const decimals = (id==='k' || id==='cw' || id==='cs') ? 0 : 1;
+  document.getElementById('lbl-'+id).textContent = Number(val).toFixed(decimals);
+  document.getElementById('sl-'+id).value = val;
+}
+
+function loadIndustrialExample() {
+  syncInput('lambda', 30); syncSlider('lambda', 30);
+  syncInput('mu', 40); syncSlider('mu', 40);
+  syncInput('k', 1); syncSlider('k', 1);
+  syncInput('cw', 500); syncSlider('cw', 500);
+  syncInput('cs', 300); syncSlider('cs', 300);
+  calculate();
+}
+
+function simulateK(newK) {
+  syncInput('k', newK); syncSlider('k', newK);
+  calculate();
+  setTimeout(() => document.getElementById('results-area').scrollIntoView({behavior: 'smooth'}), 100);
+}
+
+// ── core math ────────────────────────────────────────────────────────────
+function getMetrics(lambda, mu, k) {
+  const rho = lambda / (k * mu);
+  if(rho >= 1) return { stable: false, rho };
+
+  let P0;
+  const ratio = lambda / mu; 
+  if(k===1){
+    P0 = 1 - ratio;
+  } else {
+    let sum = 0;
+    for(let n=0;n<k;n++) sum += Math.pow(ratio,n)/fact(n);
+    sum += (Math.pow(ratio,k)/fact(k)) * ((k*mu)/((k*mu)-lambda));
+    P0 = 1/sum;
+  }
+
+  let Lq;
+  if(k===1){
+    Lq = (lambda*lambda)/(mu*(mu-lambda));
+  } else {
+    Lq = ((Math.pow(ratio,k)*lambda*mu)/(fact(k-1)*Math.pow((k*mu)-lambda,2)))*P0;
+  }
+
+  const Wq = Lq/lambda;
+  const W  = Wq + 1/mu;
+  const L  = lambda*W;
+
+  return { stable: true, rho, P0, Lq, Wq, W, L, ratio };
+}
+
+// ── main calc ────────────────────────────────────────────────────────────
+function calculate(){
+  const lambda = parseFloat(document.getElementById('in-lambda').value);
+  const mu     = parseFloat(document.getElementById('in-mu').value);
+  const k      = parseInt(document.getElementById('in-k').value);
+  const Cw     = parseFloat(document.getElementById('in-cw').value) || 0;
+  const Cs     = parseFloat(document.getElementById('in-cs').value) || 0;
+  const area   = document.getElementById('results-area');
+
+  if(isNaN(lambda)||isNaN(mu)||isNaN(k)||lambda<=0||mu<=0||k<1){
+    area.innerHTML=`<div class="alert-unstable fade-in"><div class="icon">⚠️</div><h2>PARÁMETROS INVÁLIDOS</h2><p>Todos los valores deben ser positivos y k ≥ 1.</p></div>`;
+    return;
+  }
+
+  const current = getMetrics(lambda, mu, k);
+
+  if(!current.stable){
+    area.innerHTML=`
+    <div class="alert-unstable fade-in">
+      <div class="icon">🚨</div>
+      <h2>SISTEMA INESTABLE</h2>
+      <p>La tasa de llegada supera la capacidad total de atención.<br>La cola tenderá a <strong>infinito</strong>.</p>
+      <p style="margin-top:1rem;font-size:.8rem;color:var(--text3)">
+        ρ = λ/(k·μ) = ${fmt(lambda,2)} / (${k} × ${fmt(mu,2)}) = <strong style="color:var(--red)">${fmt(current.rho,4)}</strong> ≥ 1
+      </p>
+      <p style="margin-top:.75rem;font-size:.82rem;color:var(--text2)">
+        💡 Aumentá la tasa de servicio μ, añadí más canales k, o reducí la tasa de llegada λ.
+      </p>
+    </div>`;
+    return;
+  }
+
+  const { rho, P0, Lq, Wq, W, L, ratio } = current;
+  const CT = (Cs * k) + (Cw * Lq);
+
+  // M/M/k+1 comparison
+  const next = getMetrics(lambda, mu, k + 1);
+  let comparisonHTML = '';
+  if(next.stable) {
+    const CT_next = (Cs * (k+1)) + (Cw * next.Lq);
+    const diff = CT_next - CT;
+    const diffText = diff > 0 ? `Costaría $${fmt(diff,2)} más` : `Ahorrarías $${fmt(Math.abs(diff),2)}`;
+    const diffColor = diff > 0 ? 'var(--red)' : 'var(--green)';
+    comparisonHTML = `
+      <div style="margin-top:1.5rem; padding-top:1.25rem; border-top:1px solid var(--border); text-align:center; background:rgba(0,0,0,0.1); border-radius:var(--radius-sm); padding:1rem;">
+        <h4 style="color:var(--text); margin-bottom:0.5rem; font-size:1rem;">Comparativa M/M/${k+1}</h4>
+        <p style="margin-bottom:0.75rem; font-size:0.9rem; color:var(--text2);">
+          Si agregamos un canal más (<strong>${k+1} canales</strong>), la cola (Lq) bajaría a ${fmt(next.Lq,2)} y el Costo Total sería de <strong>$${fmt(CT_next,2)}/hora</strong>.
+          <br><span style="color:${diffColor}; font-weight:bold; font-size:1.05rem;">(${diffText})</span>
+        </p>
+        <button class="btn-secondary" style="width:auto; border-color:var(--accent);" onclick="simulateK(${k+1})">Simular con ${k+1} Canales</button>
+      </div>
+    `;
+  }
+
+  // Calculate formulas strings
+  let LqCalcStr = "";
+  if (k === 1) {
+    LqCalcStr = `Lq = <div class="frac"><span>λ²</span><span>μ · (μ - λ)</span></div> = <div class="frac"><span>${fmt(lambda,2)}²</span><span>${fmt(mu,2)} · (${fmt(mu,2)} - ${fmt(lambda,2)})</span></div> = <strong>${fmt(Lq, 3)}</strong>`;
+  } else {
+    LqCalcStr = `Lq = <div class="frac"><span>aᵏ · λ · μ</span><span>(k - 1)! · (kμ - λ)²</span></div> · P₀ = <strong>${fmt(Lq, 3)}</strong>`;
+  }
+
+  let P3;
+  if(3 < k) {
+    P3 = P0 * Math.pow(ratio, 3) / fact(3);
+  } else {
+    P3 = P0 * Math.pow(ratio, 3) / (fact(k) * Math.pow(k, 3-k));
+  }
+
+  let P3CalcStr = "";
+  if (k === 1) {
+    P3CalcStr = `P₃ = (1 - ρ) · ρ³ = (1 - ${fmt(rho,3)}) · ${fmt(rho,3)}³ ≈ <strong>${fmt(P3 * 100, 1)}%</strong>`;
+  } else {
+    P3CalcStr = `P₃ = P₀ · <div class="frac"><span>a³</span><span>${3 < k ? '3!' : 'k! · k³⁻ᵏ'}</span></div> ≈ <strong>${fmt(P3 * 100, 1)}%</strong>`;
+  }
+
+  // Render Layout
+  const rhoColor = rho>=.9?'var(--red)':rho>=.7?'var(--orange)':'var(--green)';
+  const barColor = rho>=.9?'linear-gradient(90deg,var(--orange),var(--red))':
+                   rho>=.7?'linear-gradient(90deg,var(--green),var(--orange))':
+                           'linear-gradient(90deg,var(--accent),var(--green))';
+
+  const isExample = (lambda === 30 && mu === 40 && k === 1);
+  const contextHTML = isExample ? `
+    <div style="background:rgba(88,166,255,0.1); border-left:4px solid var(--accent); padding:1rem; margin-bottom:1rem; font-size:0.9rem; border-radius:4px;">
+      <strong style="color:var(--text); font-size:1rem; display:block; margin-bottom:0.4rem;">🏭 Contexto del Ejemplo Industrial:</strong>
+      • Tasa de Arribo (λ): 2,5 trabajadores cada 5 min → (2,5 / 5) × 60 = <strong>30 trabajadores/hora</strong>.<br>
+      • Tasa de Servicio (μ): El inspector tarda 1,5 min por pieza → 60 / 1,5 = <strong>40 trabajadores/hora</strong>.
+    </div>
+  ` : '';
+
+  area.innerHTML=`
+  <!-- UTILIZATION -->
+  <div class="meter-card fade-in">
+    <div class="meter-header">
+      <span class="meter-label">Factor de Utilización (ρ)</span>
+      <span class="meter-value" style="color:${rhoColor}">${fmt(rho*100,1)}%</span>
+    </div>
+    <div class="bar-track"><div class="bar-fill" id="bar-rho" style="width:0%;background:${barColor}"></div></div>
+  </div>
+
+  <!-- KPI CARDS -->
+  <div class="kpi-grid fade-in">
+    <div class="kpi-card blue">
+      <div class="kpi-symbol">Lq</div>
+      <div class="kpi-val">${fmt(Lq)}</div>
+      <div class="kpi-unit">unidades en fila</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-symbol">Wq</div>
+      <div class="kpi-val">${fmt(Wq)}</div>
+      <div class="kpi-unit">horas de espera</div>
+    </div>
+  </div>
+
+  <!-- TUTOR -->
+  <div class="tutor-card fade-in">
+    <h3>Tutor Económico: Explicación Detallada</h3>
+    
+    ${contextHTML}
+
+    <div class="step-box">
+      <div class="step-title">1. La Paradoja de la Utilización (ρ)</div>
+      <div class="math-inline step-calc">
+        ρ = <div class="frac"><span>λ</span><span>k · μ</span></div> = <div class="frac"><span>${fmt(lambda,1)}</span><span>${k} · ${fmt(mu,1)}</span></div> = <strong>${fmt(rho, 4)} (${fmt(rho*100, 1)}%)</strong>
+      </div>
+      <div class="step-comment">
+        Aunque el sistema está libre el <strong>${fmt(P0*100, 1)}%</strong> del tiempo (P₀ = ${fmt(P0, 4)}), la aleatoriedad de las llegadas genera que el <strong>${fmt(rho*100, 1)}%</strong> del tiempo haya alguien siendo atendido o esperando, provocando cuellos de botella.
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-title">2. Análisis de Tiempos (Paso a Paso)</div>
+      
+      <div style="margin-bottom:1.5rem;">
+        <strong>Longitud de la Cola (Lq):</strong><br>
+        <div class="math-inline step-calc">${LqCalcStr}</div>
+        <div class="step-comment">En promedio, siempre hay <strong>${fmt(Lq, 2)} personas y pico perdiendo tiempo</strong> en la fila.</div>
+      </div>
+
+      <div style="margin-bottom:1.5rem;">
+        <strong>Tiempo de Espera (Wq):</strong><br>
+        <div class="math-inline step-calc">
+          Wq = <div class="frac"><span>Lq</span><span>λ</span></div> = <div class="frac"><span>${fmt(Lq,3)}</span><span>${fmt(lambda,1)}</span></div> = <strong>${fmt(Wq, 4)} horas</strong>
+        </div>
+        <div class="step-comment">Cada trabajador en la fila equivale a <strong>${fmt(Wq * 60, 1)} minutos</strong> perdidos de producción.</div>
+      </div>
+
+      <div>
+        <strong>Probabilidades de Estado (Pₙ):</strong><br>
+        <div class="math-inline step-calc">${P3CalcStr}</div>
+        <div class="step-comment">
+          Probabilidad de que haya exactamente 3 unidades en el sistema en un momento dado.
+        </div>
+      </div>
+    </div>
+
+    <div class="step-box cost">
+      <div class="step-title">3. Análisis de Costos (Impacto en el Negocio)</div>
+      <p style="font-size:0.9rem; color:var(--text2); margin-bottom:0.5rem;">
+        Acá es donde el ingeniero industrial toma la decisión basándose en el Costo Total (CT).
+      </p>
+      <div class="math-inline step-calc" style="font-size:1.1rem; justify-content:center; padding:1.2rem;">
+        CT = ($${fmt(Cs)} × ${k}) + ($${fmt(Cw)} × ${fmt(Lq, 2)}) = <strong>$${fmt(CT, 2)} / hora</strong>
+      </div>
+      <div class="step-comment" style="border-color:var(--green);">
+        Este costo representa la suma de los salarios de los inspectores (<strong>$${fmt(Cs*k, 2)}/h</strong>) más el costo del tiempo improductivo de los obreros haciendo fila (<strong>$${fmt(Cw*Lq, 2)}/h</strong>). Si el costo de espera (Cw) aumenta, tener colas largas se vuelve económicamente inviable.
+      </div>
+
+      ${comparisonHTML}
+    </div>
+
+  </div>
+  `;
+
+  // animate bar after render
+  setTimeout(()=>{
+    const bar = document.getElementById('bar-rho');
+    if(bar) bar.style.width = Math.min(rho*100,100)+'%';
+  },60);
+}
+
+// init
+calculate();
+</script>
+</body>
+</html>

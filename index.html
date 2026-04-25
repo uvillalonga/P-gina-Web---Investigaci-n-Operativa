@@ -411,20 +411,25 @@
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
             </button>
         </div>
-
     </header>
 
-	<div style="background: rgba(15, 23, 42, 0.8); padding: 12px 5%; display: flex; gap: 25px; border-bottom: 1px solid var(--border); align-items: center; justify-content: center; font-size: 0.95rem;">
-        <span style="color: var(--accent); font-weight: 700;">Herramientas IO:</span>
-        <a href="index.html" style="color: var(--text-main); text-decoration: none; font-weight: 600; border-bottom: 1px solid var(--accent);">Simulador Markov</a>
-        <a href="ejercicio_call_center.html" style="color: var(--text-muted); text-decoration: none;" onmouseover="this.style.color='var(--text-main)'" onmouseout="this.style.color='var(--text-muted)'">Ejercicio Call Center</a>
-        <a href="resolvedor_markov.html" style="color: var(--text-muted); text-decoration: none;" onmouseover="this.style.color='var(--text-main)'" onmouseout="this.style.color='var(--text-muted)'">Resolvedor Markov</a>
-        <a href="resolvedor_nacimiento_muerte.html" style="color: var(--text-muted); text-decoration: none;" onmouseover="this.style.color='var(--text-main)'" onmouseout="this.style.color='var(--text-muted)'">Nacimiento/Muerte</a>
-    </div>
-    ```
+</div>
+    </header>
 
+    <div style="background: rgba(15, 23, 42, 0.9); padding: 12px 5%; display: flex; gap: 15px; border-bottom: 1px solid var(--border); align-items: center; justify-content: center; font-size: 0.9rem; flex-wrap: wrap; position: sticky; top: 0; z-index: 1000;">
+        <span style="color: var(--accent); font-weight: 700;">U1 (Markov):</span>
+        <a href="index.html" style="color: var(--text-main); text-decoration: none; font-weight: 600; border-bottom: 1px solid var(--accent);" onmouseover="this.style.color='var(--text-main)'" onmouseout="if(this.style.fontWeight!='600')this.style.color='var(--text-muted)'">Simulador</a>
+        <a href="ejercicio_call_center.html" style="color: var(--text-muted); text-decoration: none;" onmouseover="this.style.color='var(--text-main)'" onmouseout="if(this.style.fontWeight!='600')this.style.color='var(--text-muted)'">Call Center</a>
+        <a href="resolvedor_markov.html" style="color: var(--text-muted); text-decoration: none;" onmouseover="this.style.color='var(--text-main)'" onmouseout="if(this.style.fontWeight!='600')this.style.color='var(--text-muted)'">Resolvedor</a>
+        <a href="resolvedor_nacimiento_muerte.html" style="color: var(--text-muted); text-decoration: none;" onmouseover="this.style.color='var(--text-main)'" onmouseout="if(this.style.fontWeight!='600')this.style.color='var(--text-muted)'">Nacimiento/Muerte</a>
+        
+        <span style="color: var(--text-muted); margin: 0 10px;">|</span>
+        
+        <span style="color: var(--green); font-weight: 700;">U2 (Colas):</span>
+        <a href="simulador_mmk.html" style="color: var(--text-muted); text-decoration: none;" onmouseover="this.style.color='var(--text-main)'" onmouseout="if(this.style.fontWeight!='600')this.style.color='var(--text-muted)'">Simulador M/M/k</a>
+    </div>
     <nav class="tabs" id="tabs-container">
-        <!-- Tabs inyectadas via JS -->
+        </nav>
     </nav>
 
     <main id="simulation-workspace">
