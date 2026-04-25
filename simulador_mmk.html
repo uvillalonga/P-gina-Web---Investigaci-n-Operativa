@@ -186,6 +186,15 @@ footer{text-align:center;padding:2rem 1rem;color:var(--text3);font-size:.78rem;b
         </div>
         <div class="hint">Número de servidores en paralelo (entero ≥ 1)</div>
       </div>
+
+      <div class="input-group">
+        <label>Estado para Probabilidad (n) <span id="lbl-n">3</span></label>
+        <div class="slider-wrap">
+          <input type="range" id="sl-n" min="0" max="20" step="1" value="3" oninput="syncInput('n',this.value)">
+          <input type="number" id="in-n" min="0" max="50" step="1" value="3" oninput="syncSlider('n',this.value)">
+        </div>
+        <div class="hint">Número exacto de unidades en el sistema para calcular Pₙ</div>
+      </div>
       
       <div style="height:1px; background:var(--border); margin:1.5rem 0;"></div>
       
@@ -233,12 +242,12 @@ function fmt(v,d=3){return Number(v).toLocaleString('es-AR',{minimumFractionDigi
 
 // ── sync controls ────────────────────────────────────────────────────────
 function syncInput(id,val){
-  const decimals = (id==='k' || id==='cw' || id==='cs') ? 0 : 1;
+  const decimals = (id==='k' || id==='cw' || id==='cs' || id==='n') ? 0 : 1;
   document.getElementById('lbl-'+id).textContent = Number(val).toFixed(decimals);
   document.getElementById('in-'+id).value = val;
 }
 function syncSlider(id,val){
-  const decimals = (id==='k' || id==='cw' || id==='cs') ? 0 : 1;
+  const decimals = (id==='k' || id==='cw' || id==='cs' || id==='n') ? 0 : 1;
   document.getElementById('lbl-'+id).textContent = Number(val).toFixed(decimals);
   document.getElementById('sl-'+id).value = val;
 }
@@ -247,6 +256,7 @@ function loadIndustrialExample() {
   syncInput('lambda', 30); syncSlider('lambda', 30);
   syncInput('mu', 40); syncSlider('mu', 40);
   syncInput('k', 1); syncSlider('k', 1);
+  syncInput('n', 3); syncSlider('n', 3);
   syncInput('cw', 500); syncSlider('cw', 500);
   syncInput('cs', 300); syncSlider('cs', 300);
   calculate();
@@ -293,12 +303,13 @@ function calculate(){
   const lambda = parseFloat(document.getElementById('in-lambda').value);
   const mu     = parseFloat(document.getElementById('in-mu').value);
   const k      = parseInt(document.getElementById('in-k').value);
+  const n      = parseInt(document.getElementById('in-n').value);
   const Cw     = parseFloat(document.getElementById('in-cw').value) || 0;
   const Cs     = parseFloat(document.getElementById('in-cs').value) || 0;
   const area   = document.getElementById('results-area');
 
-  if(isNaN(lambda)||isNaN(mu)||isNaN(k)||lambda<=0||mu<=0||k<1){
-    area.innerHTML=`<div class="alert-unstable fade-in"><div class="icon">⚠️</div><h2>PARÁMETROS INVÁLIDOS</h2><p>Todos los valores deben ser positivos y k ≥ 1.</p></div>`;
+  if(isNaN(lambda)||isNaN(mu)||isNaN(k)||isNaN(n)||lambda<=0||mu<=0||k<1||n<0){
+    area.innerHTML=`<div class="alert-unstable fade-in"><div class="icon">⚠️</div><h2>PARÁMETROS INVÁLIDOS</h2><p>Todos los valores deben ser positivos, k ≥ 1, y n ≥ 0.</p></div>`;
     return;
   }
 
@@ -351,18 +362,19 @@ function calculate(){
     LqCalcStr = `Lq = <div class="frac"><span>aᵏ · λ · μ</span><span>(k - 1)! · (kμ - λ)²</span></div> · P₀ = <strong>${fmt(Lq, 3)}</strong>`;
   }
 
-  let P3;
-  if(3 < k) {
-    P3 = P0 * Math.pow(ratio, 3) / fact(3);
+  let Pn;
+  if(n < k) {
+    Pn = P0 * Math.pow(ratio, n) / fact(n);
   } else {
-    P3 = P0 * Math.pow(ratio, 3) / (fact(k) * Math.pow(k, 3-k));
+    Pn = P0 * Math.pow(ratio, n) / (fact(k) * Math.pow(k, n-k));
   }
 
-  let P3CalcStr = "";
+  let PnCalcStr = "";
   if (k === 1) {
-    P3CalcStr = `P₃ = (1 - ρ) · ρ³ = (1 - ${fmt(rho,3)}) · ${fmt(rho,3)}³ ≈ <strong>${fmt(P3 * 100, 1)}%</strong>`;
+    PnCalcStr = `P<sub>${n}</sub> = (1 - ρ) · ρ<sup>${n}</sup> = (1 - ${fmt(rho,3)}) · ${fmt(rho,3)}<sup>${n}</sup> ≈ <strong>${fmt(Pn * 100, 1)}%</strong>`;
   } else {
-    P3CalcStr = `P₃ = P₀ · <div class="frac"><span>a³</span><span>${3 < k ? '3!' : 'k! · k³⁻ᵏ'}</span></div> ≈ <strong>${fmt(P3 * 100, 1)}%</strong>`;
+    const denomStr = n < k ? `${n}!` : (n === k ? `${k}!` : `${k}! · ${k}<sup>${n-k}</sup>`);
+    PnCalcStr = `P<sub>${n}</sub> = P₀ · <div class="frac"><span>a<sup>${n}</sup></span><span>${denomStr}</span></div> ≈ <strong>${fmt(Pn * 100, 1)}%</strong>`;
   }
 
   // Render Layout
@@ -439,9 +451,9 @@ function calculate(){
 
       <div>
         <strong>Probabilidades de Estado (Pₙ):</strong><br>
-        <div class="math-inline step-calc">${P3CalcStr}</div>
+        <div class="math-inline step-calc">${PnCalcStr}</div>
         <div class="step-comment">
-          Probabilidad de que haya exactamente 3 unidades en el sistema en un momento dado.
+          Probabilidad de que haya exactamente ${n} unidades en el sistema en un momento dado.
         </div>
       </div>
     </div>
