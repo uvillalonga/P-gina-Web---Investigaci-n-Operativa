@@ -22,6 +22,17 @@
             --amber: #f59e0b;
         }
 
+        .site-nav{background:rgba(11,15,25,.97);border-bottom:1px solid var(--border);padding:0 5%;position:sticky;top:0;z-index:1000;backdrop-filter:blur(16px);display:flex;align-items:center;height:52px;gap:0;}
+        .nav-logo{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--text-main);font-weight:700;font-size:.9rem;white-space:nowrap;padding-right:20px;border-right:1px solid var(--border);margin-right:16px;}
+        .nav-logo .dot{width:8px;height:8px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#8b5cf6);box-shadow:0 0 8px var(--accent);}
+        .nav-unit{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--accent);white-space:nowrap;margin-right:8px;}
+        .nav-unit.u2{color:var(--emerald);}
+        a.nav-link{color:var(--text-muted);text-decoration:none;font-size:.82rem;font-weight:500;padding:0 10px;height:52px;display:flex;align-items:center;border-bottom:2px solid transparent;transition:color .2s,border-color .2s;white-space:nowrap;}
+        a.nav-link:hover{color:var(--text-main);}
+        a.nav-link.active{color:var(--text-main);border-bottom-color:var(--accent);font-weight:600;}
+        a.nav-link.active.u2{border-bottom-color:var(--emerald);}
+        .nav-sep{width:1px;height:20px;background:var(--border);margin:0 10px;}
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -555,18 +566,17 @@
         </div>
     </header>
 
-   <div style="background: rgba(15, 23, 42, 0.9); padding: 12px 5%; display: flex; gap: 15px; border-bottom: 1px solid var(--border); align-items: center; justify-content: center; font-size: 0.9rem; flex-wrap: wrap; position: sticky; top: 0; z-index: 1000;">
-        <span style="color: var(--accent); font-weight: 700;">U1 (Markov):</span>
-        <a href="index.html" style="color: var(--text-muted); text-decoration: none;" onmouseover="this.style.color='var(--text-main)'" onmouseout="if(this.style.fontWeight!='600')this.style.color='var(--text-muted)'">Simulador</a>
-        <a href="ejercicio_call_center.html" style="color: var(--text-muted); text-decoration: none;" onmouseover="this.style.color='var(--text-main)'" onmouseout="if(this.style.fontWeight!='600')this.style.color='var(--text-muted)'">Call Center</a>
-        <a href="resolvedor_markov.html" style="color: var(--text-muted); text-decoration: none;" onmouseover="this.style.color='var(--text-main)'" onmouseout="if(this.style.fontWeight!='600')this.style.color='var(--text-muted)'">Resolvedor</a>
-        <a href="resolvedor_nacimiento_muerte.html" style="color: var(--text-main); text-decoration: none; font-weight: 600; border-bottom: 1px solid var(--accent);" onmouseover="this.style.color='var(--text-main)'" onmouseout="if(this.style.fontWeight!='600')this.style.color='var(--text-muted)'">Nacimiento/Muerte</a>
-        
-        <span style="color: var(--text-muted); margin: 0 10px;">|</span>
-        
-        <span style="color: var(--green); font-weight: 700;">U2 (Colas):</span>
-        <a href="simulador_mmk.html" style="color: var(--text-muted); text-decoration: none;" onmouseover="this.style.color='var(--text-main)'" onmouseout="if(this.style.fontWeight!='600')this.style.color='var(--text-muted)'">Simulador M/M/k</a>
-    </div>
+   <nav class="site-nav">
+      <a href="index.html" class="nav-logo"><div class="dot"></div>IO · UTN</a>
+      <span class="nav-unit">U1 · Markov</span>
+      <a href="simulador_markov.html" class="nav-link">Simulador</a>
+      <a href="ejercicio_call_center.html" class="nav-link">Call Center</a>
+      <a href="resolvedor_markov.html" class="nav-link">Resolvedor</a>
+      <a href="resolvedor_nacimiento_muerte.html" class="nav-link active">Nac./Muerte</a>
+      <div class="nav-sep"></div>
+      <span class="nav-unit u2">U2 · Colas</span>
+      <a href="simulador_mmk.html" class="nav-link u2">Simulador M/M/k</a>
+    </nav>
     <main>
         <section class="config-panel" id="config-panel">
             <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.5rem;">
