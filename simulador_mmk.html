@@ -6,28 +6,34 @@
 <title>Simulador M/M/k – Teoría de Colas</title>
 <meta name="description" content="Simulador interactivo del modelo de colas M/M/k con dashboard gerencial, KPIs y análisis de costos."/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="styles.css">
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#0d1117;--surface:#161b22;--surface2:#21262d;--border:#30363d;
-  --accent:#58a6ff;--accent2:#bc8cff;--green:#3fb950;--orange:#d29922;--red:#f85149;
-  --text:#e6edf3;--text2:#8b949e;--text3:#6e7681;
-  --card-bg:#1c2128;--radius:12px;--radius-sm:8px;
-  --shadow:0 8px 32px rgba(0,0,0,.45);
-  --text-muted:#8b949e;--text-main:#e6edf3;--emerald:#3fb950;--purple:#bc8cff;
+/* ── simulador_mmk.html — page-specific styles (GitHub dark palette) ── */
+:root {
+  --bg:        #0d1117;
+  --surface:   #161b22;
+  --surface2:  #21262d;
+  --border:    #30363d;
+  --border-med:#30363d;
+  --accent:    #58a6ff;
+  --accent2:   #bc8cff;
+  --green:     #3fb950;
+  --orange:    #d29922;
+  --red:       #f85149;
+  --text:      #e6edf3;
+  --text-main: #e6edf3;
+  --text2:     #8b949e;
+  --text-muted:#8b949e;
+  --text3:     #6e7681;
+  --card-bg:   #1c2128;
+  --emerald:   #3fb950;
+  --purple:    #bc8cff;
+  --radius:    12px;
+  --radius-sm: 8px;
+  --shadow:    0 8px 32px rgba(0,0,0,.45);
 }
-.site-nav{background:rgba(10,13,18,.97);border-bottom:1px solid var(--border);padding:0 5%;position:sticky;top:0;z-index:1000;backdrop-filter:blur(16px);display:flex;align-items:center;height:52px;gap:0;}
-.nav-logo{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--text);font-weight:700;font-size:.9rem;white-space:nowrap;padding-right:20px;border-right:1px solid var(--border);margin-right:16px;}
-.nav-logo .dot{width:8px;height:8px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 0 8px rgba(88,166,255,.5);}
-.nav-unit{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--accent);white-space:nowrap;margin-right:8px;}
-.nav-unit.u2{color:var(--green);}
-a.nav-link{color:var(--text2);text-decoration:none;font-size:.82rem;font-weight:500;padding:0 10px;height:52px;display:flex;align-items:center;border-bottom:2px solid transparent;transition:color .2s,border-color .2s;white-space:nowrap;}
-a.nav-link:hover{color:var(--text);}
-a.nav-link.active{color:var(--text);border-bottom-color:var(--accent);font-weight:600;}
-a.nav-link.active.u2{border-bottom-color:var(--green);}
-.nav-sep{width:1px;height:20px;background:var(--border);margin:0 10px;}
-html{scroll-behavior:smooth}
-body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;line-height:1.6}
+body { line-height: 1.6; }
+/* Nav palette overrides - handled by styles.css and menu.js */
 
 /* HEADER */
 header{
@@ -147,23 +153,13 @@ footer{text-align:center;padding:2rem 1rem;color:var(--text3);font-size:.78rem;b
 </style>
 </head>
 <body>
+<div id="nav-container"></div>
 
-<header>
-  <div class="badge">INVESTIGACIÓN OPERATIVA · UTN</div>
+<div class="page-header u2">
   <h1>Simulador M/M/k – Teoría de Colas</h1>
   <p>Dashboard interactivo para el análisis de sistemas de espera y costos operativos</p>
-</header>
-<nav class="site-nav">
-  <a href="index.html" class="nav-logo"><div class="dot"></div>IO · UTN</a>
-  <span class="nav-unit">U1 · Markov</span>
-  <a href="simulador_markov.html" class="nav-link">Simulador</a>
-  <a href="ejercicio_call_center.html" class="nav-link">Call Center</a>
-  <a href="resolvedor_markov.html" class="nav-link">Resolvedor</a>
-  <a href="resolvedor_nacimiento_muerte.html" class="nav-link">Nac./Muerte</a>
-  <div class="nav-sep"></div>
-  <span class="nav-unit u2">U2 · Colas</span>
-  <a href="simulador_mmk.html" class="nav-link u2 active">Simulador M/M/k</a>
-</nav>
+</div>
+
 <main>
   <div class="grid-2">
 
@@ -527,5 +523,7 @@ function calculate(){
 // init
 calculate();
 </script>
+
+<script src="menu.js"></script>
 </body>
 </html>

@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulador Montecarlo — Isla de Soldadura · UTN</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+/* ── simulador_montecarlo.html — page-specific styles ── */
+body {
+  background-image: radial-gradient(ellipse 80% 50% at 20% 0%, rgba(245,158,11,0.06), transparent),
+  radial-gradient(ellipse 60% 40% at 80% 100%, rgba(16,185,129,0.05), transparent);
+}
+/* Nav color overrides for amber theme - handled by styles.css and menu.js */
+
+.container{max-width:1100px;margin:0 auto;padding:3rem 5%;display:flex;flex-direction:column;gap:4rem;}
+.module-header{margin-bottom:1.5rem;}
+.module-tag{display:inline-block;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;
+  color:var(--amber);background:rgba(245,158,11,0.1);padding:.3rem .8rem;border-radius:6px;
+  margin-bottom:.5rem;border:1px solid rgba(245,158,11,0.2);}
+.module-title{font-size:1.6rem;font-weight:700;color:var(--text);margin-bottom:.5rem;}
+.module-desc{color:var(--text2);font-size:.95rem;max-width:800px;line-height:1.6;}
+
+/* Control Panel */
+.control-panel{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:2rem;
+  box-shadow:0 10px 30px rgba(0,0,0,0.2);display:flex;flex-direction:column;gap:1.5rem;}
+.cp-section-title{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:.5rem;}
+.arrival-table{width:100%;border-collapse:collapse;}
+.arrival-table th{background:rgba(0,0,0,0.2);padding:.6rem .8rem;text-align:center;font-size:.72rem;
+  font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);border-bottom:1px solid var(--border2);}
+.arrival-table td{padding:.5rem .4rem;text-align:center;border-bottom:1px solid var(--border);}
+.arrival-table input{background:rgba(0,0,0,0.3);border:1px solid var(--border2);color:var(--text);
+  border-radius:8px;padding:.4rem .5rem;width:70px;text-align:center;font-family:'Fira Code',monospace;font-size:.85rem;
+  transition:border-color .2s;}
+.arrival-table input:focus{outline:none;border-color:var(--amber);}
+.prob-status{display:flex;align-items:center;gap:.75rem;padding:.6rem 1rem;border-radius:10px;font-size:.85rem;font-weight:600;
+  transition:background .3s,color .3s;}
+.prob-status.valid{background:rgba(16,185,129,0.1);color:var(--emerald);border:1px solid rgba(16,185,129,0.25);}
+.prob-status.invalid{background:rgba(244,63,94,0.1);color:var(--rose);border:1px solid rgba(244,63,94,0.25);}
+.cp-row{display:flex;gap:1.5rem;flex-wrap:wrap;align-items:flex-end;}
+.cp-field{display:flex;flex-direction:column;gap:.4rem;}
+.cp-field label{font-size:.75rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;}
+.cp-field input{background:rgba(0,0,0,0.3);border:1px solid var(--border2);color:var(--text);
+  border-radius:8px;padding:.5rem .8rem;width:100px;font-family:'Fira Code',monospace;font-size:.9rem;}
+.cp-field input:focus{outline:none;border-color:var(--amber);}
+.dist-select{background:rgba(0,0,0,0.3);border:1px solid var(--border2);color:var(--text);
+  border-radius:8px;padding:.5rem .8rem;font-family:'Inter',sans-serif;font-size:.9rem;
+  cursor:pointer;width:100%;transition:border-color .2s;}
+.dist-select:focus{outline:none;border-color:var(--amber);}
+.dist-select option{background:#161b22;color:var(--text);}
+.btn-generate{background:linear-gradient(135deg,#f59e0b,#d97706);color:#0b0f19;border:none;
+  padding:.75rem 2rem;border-radius:10px;font-weight:700;font-size:.95rem;cursor:pointer;
+  transition:transform .2s,box-shadow .2s,opacity .3s;box-shadow:0 4px 15px rgba(245,158,11,0.3);}
+.btn-generate:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 20px rgba(245,158,11,0.4);}
+.btn-generate:disabled{opacity:0.4;cursor:not-allowed;}
+.btn-advance{background:rgba(16,185,129,0.15);color:var(--emerald);border:1px solid rgba(16,185,129,0.3);
+  padding:.9rem 2.5rem;border-radius:12px;font-weight:700;font-size:1rem;cursor:pointer;
+  transition:transform .2s,background .2s,box-shadow .2s;display:none;margin:0 auto;}
+.btn-advance:hover:not(:disabled){transform:translateY(-2px);background:rgba(16,185,129,0.25);
+  box-shadow:0 6px 20px rgba(16,185,129,0.2);}
+.btn-advance:disabled{opacity:0.4;cursor:not-allowed;}
+.btn-advance.visible{display:block;}
+
+/* Roulette */
+.roulette-container{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:2.5rem;
+  position:relative;box-shadow:0 10px 30px rgba(0,0,0,0.2);}
+.roulette-bar-wrapper{position:relative;height:40px;margin:2rem 0 4rem;}
+.roulette-bar{width:100%;height:100%;border-radius:8px;display:flex;overflow:hidden;
+  box-shadow:inset 0 2px 5px rgba(0,0,0,0.5);background:#1a1a1a;}
+.r-segment{height:100%;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;
+  color:white;text-shadow:0 1px 2px rgba(0,0,0,0.5);position:relative;transition:width .5s ease;}
+.r-label-top{position:absolute;top:-25px;left:50%;transform:translateX(-50%);font-size:.7rem;color:var(--text2);white-space:nowrap;}
+.r-label-bottom{position:absolute;bottom:-25px;left:50%;transform:translateX(-50%);font-size:.7rem;color:rgba(255,255,255,0.7);white-space:nowrap;}
+.r-indicator{position:absolute;top:-15px;width:2px;height:70px;background:white;
+  box-shadow:0 0 10px white,0 0 20px white;z-index:10;left:0;
+  transition:left 1.5s cubic-bezier(0.2,0.8,0.2,1);opacity:0;}
+.r-indicator.visible{opacity:1;}
+.r-indicator::before{content:'';position:absolute;top:-8px;left:-6px;
+  border-left:7px solid transparent;border-right:7px solid transparent;border-top:10px solid white;}
+.roulette-card{background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.3);padding:1.5rem;
+  border-radius:12px;display:flex;align-items:center;gap:1.5rem;opacity:0;transform:translateY(10px);
+  backdrop-filter:blur(10px);transition:opacity .5s,transform .5s;}
+.roulette-card.visible{opacity:1;transform:translateY(0);}
+.rc-icon{width:48px;height:48px;border-radius:50%;background:rgba(249,115,22,0.2);
+  display:flex;align-items:center;justify-content:center;color:var(--r2);flex-shrink:0;}
+.rc-text{font-size:.95rem;line-height:1.5;color:var(--text);}
+.rc-text strong{color:var(--amber);}
+
+/* Bottleneck */
+.bottleneck-container{display:flex;flex-direction:column;gap:2rem;position:relative;display:none;}
+.bottleneck-container.visible{display:flex;}
+.cards-row{display:flex;gap:2rem;}
+@media(max-width:768px){.cards-row{flex-direction:column;}}
+.b-card{flex:1;background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:2rem 1.5rem;
+  position:relative;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,0.15);transition:transform .3s;}
+.b-card:hover{transform:translateY(-5px);}
+.bc-icon{width:56px;height:56px;border-radius:14px;margin:0 auto 1.5rem;display:flex;align-items:center;justify-content:center;}
+.b-card.m .bc-icon{background:rgba(59,130,246,0.15);color:var(--accent);}
+.b-card.p .bc-icon{background:rgba(16,185,129,0.15);color:var(--emerald);}
+.b-card.c .bc-icon{background:rgba(244,63,94,0.15);color:var(--rose);}
+.b-card.m{border-top:3px solid var(--accent);}
+.b-card.p{border-top:3px solid var(--emerald);}
+.b-card.c{border:2px solid rgba(244,63,94,0.4);background:rgba(244,63,94,0.05);}
+.bc-title{font-size:1.1rem;font-weight:700;margin-bottom:1rem;color:var(--text);}
+.bc-text{font-size:.9rem;color:var(--text2);line-height:1.6;}
+.bc-text strong{color:var(--text);}
+.bc-highlight{display:inline-block;background:rgba(255,255,255,0.05);padding:.5rem 1rem;border-radius:8px;
+  margin-top:1rem;font-family:'Fira Code',monospace;font-size:.85rem;}
+.bc-math{font-size:1.1rem;font-weight:700;color:var(--rose);margin-top:.5rem;}
+
+/* Table & Gantt */
+.table-wrapper{background:var(--surface);border:1px solid var(--border2);border-radius:16px;overflow-x:auto;
+  box-shadow:0 10px 30px rgba(0,0,0,0.2);}
+.sim-table{width:100%;border-collapse:collapse;min-width:800px;}
+.sim-table th{background:rgba(0,0,0,0.2);padding:1rem;text-align:left;font-size:.75rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:1px;color:var(--text3);border-bottom:1px solid var(--border2);}
+.sim-table td{padding:.8rem 1rem;font-size:.85rem;border-bottom:1px solid var(--border);color:var(--text);}
+.sim-table tr{transition:background .2s;}
+.sim-table tr:hover{background:rgba(255,255,255,0.02);}
+.sim-table tr.wait-0 td{background:rgba(16,185,129,0.05);}
+.sim-table tr.wait-low td{background:rgba(245,158,11,0.03);}
+.sim-table tr.wait-high td{background:rgba(244,63,94,0.08);}
+.gantt-cell{width:180px;vertical-align:middle;}
+.mini-gantt{display:flex;height:12px;border-radius:6px;background:rgba(0,0,0,0.2);overflow:hidden;
+  box-shadow:inset 0 1px 3px rgba(0,0,0,0.3);}
+.g-wait{background:var(--rose);height:100%;}
+.g-serv{background:var(--emerald);height:100%;}
+
+/* Row flash animation */
+@keyframes flashRed{0%{box-shadow:inset 0 0 0 2px var(--rose);}100%{box-shadow:inset 0 0 0 0px transparent;}}
+.row-flash td{animation:flashRed 1.5s ease-out;}
+
+/* Conclusion Card */
+.conclusion-card{margin-top:2rem;border:1px solid rgba(148,163,184,0.2);border-radius:16px;padding:2rem;
+  position:relative;overflow:hidden;display:none;transition:opacity .5s;}
+.conclusion-card.visible{display:block;}
+.conclusion-card::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;}
+.conclusion-card.approved{background:linear-gradient(135deg,rgba(16,185,129,0.08),rgba(15,23,42,0.9));}
+.conclusion-card.approved::before{background:linear-gradient(to bottom,var(--emerald),var(--cyan));}
+.conclusion-card.failed{background:linear-gradient(135deg,rgba(244,63,94,0.08),rgba(15,23,42,0.9));}
+.conclusion-card.failed::before{background:linear-gradient(to bottom,var(--rose),var(--amber));}
+.cc-title{font-size:.85rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:.5rem;}
+.cc-math{font-size:1.5rem;font-weight:800;color:var(--text);margin-bottom:1rem;font-family:'Fira Code',monospace;}
+.cc-desc{font-size:1rem;line-height:1.6;color:var(--text2);}
+.cc-desc strong{color:var(--text);}
+.cc-icon{font-size:2rem;margin-bottom:.5rem;}
+@keyframes slideUp{to{opacity:1;transform:translateY(0);}}
+@keyframes fadeIn{to{opacity:1;}}
+</style>
+</head>
+<body>
+<div id="nav-container"></div>
+
+
+<div class="page-header u4">
+  <h1>Simulación Montecarlo</h1>
+  <p>Análisis estocástico de una Isla de Soldadura. Deconstrucción visual del azar, tiempos de espera y cuellos de botella gerenciales.</p>
+</div>
+
+<div class="container">
+
+  <!-- CONTROL PANEL -->
+  <div class="module-section">
+    <div class="module-header">
+      <span class="module-tag">Panel de Control</span>
+      <div class="module-title">Configuración What-If</div>
+      <div class="module-desc">Definí las distribuciones de llegada, el tiempo de servicio y la meta gerencial. Luego generá una nueva simulación estocástica.</div>
+    </div>
+    <div class="control-panel">
+      <!-- Distribución de Llegadas -->
+      <div>
+        <div class="cp-section-title">Distribución de Llegadas</div>
+        <div class="cp-row" style="margin-bottom:1rem;">
+          <div class="cp-field" style="flex:1;">
+            <label>Tipo de Distribución</label>
+            <select id="distLlegada" onchange="toggleDistUI()" class="dist-select">
+              <option value="discrete">Empírica Discreta (Tabla)</option>
+              <option value="exponential">Exponencial (Media)</option>
+            </select>
+          </div>
+          <div class="cp-field" id="expLlegadaField" style="display:none;">
+            <label>Media de Llegadas (min)</label>
+            <input type="number" id="mediaLlegada" value="5" min="0.1" step="0.1" class="cp-field input">
+          </div>
+        </div>
+        <div id="llegadaTableWrapper">
+          <table class="arrival-table" id="arrivalTable">
+            <thead><tr><th>Tiempo (min)</th><th>Probabilidad</th></tr></thead>
+            <tbody>
+              <tr><td><input type="number" id="t0" value="1" min="0" step="1"></td><td><input type="number" id="p0" value="0.05" min="0" max="1" step="0.01"></td></tr>
+              <tr><td><input type="number" id="t1" value="3" min="0" step="1"></td><td><input type="number" id="p1" value="0.10" min="0" max="1" step="0.01"></td></tr>
+              <tr><td><input type="number" id="t2" value="5" min="0" step="1"></td><td><input type="number" id="p2" value="0.50" min="0" max="1" step="0.01"></td></tr>
+              <tr><td><input type="number" id="t3" value="7" min="0" step="1"></td><td><input type="number" id="p3" value="0.35" min="0" max="1" step="0.01"></td></tr>
+            </tbody>
+          </table>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:.75rem;">
+            <div class="prob-status valid" id="probStatus">✓ Suma = 1.00</div>
+            <button style="background:rgba(139,92,246,0.15);color:var(--purple);border:1px solid rgba(139,92,246,0.3);padding:.4rem 1rem;border-radius:8px;font-size:.78rem;font-weight:600;cursor:pointer;" onclick="addRow()">+ Agregar fila</button>
+          </div>
+        </div>
+      </div>
+      <!-- Distribución de Servicio -->
+      <div>
+        <div class="cp-section-title">Distribución de Servicio</div>
+        <div class="cp-row" style="margin-bottom:1rem;">
+          <div class="cp-field" style="flex:1;">
+            <label>Tipo de Distribución</label>
+            <select id="distServicio" onchange="toggleDistUI()" class="dist-select">
+              <option value="fixed">Tiempo Fijo (constante)</option>
+              <option value="exponential">Exponencial (Media)</option>
+            </select>
+          </div>
+          <div class="cp-field" id="svcFixedField">
+            <label>Tiempo de Servicio (min)</label>
+            <input type="number" id="serviceTime" value="5" min="1" step="1">
+          </div>
+          <div class="cp-field" id="svcExpField" style="display:none;">
+            <label>Media de Servicio (min)</label>
+            <input type="number" id="mediaServicio" value="5" min="0.1" step="0.1">
+          </div>
+        </div>
+      </div>
+      <!-- KPI + Generate -->
+      <div class="cp-row">
+        <div class="cp-field">
+          <label>Meta Gerencial KPI (min espera)</label>
+          <input type="number" id="kpiTarget" value="3.0" min="0" step="0.1">
+        </div>
+        <div class="cp-field">
+          <label>N° de Órdenes</label>
+          <input type="number" id="numOrders" value="10" min="1" max="50" step="1">
+        </div>
+        <button class="btn-generate" id="btnGenerate" onclick="runSimulation()">🎲 Generar Nueva Simulación</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODULE 1: Roulette / Formula -->
+  <div class="module-section" id="rouletteSection" style="display:none;">
+    <div class="module-header">
+      <span class="module-tag">Módulo 1</span>
+      <div class="module-title" id="mod1Title">La Ruleta de Montecarlo</div>
+      <div class="module-desc" id="mod1Desc">Transformando el azar puro en realidad operativa.</div>
+    </div>
+    <!-- Panel A: Ruleta (distribución discreta) -->
+    <div id="roulettePanel">
+      <div class="roulette-container">
+        <div class="roulette-bar-wrapper">
+          <div class="roulette-bar" id="rouletteBar"></div>
+          <div class="r-indicator" id="r-indicator"></div>
+        </div>
+        <div class="roulette-card" id="rouletteCard">
+          <div class="rc-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="M2 12h2"/><path d="M20 12h2"/></svg></div>
+          <div class="rc-text" id="rouletteText"></div>
+        </div>
+      </div>
+    </div>
+    <!-- Panel B: Fórmula Exponencial -->
+    <div id="formulaPanel" style="display:none;">
+      <div class="roulette-container">
+        <div style="text-align:center;padding:1rem 0 .5rem;">
+          <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:1rem;">Transformada Inversa · Distribución Exponencial</div>
+          <div style="font-family:'Fira Code',monospace;font-size:1.4rem;font-weight:700;color:var(--amber);background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:12px;padding:1.2rem 2rem;display:inline-block;margin-bottom:1.5rem;">
+            t = (1 / &lambda;) &middot; ln(1 / RND)
+          </div>
+          <div style="color:var(--text2);font-size:.9rem;max-width:600px;margin:0 auto 1.5rem;">Donde <strong style="color:var(--text)">1/&lambda;</strong> es la media de la distribución y <strong style="color:var(--text)">RND</strong> es un número uniforme.</div>
+        </div>
+        <div class="roulette-card" id="formulaCard" style="display:none;">
+          <div class="rc-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 2l20 20"/><path d="M9 9h.01"/><path d="M15 15h.01"/></svg></div>
+          <div class="rc-text" id="formulaText"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODULE 2: Bottleneck -->
+  <div class="module-section" id="bottleneckSection" style="display:none;">
+    <div class="module-header">
+      <span class="module-tag">Módulo 2</span>
+      <div class="module-title">El Embotellamiento</div>
+      <div class="module-desc">La lógica del reloj de simulación. En las filas de espera, el cuello de botella ocurre cuando el <strong>Tiempo de Llegada</strong> choca contra el <strong>Tiempo de Salida</strong> de la orden anterior.</div>
+    </div>
+    <div class="bottleneck-container visible" id="bottleneckCards">
+      <div class="cards-row">
+        <div class="b-card m">
+          <div class="bc-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+          <div class="bc-title">Tarjeta A (La Máquina)</div>
+          <div class="bc-text" id="cardA">Generá una simulación para ver los datos.</div>
+          <div class="bc-highlight" id="cardAhl"></div>
+        </div>
+        <div class="b-card p">
+          <div class="bc-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>
+          <div class="bc-title">Tarjeta B (La Nueva Pieza)</div>
+          <div class="bc-text" id="cardB">Generá una simulación para ver los datos.</div>
+          <div class="bc-highlight" id="cardBhl"></div>
+        </div>
+      </div>
+      <div class="b-card c" style="margin:0 auto;max-width:600px;" id="cardCwrap">
+        <div class="bc-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+        <div class="bc-title">Tarjeta C (El Choque)</div>
+        <div class="bc-text" id="cardC">Generá una simulación para ver los datos.</div>
+        <div class="bc-math" id="cardCmath"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP BUTTON -->
+  <button class="btn-advance" id="btnAdvance" onclick="advanceStep()">▶ Avanzar Siguiente Orden</button>
+
+  <!-- MODULE 3: Table & Gantt -->
+  <div class="module-section" id="tableSection" style="display:none;">
+    <div class="module-header">
+      <span class="module-tag">Módulo 3</span>
+      <div class="module-title">Registro Histórico y Gantt</div>
+      <div class="module-desc">Consolidación de las 10 corridas estocásticas. Las filas críticas están resaltadas según el tiempo perdido en el sistema.</div>
+    </div>
+    <div class="table-wrapper">
+        <table class="sim-table">
+          <thead><tr>
+            <th>N° Orden</th><th>RND Llegada</th><th>Δ Llegada</th><th>Reloj Llegada Fila</th>
+            <th>RND Servicio</th><th>T. Servicio</th><th>Inicio Servicio</th><th>T. Espera</th><th>Reloj Fin Serv.</th><th>Gantt</th>
+          </tr></thead>
+        <tbody id="simBody"></tbody>
+      </table>
+    </div>
+    <div class="conclusion-card" id="conclusionCard">
+      <div class="cc-icon" id="ccIcon"></div>
+      <div class="cc-title">Traducción Gerencial</div>
+      <div class="cc-math" id="ccMath"></div>
+      <div class="cc-desc" id="ccDesc"></div>
+    </div>
+  </div>
+
+</div>
+<script>
+// ── STATE ──
+let simData = [], currentStep = 0, intervals = [];
+const COLORS = ['#ef4444','#f97316','#10b981','#3b82f6','#8b5cf6','#06b6d4','#ec4899','#84cc16'];
+
+// ── DISTRIBUTION UI TOGGLE ──
+function toggleDistUI(){
+  const distL = document.getElementById('distLlegada').value;
+  const distS = document.getElementById('distServicio').value;
+  document.getElementById('llegadaTableWrapper').style.display = distL === 'discrete' ? '' : 'none';
+  document.getElementById('expLlegadaField').style.display    = distL === 'exponential' ? '' : 'none';
+  document.getElementById('svcFixedField').style.display      = distS === 'fixed' ? '' : 'none';
+  document.getElementById('svcExpField').style.display        = distS === 'exponential' ? '' : 'none';
+  // Module 1 panel switch
+  const isDiscrete = distL === 'discrete';
+  document.getElementById('roulettePanel').style.display  = isDiscrete ? '' : 'none';
+  document.getElementById('formulaPanel').style.display   = isDiscrete ? 'none' : '';
+  document.getElementById('mod1Title').textContent = isDiscrete ? 'La Ruleta de Montecarlo' : 'Transformada Inversa: del RND al tiempo';
+  document.getElementById('mod1Desc').textContent  = isDiscrete
+    ? 'Transformando el azar puro en realidad operativa. A cada rango de probabilidad se le asigna un tiempo empírico.'
+    : 'La distribución exponencial modela tiempos entre eventos aleatorios. La transformada inversa convierte un RND uniforme en un tiempo de espera real.';
+  if(distL === 'discrete') validateProbs();
+}
+
+// ── PROBABILITY VALIDATION ──
+function getArrivals(){
+  const rows = document.querySelectorAll('#arrivalTable tbody tr');
+  return Array.from(rows).map(r => ({
+    time: parseFloat(r.querySelector('td:first-child input').value) || 0,
+    prob: parseFloat(r.querySelector('td:last-child input').value) || 0
+  }));
+}
+function validateProbs(){
+  const arrivals = getArrivals();
+  const sum = arrivals.reduce((s,a) => s + a.prob, 0);
+  const el = document.getElementById('probStatus');
+  const valid = Math.abs(sum - 1.0) < 0.001;
+  el.textContent = valid ? `✓ Suma = ${sum.toFixed(2)}` : `✗ Suma = ${sum.toFixed(2)} (debe ser 1.00)`;
+  el.className = 'prob-status ' + (valid ? 'valid' : 'invalid');
+  document.getElementById('btnGenerate').disabled = !valid;
+  updateRoulette(); return valid;
+}
+document.getElementById('arrivalTable').addEventListener('input', validateProbs);
+
+function addRow(){
+  const tbody = document.querySelector('#arrivalTable tbody');
+  const idx = tbody.children.length;
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td><input type="number" id="t${idx}" value="0" min="0" step="1"></td><td><input type="number" id="p${idx}" value="0" min="0" max="1" step="0.01"></td>`;
+  tbody.appendChild(tr); validateProbs();
+}
+
+// ── ROULETTE RENDERING ──
+function updateRoulette(){
+  const arrivals = getArrivals();
+  const bar = document.getElementById('rouletteBar');
+  bar.innerHTML = ''; let cumul = 0;
+  arrivals.forEach((a,i) => {
+    const seg = document.createElement('div');
+    seg.className = 'r-segment';
+    seg.style.width = (a.prob*100)+'%';
+    seg.style.background = COLORS[i % COLORS.length];
+    const lo = cumul.toFixed(2); cumul += a.prob; const hi = cumul.toFixed(2);
+    if(a.prob >= 0.08) seg.innerHTML = `<span class="r-label-top">[${lo}-${hi}]</span>${a.time}m<span class="r-label-bottom">${(a.prob*100).toFixed(0)}%</span>`;
+    else if(a.prob > 0) seg.innerHTML = `<span class="r-label-bottom">${(a.prob*100).toFixed(0)}%</span>`;
+    bar.appendChild(seg);
+  });
+}
+
+// ── STOCHASTIC ENGINE ──
+function buildIntervals(arrivals){
+  let cumul = 0;
+  return arrivals.map(a => { const iv={lo:cumul,hi:cumul+a.prob,time:a.time}; cumul+=a.prob; return iv; });
+}
+function lookupDelta(rnd, ivs){
+  for(const iv of ivs) if(rnd >= iv.lo && rnd < iv.hi) return iv.time;
+  return ivs[ivs.length-1].time;
+}
+function expInverse(media, rnd){ return Math.ceil(media * Math.log(1 / rnd)); }
+
+function getSvcTime(rndSvc){
+  const distS = document.getElementById('distServicio').value;
+  if(distS === 'exponential'){
+    const media = parseFloat(document.getElementById('mediaServicio').value) || 5;
+    return { t: expInverse(media, rndSvc), media };
+  }
+  return { t: parseFloat(document.getElementById('serviceTime').value) || 5, media: null };
+}
+
+function getArrivalDelta(rndL){
+  const distL = document.getElementById('distLlegada').value;
+  if(distL === 'exponential'){
+    const media = parseFloat(document.getElementById('mediaLlegada').value) || 5;
+    return { delta: expInverse(media, rndL), media };
+  }
+  if(!intervals.length) intervals = buildIntervals(getArrivals());
+  return { delta: lookupDelta(rndL, intervals), media: null };
+}
+
+// ── RUN SIMULATION ──
+function runSimulation(){
+  const distL = document.getElementById('distLlegada').value;
+  if(distL === 'discrete' && !validateProbs()) return;
+  if(distL === 'discrete') intervals = buildIntervals(getArrivals());
+  const n = parseInt(document.getElementById('numOrders').value) || 10;
+  simData = [];
+  for(let i = 0; i < n; i++){
+    const rndL = parseFloat((Math.random()).toFixed(4));
+    const rndS = parseFloat((Math.random()).toFixed(4));
+    const { delta } = getArrivalDelta(rndL);
+    const { t: svc } = getSvcTime(rndS);
+    const prevArr = i > 0 ? simData[i-1].arr : 0;
+    const prevSal = i > 0 ? simData[i-1].sal : 0;
+    const arr = prevArr + delta;
+    const ini = Math.max(arr, prevSal);
+    const esp = parseFloat((ini - arr).toFixed(2));
+    const sal = parseFloat((ini + svc).toFixed(2));
+    simData.push({n:i+1, rndL, rndS, delta, svc, arr, ini, esp, sal});
+  }
+  currentStep = 0;
+  ['rouletteSection','bottleneckSection','tableSection'].forEach(id => document.getElementById(id).style.display = '');
+  document.getElementById('btnAdvance').classList.add('visible');
+  document.getElementById('btnAdvance').disabled = false;
+  document.getElementById('simBody').innerHTML = '';
+  const cc = document.getElementById('conclusionCard');
+  cc.classList.remove('visible','approved','failed'); cc.style.display = 'none';
+  showMod1(simData[0]);
+  const bi = simData.findIndex(r => r.esp > 0);
+  showBottleneck(bi > 0 ? bi : Math.min(1, simData.length-1));
+  advanceStep();
+}
+
+// ── MODULE 1 ──
+function showMod1(row){
+  const distL = document.getElementById('distLlegada').value;
+  if(distL === 'discrete'){
+    // Ruleta
+    const indicator = document.getElementById('r-indicator');
+    const pctPos = row.rndL * 100;
+    indicator.style.left = '0%'; indicator.classList.add('visible');
+    setTimeout(() => { indicator.style.left = pctPos + '%'; }, 100);
+    const arrivals = getArrivals(); let cumul = 0, segName='', segColor='', segProb=0;
+    for(let i=0; i<arrivals.length; i++){
+      if(row.rndL >= cumul && row.rndL < cumul+arrivals[i].prob){
+        segName=arrivals[i].time+' min'; segColor=COLORS[i%COLORS.length]; segProb=arrivals[i].prob; break;
+      } cumul += arrivals[i].prob;
+    }
+    const text = document.getElementById('rouletteText');
+    text.innerHTML = `<strong>RND Llegada = ${row.rndL.toFixed(4)}</strong> → impacta el segmento de <strong>${segName}</strong> (Prob: ${(segProb*100).toFixed(0)}%). La próxima orden tardará <strong>${row.delta} min</strong> en llegar.`;
+    setTimeout(() => document.getElementById('rouletteCard').classList.add('visible'), 300);
+  } else {
+    // Fórmula
+    const media = parseFloat(document.getElementById('mediaLlegada').value) || 5;
+    const fc = document.getElementById('formulaCard');
+    const ft = document.getElementById('formulaText');
+    ft.innerHTML = `<strong>RND Llegada = ${row.rndL.toFixed(4)}</strong> → t = (${media}) &middot; ln(1 / ${row.rndL.toFixed(4)}) = <strong style="color:var(--amber)">${row.delta} min</strong>`;
+    fc.style.display = 'flex';
+    setTimeout(() => fc.classList.add('visible'), 300);
+  }
+}
+
+function showBottleneck(idx){
+  if(idx <= 0 || !simData[idx]) return;
+  const row = simData[idx], prev = simData[idx-1];
+  document.getElementById('cardA').innerHTML = `La <strong>Orden N° ${prev.n}</strong> inició servicio en el min ${prev.ini} y tardó ${prev.svc} min → la máquina se libera en el <strong>minuto ${prev.sal}</strong>.`;
+  document.getElementById('cardAhl').textContent = `Fin Servicio ${prev.n} = ${prev.sal}`;
+  document.getElementById('cardB').innerHTML = `La <strong>Orden N° ${row.n}</strong> llega en el <strong>minuto ${row.arr}</strong> (RND = ${row.rndL.toFixed(2)}, Δ = ${row.delta} min).`;
+  document.getElementById('cardBhl').textContent = `Llegada ${row.n} = ${row.arr}`;
+  if(row.esp > 0){
+    document.getElementById('cardC').innerHTML = `Como <strong>${prev.sal} > ${row.arr}</strong>, la Orden N° ${row.n} espera en cola.`;
+    document.getElementById('cardCmath').textContent = `Espera = max(${row.arr}, ${prev.sal}) − ${row.arr} = ${row.esp} min`;
+  } else {
+    document.getElementById('cardC').innerHTML = `La máquina ya está libre (Fin prev = ${prev.sal} ≤ ${row.arr}). <strong>Sin espera.</strong>`;
+    document.getElementById('cardCmath').textContent = `Espera = 0 min`;
+  }
+  document.getElementById('cardCwrap').style.display = '';
+}
+
+// ── STEP BY STEP ──
+function advanceStep(){
+  if(currentStep >= simData.length){ document.getElementById('btnAdvance').disabled = true; return; }
+  const row = simData[currentStep];
+  const maxSvc = Math.max(...simData.map(r=>r.svc));
+  const maxEsp = Math.max(...simData.map(r=>r.esp));
+  const MAX_GANTT = maxEsp + maxSvc || maxSvc + 1;
+  const waitPct = (row.esp / MAX_GANTT) * 100;
+  const servPct = (row.svc / MAX_GANTT) * 100;
+  const tbody = document.getElementById('simBody');
+  const tr = document.createElement('tr');
+  if(row.esp === 0) tr.className = 'wait-0';
+  else if(row.esp <= 2) tr.className = 'wait-low';
+  else tr.className = 'wait-high row-flash';
+  const espColor = row.esp === 0 ? 'var(--emerald)' : (row.esp >= maxEsp && maxEsp > 0 ? 'var(--rose)' : 'inherit');
+  tr.innerHTML = `
+    <td><strong>#${row.n}</strong></td>
+    <td style="font-family:'Fira Code',monospace">${row.rndL.toFixed(4)}</td>
+    <td>${row.delta} min</td>
+    <td>Min ${row.arr}</td>
+    <td style="font-family:'Fira Code',monospace">${row.rndS.toFixed(4)}</td>
+    <td>${row.svc} min</td>
+    <td>Min ${row.ini}</td>
+    <td style="font-weight:700;color:${espColor}">${row.esp} min</td>
+    <td>Min ${row.sal}</td>
+    <td class="gantt-cell"><div class="mini-gantt"><div class="g-wait" style="width:${waitPct}%" title="Espera: ${row.esp}m"></div><div class="g-serv" style="width:${servPct}%" title="Servicio: ${row.svc}m"></div></div></td>`;
+  tbody.appendChild(tr);
+  showMod1(row);
+  currentStep++;
+  if(currentStep >= simData.length){ document.getElementById('btnAdvance').disabled = true; showConclusion(); }
+}
+
+// ── CONCLUSION ──
+function showConclusion(){
+  const kpi = parseFloat(document.getElementById('kpiTarget').value) || 3.0;
+  const totalWait = simData.reduce((s,r) => s + r.esp, 0);
+  const avg = totalWait / simData.length;
+  const card = document.getElementById('conclusionCard');
+  const waitStr = simData.map(r => r.esp).join(' + ');
+  document.getElementById('ccMath').innerHTML = `Promedio de Espera = (${waitStr}) / ${simData.length} = <strong>${avg.toFixed(2)} min</strong>`;
+  if(avg <= kpi){
+    card.className = 'conclusion-card visible approved';
+    document.getElementById('ccIcon').textContent = '✅';
+    document.getElementById('ccDesc').innerHTML = `<strong>Aprobado.</strong> Espera media = <strong>${avg.toFixed(2)} min</strong>. Se cumplió la meta de <strong>${kpi.toFixed(1)} min</strong>.`;
+  } else {
+    card.className = 'conclusion-card visible failed';
+    document.getElementById('ccIcon').textContent = '🚨';
+    document.getElementById('ccDesc').innerHTML = `<strong>Reprobado.</strong> Espera media = <strong>${avg.toFixed(2)} min</strong>. Se superó la meta de <strong>${kpi.toFixed(1)} min</strong>. Considerar reducir tiempo de servicio o agregar un canal.`;
+  }
+  card.style.display = 'block';
+}
+
+// ── INIT ──
+document.addEventListener('DOMContentLoaded', () => { validateProbs(); updateRoulette(); toggleDistUI(); });
+</script>
+
+<script src="menu.js"></script>
+</body>
+</html>

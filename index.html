@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -6,251 +6,134 @@
 <title>Investigación Operativa — Portal del Cursado · UTN</title>
 <meta name="description" content="Portal educativo de Investigación Operativa para la cursada del día sábado. UTN - Ingeniería Industrial.">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#0b0f19;
-  --surface:rgba(20,27,45,0.8);
-  --surface2:rgba(30,41,59,0.6);
-  --border:rgba(148,163,184,0.1);
-  --border2:rgba(148,163,184,0.18);
-  --text:#f1f5f9;
-  --text2:#94a3b8;
-  --text3:#64748b;
-  --accent:#3b82f6;
-  --accent-glow:rgba(59,130,246,0.15);
-  --emerald:#10b981;
-  --emerald-glow:rgba(16,185,129,0.12);
-  --amber:#f59e0b;
-  --amber-glow:rgba(245,158,11,0.12);
-  --purple:#8b5cf6;
-  --purple-glow:rgba(139,92,246,0.12);
-  --rose:#f43f5e;
-  --cyan:#06b6d4;
-}
-html{scroll-behavior:smooth}
-body{
-  font-family:'Inter',sans-serif;
-  background:var(--bg);
-  color:var(--text);
-  min-height:100vh;
+/* ── index.html exclusive styles ── */
+body {
   background-image:
-    radial-gradient(ellipse 80% 50% at 20% 0%,rgba(59,130,246,0.06),transparent),
-    radial-gradient(ellipse 60% 40% at 80% 100%,rgba(139,92,246,0.05),transparent);
+    radial-gradient(ellipse 80% 50% at 20% 0%, rgba(59,130,246,0.06), transparent),
+    radial-gradient(ellipse 60% 40% at 80% 100%, rgba(139,92,246,0.05), transparent);
 }
 
-/* ── NAV ── */
-.site-nav{
-  background:rgba(11,15,25,0.97);
-  border-bottom:1px solid var(--border);
-  padding:0 5%;
-  position:sticky;top:0;z-index:1000;
-  backdrop-filter:blur(16px);
-  display:flex;align-items:center;
-  height:52px;gap:0;
+/* HERO */
+.hero {
+  padding: 5rem 8% 4rem;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
 }
-.nav-logo{
-  display:flex;align-items:center;gap:8px;
-  text-decoration:none;color:var(--text);
-  font-weight:700;font-size:.9rem;
-  white-space:nowrap;
-  padding-right:20px;border-right:1px solid var(--border);
-  margin-right:16px;
+.hero::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse 70% 60% at 50% -10%, rgba(59,130,246,0.1), transparent);
+  pointer-events: none;
 }
-.nav-logo .dot{
-  width:8px;height:8px;border-radius:50%;
-  background:linear-gradient(135deg,var(--accent),var(--purple));
-  box-shadow:0 0 8px var(--accent);
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(59,130,246,0.1);
+  border: 1px solid rgba(59,130,246,0.25);
+  color: var(--accent);
+  padding: .35rem 1rem; border-radius: 999px;
+  font-size: .78rem; font-weight: 700;
+  letter-spacing: .8px; text-transform: uppercase;
+  margin-bottom: 1.5rem;
 }
-.nav-unit{
-  font-size:.72rem;font-weight:700;
-  text-transform:uppercase;letter-spacing:.8px;
-  color:var(--accent);white-space:nowrap;margin-right:8px;
+.hero h1 {
+  font-size: clamp(2rem,5vw,3.5rem);
+  font-weight: 800; letter-spacing: -.5px;
+  background: linear-gradient(135deg, #93c5fd 0%, #f8fafc 45%, #c4b5fd 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 1rem;
 }
-.nav-unit.u2{color:var(--emerald);}
-a.nav-link{
-  color:var(--text2);text-decoration:none;
-  font-size:.82rem;font-weight:500;
-  padding:0 10px;height:52px;
-  display:flex;align-items:center;
-  border-bottom:2px solid transparent;
-  transition:color .2s,border-color .2s;
-  white-space:nowrap;
+.hero-sub {
+  font-size: 1.1rem; color: var(--text2);
+  max-width: 580px; margin: 0 auto 2rem;
+  line-height: 1.7;
 }
-a.nav-link:hover{color:var(--text);}
-a.nav-link.active{color:var(--text);border-bottom-color:var(--accent);font-weight:600;}
-a.nav-link.active.u2{border-bottom-color:var(--emerald);}
-.nav-sep{width:1px;height:20px;background:var(--border);margin:0 10px;}
+.hero-meta {
+  display: flex; align-items: center; justify-content: center; gap: 2rem;
+  flex-wrap: wrap; font-size: .85rem; color: var(--text3);
+}
+.hero-meta span { display: flex; align-items: center; gap: 5px; }
 
-/* ── HERO ── */
-.hero{
-  padding:5rem 8% 4rem;
-  text-align:center;
-  border-bottom:1px solid var(--border);
-  position:relative;
-  overflow:hidden;
-}
-.hero::before{
-  content:'';position:absolute;inset:0;
-  background:radial-gradient(ellipse 70% 60% at 50% -10%,rgba(59,130,246,0.1),transparent);
-  pointer-events:none;
-}
-.hero-badge{
-  display:inline-flex;align-items:center;gap:6px;
-  background:rgba(59,130,246,0.1);
-  border:1px solid rgba(59,130,246,0.25);
-  color:var(--accent);
-  padding:.35rem 1rem;border-radius:999px;
-  font-size:.78rem;font-weight:700;
-  letter-spacing:.8px;text-transform:uppercase;
-  margin-bottom:1.5rem;
-}
-.hero h1{
-  font-size:clamp(2rem,5vw,3.5rem);
-  font-weight:800;letter-spacing:-.5px;
-  background:linear-gradient(135deg,#93c5fd 0%,#f8fafc 45%,#c4b5fd 100%);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-  background-clip:text;
-  margin-bottom:1rem;
-}
-.hero-sub{
-  font-size:1.1rem;color:var(--text2);
-  max-width:580px;margin:0 auto 2rem;
-  line-height:1.7;
-}
-.hero-meta{
-  display:flex;align-items:center;justify-content:center;gap:2rem;
-  flex-wrap:wrap;
-  font-size:.85rem;color:var(--text3);
-}
-.hero-meta span{display:flex;align-items:center;gap:5px;}
+/* CONTENT */
+.content { max-width: 1100px; margin: 0 auto; padding: 3.5rem 5%; }
 
-/* ── MAIN CONTENT ── */
-.content{max-width:1100px;margin:0 auto;padding:3.5rem 5%;}
+.section-header { display: flex; align-items: flex-end; gap: 1rem; margin-bottom: 1.5rem; }
+.section-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: .72rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1px;
+  padding: .3rem .8rem; border-radius: 6px; flex-shrink: 0;
+}
+.section-tag.u1 { background: rgba(59,130,246,.1); color: var(--accent); border: 1px solid rgba(59,130,246,.2); }
+.section-tag.u2 { background: rgba(16,185,129,.1); color: var(--emerald); border: 1px solid rgba(16,185,129,.2); }
+.section-tag.u4 { background: rgba(245,158,11,.1); color: var(--amber); border: 1px solid rgba(245,158,11,.2); }
+.section-tag.future { background: rgba(100,116,139,.08); color: var(--text3); border: 1px solid rgba(100,116,139,.15); }
+.section-title { font-size: 1.3rem; font-weight: 700; color: var(--text); }
+.section-desc { font-size: .88rem; color: var(--text2); margin-left: auto; text-align: right; max-width: 320px; }
+.divider { height: 1px; background: var(--border); margin: 2.5rem 0; }
 
-.section-header{
-  display:flex;align-items:flex-end;gap:1rem;
-  margin-bottom:1.5rem;
+/* TOOL CARDS */
+.tools-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px,1fr));
+  gap: 1rem;
 }
-.section-tag{
-  display:inline-flex;align-items:center;gap:6px;
-  font-size:.72rem;font-weight:700;
-  text-transform:uppercase;letter-spacing:1px;
-  padding:.3rem .8rem;border-radius:6px;
-  flex-shrink:0;
+.tool-card {
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 14px; padding: 1.5rem;
+  text-decoration: none; color: var(--text);
+  display: flex; flex-direction: column; gap: .75rem;
+  transition: transform .2s, border-color .25s, box-shadow .25s;
+  position: relative; overflow: hidden;
 }
-.section-tag.u1{background:rgba(59,130,246,.1);color:var(--accent);border:1px solid rgba(59,130,246,.2);}
-.section-tag.u2{background:rgba(16,185,129,.1);color:var(--emerald);border:1px solid rgba(16,185,129,.2);}
-.section-tag.future{background:rgba(100,116,139,.08);color:var(--text3);border:1px solid rgba(100,116,139,.15);}
-.section-title{font-size:1.3rem;font-weight:700;color:var(--text);}
-.section-desc{font-size:.88rem;color:var(--text2);margin-left:auto;text-align:right;max-width:320px;}
+.tool-card::before { content: ''; position: absolute; inset: 0; opacity: 0; transition: opacity .25s; border-radius: 14px; }
+.tool-card:hover { transform: translateY(-3px); }
+.tool-card.u1::before { background: var(--accent-glow); }
+.tool-card.u2::before { background: var(--emerald-glow); }
+.tool-card.u4::before { background: var(--amber-glow); }
+.tool-card.u1:hover { border-color: rgba(59,130,246,.4); box-shadow: 0 8px 32px rgba(59,130,246,.1); }
+.tool-card.u2:hover { border-color: rgba(16,185,129,.4); box-shadow: 0 8px 32px rgba(16,185,129,.1); }
+.tool-card.u4:hover { border-color: rgba(245,158,11,.4); box-shadow: 0 8px 32px rgba(245,158,11,.1); }
+.tool-card:hover::before { opacity: 1; }
 
-.divider{height:1px;background:var(--border);margin:2.5rem 0;}
+.tool-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: .5rem; }
+.tool-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.tool-card.u1 .tool-icon { background: rgba(59,130,246,.12); }
+.tool-card.u2 .tool-icon { background: rgba(16,185,129,.12); }
+.tool-card.u4 .tool-icon { background: rgba(245,158,11,.12); }
+.tool-badge { font-size: .68rem; font-weight: 700; padding: .2rem .6rem; border-radius: 6px; text-transform: uppercase; letter-spacing: .5px; white-space: nowrap; }
+.badge-available { background: rgba(16,185,129,.12); color: var(--emerald); border: 1px solid rgba(16,185,129,.25); }
+.badge-soon { background: rgba(100,116,139,.1); color: var(--text3); border: 1px solid rgba(100,116,139,.2); }
+.tool-name { font-size: 1rem; font-weight: 700; color: var(--text); line-height: 1.3; }
+.tool-desc { font-size: .82rem; color: var(--text2); line-height: 1.55; flex: 1; }
+.tool-footer { display: flex; align-items: center; justify-content: space-between; padding-top: .75rem; border-top: 1px solid var(--border); font-size: .75rem; color: var(--text3); }
+.tool-card.u1 .tool-arrow { color: var(--accent); }
+.tool-card.u2 .tool-arrow { color: var(--emerald); }
+.tool-card.u4 .tool-arrow { color: var(--amber); }
 
-/* ── TOOL CARDS ── */
-.tools-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
-  gap:1rem;
-}
-.tool-card{
-  background:var(--surface);
-  border:1px solid var(--border2);
-  border-radius:14px;
-  padding:1.5rem;
-  text-decoration:none;
-  color:var(--text);
-  display:flex;flex-direction:column;gap:.75rem;
-  transition:transform .2s,border-color .25s,box-shadow .25s;
-  position:relative;overflow:hidden;
-}
-.tool-card::before{
-  content:'';position:absolute;inset:0;opacity:0;
-  transition:opacity .25s;border-radius:14px;
-}
-.tool-card:hover{transform:translateY(-3px);}
-.tool-card.u1::before{background:var(--accent-glow);}
-.tool-card.u2::before{background:var(--emerald-glow);}
-.tool-card.u1:hover{border-color:rgba(59,130,246,.4);box-shadow:0 8px 32px rgba(59,130,246,.1);}
-.tool-card.u2:hover{border-color:rgba(16,185,129,.4);box-shadow:0 8px 32px rgba(16,185,129,.1);}
-.tool-card:hover::before{opacity:1;}
+/* FUTURE UNITS */
+.future-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(220px,1fr)); gap: .75rem; margin-top: 1rem; }
+.future-card { background: rgba(15,20,35,0.4); border: 1px dashed rgba(100,116,139,.2); border-radius: 12px; padding: 1.25rem; display: flex; flex-direction: column; gap: .5rem; }
+.future-name { font-size: .9rem; font-weight: 600; color: var(--text3); }
+.future-desc { font-size: .78rem; color: var(--text3); opacity: .7; }
 
-.tool-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem;}
-.tool-icon{
-  width:40px;height:40px;border-radius:10px;
-  display:flex;align-items:center;justify-content:center;
-  flex-shrink:0;
-}
-.tool-card.u1 .tool-icon{background:rgba(59,130,246,.12);}
-.tool-card.u2 .tool-icon{background:rgba(16,185,129,.12);}
-.tool-badge{
-  font-size:.68rem;font-weight:700;
-  padding:.2rem .6rem;border-radius:6px;
-  text-transform:uppercase;letter-spacing:.5px;
-  white-space:nowrap;
-}
-.badge-available{background:rgba(16,185,129,.12);color:var(--emerald);border:1px solid rgba(16,185,129,.25);}
-.badge-soon{background:rgba(100,116,139,.1);color:var(--text3);border:1px solid rgba(100,116,139,.2);}
+/* FOOTER (index-specific padding) */
+footer { padding: 2.5rem 5%; line-height: 1.8; }
 
-.tool-name{font-size:1rem;font-weight:700;color:var(--text);line-height:1.3;}
-.tool-desc{font-size:.82rem;color:var(--text2);line-height:1.55;flex:1;}
-.tool-footer{
-  display:flex;align-items:center;justify-content:space-between;
-  padding-top:.75rem;
-  border-top:1px solid var(--border);
-  font-size:.75rem;color:var(--text3);
-}
-.tool-card.u1 .tool-arrow{color:var(--accent);}
-.tool-card.u2 .tool-arrow{color:var(--emerald);}
-
-/* ── FUTURE UNITS ── */
-.future-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
-  gap:.75rem;
-  margin-top:1rem;
-}
-.future-card{
-  background:rgba(15,20,35,0.4);
-  border:1px dashed rgba(100,116,139,.2);
-  border-radius:12px;
-  padding:1.25rem;
-  display:flex;flex-direction:column;gap:.5rem;
-}
-.future-name{font-size:.9rem;font-weight:600;color:var(--text3);}
-.future-desc{font-size:.78rem;color:var(--text3);opacity:.7;}
-
-/* ── FOOTER ── */
-footer{
-  text-align:center;padding:2.5rem 5%;
-  border-top:1px solid var(--border);
-  color:var(--text3);font-size:.78rem;
-  line-height:1.8;
-}
-footer strong{color:var(--text2);}
-
-@media(max-width:640px){
-  .hero{padding:3rem 5% 2.5rem;}
-  .section-desc{display:none;}
+@media(max-width:640px) {
+  .hero { padding: 3rem 5% 2.5rem; }
+  .section-desc { display: none; }
 }
 </style>
 </head>
 <body>
 
-<nav class="site-nav">
-  <a href="index.html" class="nav-logo">
-    <div class="dot"></div>
-    IO · UTN
-  </a>
-  <span class="nav-unit">U1 · Markov</span>
-  <a href="simulador_markov.html" class="nav-link">Simulador</a>
-  <a href="ejercicio_call_center.html" class="nav-link">Call Center</a>
-  <a href="resolvedor_markov.html" class="nav-link">Resolvedor</a>
-  <a href="resolvedor_nacimiento_muerte.html" class="nav-link">Nac./Muerte</a>
-  <div class="nav-sep"></div>
-  <span class="nav-unit u2">U2 · Colas</span>
-  <a href="simulador_mmk.html" class="nav-link u2">Simulador M/M/k</a>
-</nav>
+<div id="nav-container"></div>
+
+
 
 <section class="hero">
   <div class="hero-badge">
@@ -378,6 +261,34 @@ footer strong{color:var(--text2);}
 
   <div class="divider"></div>
 
+  <!-- U4 -->
+  <div class="section-header">
+    <span class="section-tag u4">Unidad 4</span>
+    <div class="section-title">Simulación Montecarlo</div>
+    <div class="section-desc">Métodos estocásticos aplicados a problemas de tiempo e inventario en manufactura</div>
+  </div>
+
+  <div class="tools-grid">
+
+    <a href="simulador_montecarlo.html" class="tool-card u4">
+      <div class="tool-card-top">
+        <div class="tool-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+        </div>
+        <span class="tool-badge badge-available">Disponible</span>
+      </div>
+      <div class="tool-name">Simulador de Isla de Soldadura</div>
+      <div class="tool-desc">Módulo educativo que deconstruye la Simulación Montecarlo con ruletas interactivas, análisis de embotellamientos y cálculo visual de tiempos de espera con diagrama de Gantt.</div>
+      <div class="tool-footer">
+        <span>Ruleta probabilística · Gantt interactivo</span>
+        <span class="tool-arrow">→</span>
+      </div>
+    </a>
+
+  </div>
+
+  <div class="divider"></div>
+
   <!-- FUTURAS UNIDADES -->
   <div class="section-header">
     <span class="section-tag future">Próximamente</span>
@@ -388,14 +299,6 @@ footer strong{color:var(--text2);}
     <div class="future-card">
       <div class="future-name">Unidad 3 · Programación Lineal</div>
       <div class="future-desc">Simplex, dualidad y análisis de sensibilidad</div>
-    </div>
-    <div class="future-card">
-      <div class="future-name">Unidad 4 · Redes y Grafos</div>
-      <div class="future-desc">CPM, PERT y flujo en redes</div>
-    </div>
-    <div class="future-card">
-      <div class="future-name">Unidad 5 · Simulación</div>
-      <div class="future-desc">Método de Monte Carlo y simulación de eventos</div>
     </div>
     <div class="future-card">
       <div class="future-name">Unidad 6 · Inventarios</div>
@@ -410,5 +313,7 @@ footer strong{color:var(--text2);}
   Herramientas educativas de acceso libre para uso en clase y estudio individual.
 </footer>
 
+
+<script src="menu.js"></script>
 </body>
 </html>

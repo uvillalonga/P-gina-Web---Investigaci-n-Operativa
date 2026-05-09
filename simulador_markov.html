@@ -6,100 +6,15 @@
     <title>Simulador de Cadenas de Markov — IO · UTN</title>
     <meta name="description" content="Simulador interactivo de Cadenas de Markov para sistemas ergódicos, absorbentes, periódicos y transitorios.">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;800&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
     <style>
-        :root {
-            --bg-color: #0b0f19;
-            --surface: rgba(30, 41, 59, 0.7);
-            --surface-hover: rgba(30, 41, 59, 0.9);
-            --border: rgba(148, 163, 184, 0.1);
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --accent: #3b82f6;
-            --emerald: #10b981;
-            --rose: #f43f5e;
-            --amber: #f59e0b;
-            --purple: #8b5cf6;
-            --cyan: #06b6d4;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
+        /* ── simulador_markov.html — page-specific styles ── */
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            overflow-x: hidden;
             background-image: 
-                radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.05), transparent 25%),
-                radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.05), transparent 25%);
-        }
-
-        /* ── NAVBAR UNIFICADO ── */
-        .site-nav {
-            background: rgba(11, 15, 25, 0.95);
-            border-bottom: 1px solid var(--border);
-            padding: 0 5%;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            backdrop-filter: blur(12px);
-            display: flex;
-            align-items: center;
-            gap: 0;
-            height: 52px;
-        }
-        .site-nav .nav-logo {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            text-decoration: none;
-            color: var(--text-main);
-            font-weight: 700;
-            font-size: 0.9rem;
-            white-space: nowrap;
-            padding-right: 20px;
-            border-right: 1px solid var(--border);
-            margin-right: 16px;
-        }
-        .site-nav .nav-logo svg { opacity: 0.7; }
-        .site-nav .nav-unit {
-            font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            color: var(--accent);
-            white-space: nowrap;
-            margin-right: 10px;
-        }
-        .site-nav .nav-unit.u2 { color: var(--emerald); }
-        .site-nav a.nav-link {
-            color: var(--text-muted);
-            text-decoration: none;
-            font-size: 0.85rem;
-            font-weight: 500;
-            padding: 0 10px;
-            height: 52px;
-            display: flex;
-            align-items: center;
-            border-bottom: 2px solid transparent;
-            transition: color 0.2s, border-color 0.2s;
-            white-space: nowrap;
-        }
-        .site-nav a.nav-link:hover { color: var(--text-main); }
-        .site-nav a.nav-link.active {
-            color: var(--text-main);
-            border-bottom-color: var(--accent);
-            font-weight: 600;
-        }
-        .site-nav a.nav-link.active.u2 { border-bottom-color: var(--emerald); }
-        .site-nav .nav-sep {
-            width: 1px;
-            height: 20px;
-            background: var(--border);
-            margin: 0 8px;
+                radial-gradient(circle at 15% 50%, rgba(59,130,246,0.05), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(139,92,246,0.05), transparent 25%);
         }
 
         header {
@@ -114,7 +29,7 @@
         .header-left h1 {
             font-size: 1.8rem;
             font-weight: 800;
-            background: linear-gradient(to right, #60a5fa, #c084fc);
+            background: linear-gradient(to right, #3b82f6, #93c5fd);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 0.25rem;
@@ -380,20 +295,8 @@
 </head>
 <body>
 
-    <nav class="site-nav">
-        <a href="index.html" class="nav-logo">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-            IO · UTN
-        </a>
-        <span class="nav-unit">U1 · Markov</span>
-        <a href="simulador_markov.html" class="nav-link active">Simulador</a>
-        <a href="ejercicio_call_center.html" class="nav-link">Call Center</a>
-        <a href="resolvedor_markov.html" class="nav-link">Resolvedor</a>
-        <a href="resolvedor_nacimiento_muerte.html" class="nav-link">Nac./Muerte</a>
-        <div class="nav-sep"></div>
-        <span class="nav-unit u2">U2 · Colas</span>
-        <a href="simulador_mmk.html" class="nav-link u2">Simulador M/M/k</a>
-    </nav>
+    <div id="nav-container"></div>
+
 
     <header>
         <div class="header-left">
@@ -609,5 +512,7 @@
 
         window.onload = initApp;
     </script>
+
+<script src="menu.js"></script>
 </body>
 </html>
