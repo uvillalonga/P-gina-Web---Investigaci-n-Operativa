@@ -56,11 +56,11 @@ body {
 .btn-generate:disabled{opacity:0.4;cursor:not-allowed;}
 .btn-advance{background:rgba(16,185,129,0.15);color:var(--emerald);border:1px solid rgba(16,185,129,0.3);
   padding:.9rem 2.5rem;border-radius:12px;font-weight:700;font-size:1rem;cursor:pointer;
-  transition:transform .2s,background .2s,box-shadow .2s;display:none;margin:0 auto;}
+  transition:transform .2s,background .2s,box-shadow .2s;}
 .btn-advance:hover:not(:disabled){transform:translateY(-2px);background:rgba(16,185,129,0.25);
   box-shadow:0 6px 20px rgba(16,185,129,0.2);}
 .btn-advance:disabled{opacity:0.4;cursor:not-allowed;}
-.btn-advance.visible{display:block;}
+
 
 /* Roulette */
 .roulette-container{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:2.5rem;
@@ -305,8 +305,12 @@ body {
     </div>
   </div>
 
-  <!-- STEP BUTTON -->
-  <button class="btn-advance" id="btnAdvance" onclick="advanceStep()">▶ Avanzar Siguiente Orden</button>
+  <!-- STEP BUTTONS -->
+  <div id="sim-controls" style="display:none; justify-content:center; gap:1rem; margin:2rem 0;">
+    <button class="btn-advance" id="btnAuto" onclick="toggleAutoPlay()" style="margin:0; background:rgba(59,130,246,0.15); color:var(--accent); border-color:rgba(59,130,246,0.3);">⏯ Ejecutar Automático</button>
+    <button class="btn-advance" id="btnAdvance" onclick="advanceStep()" style="margin:0;">▶ Siguiente Orden</button>
+    <button class="btn-advance" id="btnFastForward" onclick="fastForward()" style="margin:0; background:rgba(245,158,11,0.15); color:var(--amber); border-color:rgba(245,158,11,0.3);">⏩ Ver Resultado Final</button>
+  </div>
 
   <!-- MODULE 3: Table & Gantt -->
   <div class="module-section" id="tableSection" style="display:none;">
@@ -336,6 +340,26 @@ body {
 <script>
 // ── STATE ──
 let simData = [], currentStep = 0, intervals = [];
+let isAutoPlaying = false, autoPlayInterval = null;
+
+function toggleAutoPlay() {
+  const btn = document.getElementById('btnAuto');
+  isAutoPlaying = !isAutoPlaying;
+  if(isAutoPlaying) {
+    btn.innerHTML = '⏸ Pausar';
+    autoPlayInterval = setInterval(advanceStep, 800);
+  } else {
+    btn.innerHTML = '⏯ Ejecutar Automático';
+    clearInterval(autoPlayInterval);
+  }
+}
+
+function fastForward() {
+  if(isAutoPlaying) toggleAutoPlay();
+  while(currentStep < simData.length) {
+    advanceStep();
+  }
+}
 const COLORS = ['#ef4444','#f97316','#10b981','#3b82f6','#8b5cf6','#06b6d4','#ec4899','#84cc16'];
 
 // ── DISTRIBUTION UI TOGGLE ──
@@ -454,8 +478,10 @@ function runSimulation(){
   }
   currentStep = 0;
   ['rouletteSection','bottleneckSection','tableSection'].forEach(id => document.getElementById(id).style.display = '');
-  document.getElementById('btnAdvance').classList.add('visible');
+  document.getElementById('sim-controls').style.display = 'flex';
   document.getElementById('btnAdvance').disabled = false;
+  document.getElementById('btnAuto').disabled = false;
+  document.getElementById('btnFastForward').disabled = false;
   document.getElementById('simBody').innerHTML = '';
   const cc = document.getElementById('conclusionCard');
   cc.classList.remove('visible','approved','failed'); cc.style.display = 'none';
@@ -540,7 +566,14 @@ function advanceStep(){
   tbody.appendChild(tr);
   showMod1(row);
   currentStep++;
-  if(currentStep >= simData.length){ document.getElementById('btnAdvance').disabled = true; showConclusion(); }
+  if(currentStep >= simData.length){ 
+    clearInterval(autoPlayInterval);
+    if(isAutoPlaying) toggleAutoPlay();
+    document.getElementById('btnAdvance').disabled = true; 
+    document.getElementById('btnAuto').disabled = true;
+    document.getElementById('btnFastForward').disabled = true;
+    showConclusion(); 
+  }
 }
 
 // ── CONCLUSION ──
