@@ -23,7 +23,7 @@
     // Unidad 2 · Teoría de Colas
     { href: 'simulador_mmk.html',              label: 'Simulador M/M/k',  unit: 'u2' },
     // Unidad 4 · Simulación
-    { href: 'simulador_montecarlo.html',       label: 'Isla de Soldadura', unit: 'u4' },
+    { href: 'simulador_montecarlo.html',       label: 'Filas de Espera', unit: 'u4' },
   ];
 
   // ── Helpers ────────────────────────────────────────────────────────────────

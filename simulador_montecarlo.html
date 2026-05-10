@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Simulador Montecarlo — Isla de Soldadura · UTN</title>
+<title>Simulación Montecarlo: Filas de Espera</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 <style>
@@ -86,28 +86,51 @@ body {
   display:flex;align-items:center;justify-content:center;color:var(--r2);flex-shrink:0;}
 .rc-text{font-size:.95rem;line-height:1.5;color:var(--text);}
 .rc-text strong{color:var(--amber);}
-
-/* Bottleneck */
-.bottleneck-container{display:flex;flex-direction:column;gap:2rem;position:relative;display:none;}
-.bottleneck-container.visible{display:flex;}
-.cards-row{display:flex;gap:2rem;}
-@media(max-width:768px){.cards-row{flex-direction:column;}}
-.b-card{flex:1;background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:2rem 1.5rem;
-  position:relative;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,0.15);transition:transform .3s;}
-.b-card:hover{transform:translateY(-5px);}
-.bc-icon{width:56px;height:56px;border-radius:14px;margin:0 auto 1.5rem;display:flex;align-items:center;justify-content:center;}
-.b-card.m .bc-icon{background:rgba(59,130,246,0.15);color:var(--accent);}
-.b-card.p .bc-icon{background:rgba(16,185,129,0.15);color:var(--emerald);}
-.b-card.c .bc-icon{background:rgba(244,63,94,0.15);color:var(--rose);}
-.b-card.m{border-top:3px solid var(--accent);}
-.b-card.p{border-top:3px solid var(--emerald);}
-.b-card.c{border:2px solid rgba(244,63,94,0.4);background:rgba(244,63,94,0.05);}
-.bc-title{font-size:1.1rem;font-weight:700;margin-bottom:1rem;color:var(--text);}
-.bc-text{font-size:.9rem;color:var(--text2);line-height:1.6;}
-.bc-text strong{color:var(--text);}
-.bc-highlight{display:inline-block;background:rgba(255,255,255,0.05);padding:.5rem 1rem;border-radius:8px;
-  margin-top:1rem;font-family:'Fira Code',monospace;font-size:.85rem;}
-.bc-math{font-size:1.1rem;font-weight:700;color:var(--rose);margin-top:.5rem;}
+/* Flow Dashboard */
+.flow-container {
+  display: flex; align-items: center; justify-content: center;
+  gap: 0.5rem; margin-bottom: 2rem; padding: 1.5rem;
+  background: rgba(0,0,0,0.2); border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.05);
+  font-family: var(--font-mono);
+}
+.flow-zone { text-align: center; position: relative; flex: 1; }
+.zone-label {
+  font-size: 0.75rem; color: var(--text2); text-transform: uppercase;
+  letter-spacing: 0.05em; margin-bottom: 0.75rem;
+}
+.flow-arrow { font-size: 1.5rem; color: rgba(255,255,255,0.1); user-select: none; }
+.portal {
+  width: 50px; height: 50px; border-radius: 50%;
+  margin: 0 auto; background: rgba(255,255,255,0.03);
+  border: 2px dashed rgba(255,255,255,0.1);
+}
+.queue-line {
+  height: 50px; display: flex; justify-content: center;
+  align-items: center; gap: 4px; padding: 0 10px;
+  background: rgba(0,0,0,0.1); border-radius: 8px;
+}
+.server-station {
+  width: 80px; height: 50px; border-radius: 4px; margin: 0 auto;
+  border: 2px solid rgba(255,255,255,0.1);
+  background: rgba(0,0,0,0.2);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: none;
+  transition: border-color 0.6s ease-in-out;
+}
+.server-station.occupied { border-color: var(--amber); background: rgba(245,158,11,0.05); }
+.token {
+  width: 35px; height: 35px; background: var(--accent);
+  color: white; display: flex; align-items: center; justify-content: center;
+  border-radius: 4px; position: relative; opacity: 0;
+  transition: all 1.2s cubic-bezier(0.4, 0, 0.2, 1); user-select: none; z-index: 10;
+}
+/* Estados visuales específicos */
+.token.in-portal { opacity: 1; transform: scale(1); }
+.token.in-queue { opacity: 1; transform: scale(1); }
+.token.in-server { opacity: 1; transform: scale(1.1); background: var(--amber); z-index: 20; }
+.token.disappearing { opacity: 0; transform: scale(0.1); }
+.token.exiting { opacity: 0; transform: scale(0.5) translateX(200px); }
 
 /* Table & Gantt */
 .table-wrapper{background:var(--surface);border:1px solid var(--border2);border-radius:16px;overflow-x:auto;
@@ -154,8 +177,8 @@ body {
 
 
 <div class="page-header u4">
-  <h1>Simulación Montecarlo</h1>
-  <p>Análisis estocástico de una Isla de Soldadura. Deconstrucción visual del azar, tiempos de espera y cuellos de botella gerenciales.</p>
+  <h1>Simulación Montecarlo: Filas de Espera</h1>
+  <p>Análisis estocástico de sistemas de espera. Deconstrucción visual del azar, tiempos de espera y cuellos de botella gerenciales.</p>
 </div>
 
 <div class="container">
@@ -180,8 +203,14 @@ body {
             </select>
           </div>
           <div class="cp-field" id="expLlegadaField" style="display:none;">
-            <label>Media de Llegadas (1/<span style="text-transform: none;">&lambda;</span>) [min]</label>
-            <input type="number" id="mediaLlegada" value="5" min="0.1" step="0.1" class="cp-field input">
+            <label>Parámetro de Llegadas (<span style="text-transform: none;">&lambda;</span>)</label>
+            <div style="display:flex; gap:5px;">
+              <input type="number" id="valLlegada" value="5" min="0.1" step="0.1" class="cp-field input">
+              <select id="unitLlegada" class="dist-select" style="width:auto;">
+                <option value="mean">Minutos / orden (Media)</option>
+                <option value="rate">Órdenes / hora (Tasa)</option>
+              </select>
+            </div>
           </div>
         </div>
         <div id="llegadaTableWrapper">
@@ -216,8 +245,14 @@ body {
             <input type="number" id="serviceTime" value="5" min="1" step="1">
           </div>
           <div class="cp-field" id="svcExpField" style="display:none;">
-            <label>Media de Servicio (1/<span style="text-transform: none;">&mu;</span>) [min]</label>
-            <input type="number" id="mediaServicio" value="5" min="0.1" step="0.1">
+            <label>Parámetro de Servicio (<span style="text-transform: none;">&mu;</span>)</label>
+            <div style="display:flex; gap:5px;">
+              <input type="number" id="valServicio" value="5" min="0.1" step="0.1" class="cp-field input">
+              <select id="unitServicio" class="dist-select" style="width:auto;">
+                <option value="mean">Minutos / orden (Media)</option>
+                <option value="rate">Órdenes / hora (Tasa)</option>
+              </select>
+            </div>
           </div>
         </div>
       </div>
@@ -236,74 +271,77 @@ body {
     </div>
   </div>
 
-  <!-- MODULE 1: Roulette / Formula -->
+  <!-- MODULE 1: Motores Estocásticos -->
   <div class="module-section" id="rouletteSection" style="display:none;">
     <div class="module-header">
       <span class="module-tag">Módulo 1</span>
-      <div class="module-title" id="mod1Title">La Ruleta de Montecarlo</div>
-      <div class="module-desc" id="mod1Desc">Transformando el azar puro en realidad operativa.</div>
+      <div class="module-title" id="mod1Title">Motores Estocásticos</div>
+      <div class="module-desc" id="mod1Desc">Transformación estocástica: Generación de tiempos de arribo y servicio mediante el azar (RND).</div>
     </div>
-    <!-- Panel A: Ruleta (distribución discreta) -->
-    <div id="roulettePanel">
-      <div class="roulette-container">
-        <div class="roulette-bar-wrapper">
-          <div class="roulette-bar" id="rouletteBar"></div>
-          <div class="r-indicator" id="r-indicator"></div>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+      <!-- Motor Llegadas -->
+      <div>
+        <div style="font-size:1.1rem; font-weight:700; color:var(--amber); margin-bottom:1rem;">Motor de Llegadas (<span style="text-transform: none;">&lambda;</span>)</div>
+        <div id="llegadaRoulettePanel">
+          <div class="roulette-container">
+            <div class="roulette-bar-wrapper">
+              <div class="roulette-bar" id="rouletteBar"></div>
+              <div class="r-indicator" id="r-indicator"></div>
+            </div>
+            <div class="roulette-card" id="rouletteCardL">
+              <div class="rc-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="M2 12h2"/><path d="M20 12h2"/></svg></div>
+              <div class="rc-text" id="rouletteTextL"></div>
+            </div>
+          </div>
         </div>
-        <div class="roulette-card" id="rouletteCard">
-          <div class="rc-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="M2 12h2"/><path d="M20 12h2"/></svg></div>
-          <div class="rc-text" id="rouletteText"></div>
+        <div id="llegadaFormulaPanel" style="display:none;">
+          <div class="roulette-container">
+            <div style="text-align:center;padding:1rem 0 .5rem;">
+              <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:1rem;">Distribución Exponencial</div>
+              <div style="font-family:'Fira Code',monospace;font-size:1.2rem;font-weight:700;color:var(--amber);background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:12px;padding:1rem;display:inline-block;margin-bottom:1rem;">
+                t = (1/&lambda;) &middot; ln(1/RND)
+              </div>
+            </div>
+            <div class="roulette-card" id="formulaCardL" style="display:none;">
+              <div class="rc-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 2l20 20"/><path d="M9 9h.01"/><path d="M15 15h.01"/></svg></div>
+              <div class="rc-text" id="formulaTextL"></div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-    <!-- Panel B: Fórmula Exponencial -->
-    <div id="formulaPanel" style="display:none;">
-      <div class="roulette-container">
-        <div style="text-align:center;padding:1rem 0 .5rem;">
-          <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:1rem;">Transformada Inversa · Distribución Exponencial</div>
-          <div style="font-family:'Fira Code',monospace;font-size:1.4rem;font-weight:700;color:var(--amber);background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:12px;padding:1.2rem 2rem;display:inline-block;margin-bottom:1.5rem;">
-            t = (1 / &lambda;) &middot; ln(1 / RND)
+
+      <!-- Motor Servicio -->
+      <div>
+        <div style="font-size:1.1rem; font-weight:700; color:var(--emerald); margin-bottom:1rem;">Motor de Servicio (&mu;)</div>
+        <div id="servicioFixedPanel" style="display:none;">
+          <div class="roulette-container" style="text-align:center;">
+            <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:1rem;">Tiempo Fijo Constante</div>
+            <div class="roulette-card" id="fixedCardS" style="display:none; text-align:left;">
+              <div class="rc-icon" style="color:var(--emerald);background:rgba(16,185,129,0.2);"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+              <div class="rc-text" id="fixedTextS"></div>
+            </div>
           </div>
-          <div style="color:var(--text2);font-size:.9rem;max-width:600px;margin:0 auto 1.5rem;">Donde <strong style="color:var(--text)">1/&lambda;</strong> es la media de la distribución y <strong style="color:var(--text)">RND</strong> es un número uniforme.</div>
         </div>
-        <div class="roulette-card" id="formulaCard" style="display:none;">
-          <div class="rc-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 2l20 20"/><path d="M9 9h.01"/><path d="M15 15h.01"/></svg></div>
-          <div class="rc-text" id="formulaText"></div>
+        <div id="servicioFormulaPanel" style="display:none;">
+          <div class="roulette-container">
+            <div style="text-align:center;padding:1rem 0 .5rem;">
+              <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:1rem;">Distribución Exponencial</div>
+              <div style="font-family:'Fira Code',monospace;font-size:1.2rem;font-weight:700;color:var(--emerald);background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:12px;padding:1rem;display:inline-block;margin-bottom:1rem;">
+                t = (1/&mu;) &middot; ln(1/RND)
+              </div>
+            </div>
+            <div class="roulette-card" id="formulaCardS" style="display:none;">
+              <div class="rc-icon" style="color:var(--emerald);background:rgba(16,185,129,0.2);"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 2l20 20"/><path d="M9 9h.01"/><path d="M15 15h.01"/></svg></div>
+              <div class="rc-text" id="formulaTextS"></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- MODULE 2: Bottleneck -->
-  <div class="module-section" id="bottleneckSection" style="display:none;">
-    <div class="module-header">
-      <span class="module-tag">Módulo 2</span>
-      <div class="module-title">El Embotellamiento</div>
-      <div class="module-desc">La lógica del reloj de simulación. En las filas de espera, el cuello de botella ocurre cuando el <strong>Tiempo de Llegada</strong> choca contra el <strong>Tiempo de Salida</strong> de la orden anterior.</div>
-    </div>
-    <div class="bottleneck-container visible" id="bottleneckCards">
-      <div class="cards-row">
-        <div class="b-card m">
-          <div class="bc-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
-          <div class="bc-title">Tarjeta A (La Máquina)</div>
-          <div class="bc-text" id="cardA">Generá una simulación para ver los datos.</div>
-          <div class="bc-highlight" id="cardAhl"></div>
-        </div>
-        <div class="b-card p">
-          <div class="bc-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>
-          <div class="bc-title">Tarjeta B (La Nueva Pieza)</div>
-          <div class="bc-text" id="cardB">Generá una simulación para ver los datos.</div>
-          <div class="bc-highlight" id="cardBhl"></div>
-        </div>
-      </div>
-      <div class="b-card c" style="margin:0 auto;max-width:600px;" id="cardCwrap">
-        <div class="bc-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
-        <div class="bc-title">Tarjeta C (El Choque)</div>
-        <div class="bc-text" id="cardC">Generá una simulación para ver los datos.</div>
-        <div class="bc-math" id="cardCmath"></div>
-      </div>
-    </div>
-  </div>
+
 
   <!-- STEP BUTTONS -->
   <div id="sim-controls" style="display:none; justify-content:center; gap:1rem; margin:2rem 0;">
@@ -317,7 +355,24 @@ body {
     <div class="module-header">
       <span class="module-tag">Módulo 3</span>
       <div class="module-title">Registro Histórico y Gantt</div>
-      <div class="module-desc">Consolidación de las 10 corridas estocásticas. Las filas críticas están resaltadas según el tiempo perdido en el sistema.</div>
+      <div class="module-desc">Cronograma de Simulación: Evolución temporal del sistema y estado de la fila en tiempo real.</div>
+    </div>
+    <div id="flow-dashboard" class="flow-container">
+      <div class="flow-zone input-zone">
+        <div class="zone-label">Entradas (<span style="text-transform: none;">&lambda;</span>)</div>
+        <div class="portal" id="portal-in"></div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-zone queue-zone">
+        <div class="zone-label">Fila de Espera</div>
+        <div id="queue-counter" style="position: absolute; top: -2.5rem; left: 50%; transform: translateX(-50%); z-index: 50; font-size: 1rem; color: var(--amber); font-weight: bold; background: rgba(0,0,0,0.4); padding: 2px 8px; border-radius: 4px; display: none;">En Fila: <span id="queue-count-num">0</span></div>
+        <div class="queue-line" id="flow-queue"></div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-zone server-zone">
+        <div class="zone-label">Servicio (1/<span style="text-transform: none;">&mu;</span>)</div>
+        <div class="server-station" id="flow-server"></div>
+      </div>
     </div>
     <div class="table-wrapper">
         <table class="sim-table">
@@ -341,23 +396,48 @@ body {
 // ── STATE ──
 let simData = [], currentStep = 0, intervals = [];
 let isAutoPlaying = false, autoPlayInterval = null;
+let activeTokens = {};
+let isAnimating = false;
+let isFastForwarding = false;
+const sleep = (ms) => new Promise(r => setTimeout(r, isFastForwarding ? 0 : ms));
 
-function toggleAutoPlay() {
+function updateQueueCounter() {
+  const queueCounter = document.getElementById('queue-counter');
+  if(!queueCounter) return;
+  const inQueue = document.querySelectorAll('#flow-queue .token').length;
+  if(inQueue > 0) {
+    queueCounter.style.display = 'block';
+    document.getElementById('queue-count-num').textContent = inQueue;
+  } else {
+    queueCounter.style.display = 'none';
+  }
+}
+
+async function toggleAutoPlay() {
   const btn = document.getElementById('btnAuto');
   isAutoPlaying = !isAutoPlaying;
   if(isAutoPlaying) {
     btn.innerHTML = '⏸ Pausar';
-    autoPlayInterval = setInterval(advanceStep, 800);
+    while(isAutoPlaying && currentStep < simData.length) {
+      await advanceStep();
+      if(isAutoPlaying && currentStep < simData.length) await sleep(500);
+    }
+    if(currentStep >= simData.length) {
+      isAutoPlaying = false;
+      btn.innerHTML = '⏯ Ejecutar Automático';
+    }
   } else {
     btn.innerHTML = '⏯ Ejecutar Automático';
-    clearInterval(autoPlayInterval);
+    if(!isAnimating) document.getElementById('btnAdvance').disabled = false;
   }
 }
 
-function fastForward() {
-  if(isAutoPlaying) toggleAutoPlay();
+async function fastForward() {
+  isAutoPlaying = false;
+  document.getElementById('btnAuto').innerHTML = '⏯ Ejecutar Automático';
+  isFastForwarding = true;
   while(currentStep < simData.length) {
-    advanceStep();
+    await advanceStep();
   }
 }
 const COLORS = ['#ef4444','#f97316','#10b981','#3b82f6','#8b5cf6','#06b6d4','#ec4899','#84cc16'];
@@ -370,14 +450,13 @@ function toggleDistUI(){
   document.getElementById('expLlegadaField').style.display    = distL === 'exponential' ? '' : 'none';
   document.getElementById('svcFixedField').style.display      = distS === 'fixed' ? '' : 'none';
   document.getElementById('svcExpField').style.display        = distS === 'exponential' ? '' : 'none';
+  
   // Module 1 panel switch
-  const isDiscrete = distL === 'discrete';
-  document.getElementById('roulettePanel').style.display  = isDiscrete ? '' : 'none';
-  document.getElementById('formulaPanel').style.display   = isDiscrete ? 'none' : '';
-  document.getElementById('mod1Title').textContent = isDiscrete ? 'La Ruleta de Montecarlo' : 'Transformada Inversa: del RND al tiempo';
-  document.getElementById('mod1Desc').textContent  = isDiscrete
-    ? 'Transformando el azar puro en realidad operativa. A cada rango de probabilidad se le asigna un tiempo empírico.'
-    : 'La distribución exponencial modela tiempos entre eventos aleatorios. La transformada inversa convierte un RND uniforme en un tiempo de espera real.';
+  document.getElementById('llegadaRoulettePanel').style.display = distL === 'discrete' ? '' : 'none';
+  document.getElementById('llegadaFormulaPanel').style.display  = distL === 'exponential' ? '' : 'none';
+  document.getElementById('servicioFixedPanel').style.display   = distS === 'fixed' ? '' : 'none';
+  document.getElementById('servicioFormulaPanel').style.display = distS === 'exponential' ? '' : 'none';
+  
   if(distL === 'discrete') validateProbs();
 }
 
@@ -440,7 +519,9 @@ function expInverse(media, rnd){ return Math.ceil(media * Math.log(1 / rnd)); }
 function getSvcTime(rndSvc){
   const distS = document.getElementById('distServicio').value;
   if(distS === 'exponential'){
-    const media = parseFloat(document.getElementById('mediaServicio').value) || 5;
+    const val = parseFloat(document.getElementById('valServicio').value) || 5;
+    const unit = document.getElementById('unitServicio').value;
+    const media = unit === 'rate' ? 60 / val : val;
     return { t: expInverse(media, rndSvc), media };
   }
   return { t: parseFloat(document.getElementById('serviceTime').value) || 5, media: null };
@@ -449,7 +530,9 @@ function getSvcTime(rndSvc){
 function getArrivalDelta(rndL){
   const distL = document.getElementById('distLlegada').value;
   if(distL === 'exponential'){
-    const media = parseFloat(document.getElementById('mediaLlegada').value) || 5;
+    const val = parseFloat(document.getElementById('valLlegada').value) || 5;
+    const unit = document.getElementById('unitLlegada').value;
+    const media = unit === 'rate' ? 60 / val : val;
     return { delta: expInverse(media, rndL), media };
   }
   if(!intervals.length) intervals = buildIntervals(getArrivals());
@@ -477,7 +560,18 @@ function runSimulation(){
     simData.push({n:i+1, rndL, rndS, delta, svc, arr, ini, esp, sal});
   }
   currentStep = 0;
-  ['rouletteSection','bottleneckSection','tableSection'].forEach(id => document.getElementById(id).style.display = '');
+  activeTokens = {};
+  isFastForwarding = false;
+  isAnimating = false;
+  ['portal-in', 'flow-queue', 'flow-server', 'portal-out'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) {
+      el.innerHTML = '';
+      if(id === 'flow-server') el.classList.remove('occupied');
+    }
+  });
+  updateQueueCounter();
+  ['rouletteSection','tableSection'].forEach(id => document.getElementById(id).style.display = '');
   document.getElementById('sim-controls').style.display = 'flex';
   document.getElementById('btnAdvance').disabled = false;
   document.getElementById('btnAuto').disabled = false;
@@ -485,61 +579,71 @@ function runSimulation(){
   document.getElementById('simBody').innerHTML = '';
   const cc = document.getElementById('conclusionCard');
   cc.classList.remove('visible','approved','failed'); cc.style.display = 'none';
+  ['rouletteCardL', 'formulaCardL', 'fixedCardS', 'formulaCardS'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.classList.remove('visible');
+  });
   showMod1(simData[0]);
-  const bi = simData.findIndex(r => r.esp > 0);
-  showBottleneck(bi > 0 ? bi : Math.min(1, simData.length-1));
   advanceStep();
 }
 
 // ── MODULE 1 ──
 function showMod1(row){
   const distL = document.getElementById('distLlegada').value;
+  const distS = document.getElementById('distServicio').value;
+  
+  // Motor Llegadas
   if(distL === 'discrete'){
-    // Ruleta
     const indicator = document.getElementById('r-indicator');
     const pctPos = row.rndL * 100;
     indicator.style.left = '0%'; indicator.classList.add('visible');
     setTimeout(() => { indicator.style.left = pctPos + '%'; }, 100);
-    const arrivals = getArrivals(); let cumul = 0, segName='', segColor='', segProb=0;
+    const arrivals = getArrivals(); let cumul = 0, segName='', segProb=0;
     for(let i=0; i<arrivals.length; i++){
       if(row.rndL >= cumul && row.rndL < cumul+arrivals[i].prob){
-        segName=arrivals[i].time+' min'; segColor=COLORS[i%COLORS.length]; segProb=arrivals[i].prob; break;
+        segName=arrivals[i].time+' min'; segProb=arrivals[i].prob; break;
       } cumul += arrivals[i].prob;
     }
-    const text = document.getElementById('rouletteText');
-    text.innerHTML = `<strong>RND Llegada = ${row.rndL.toFixed(4)}</strong> → impacta el segmento de <strong>${segName}</strong> (Prob: ${(segProb*100).toFixed(0)}%). La próxima orden tardará <strong>${row.delta} min</strong> en llegar.`;
-    setTimeout(() => document.getElementById('rouletteCard').classList.add('visible'), 300);
+    const textL = document.getElementById('rouletteTextL');
+    textL.innerHTML = `<strong>RND Llegada = ${row.rndL.toFixed(4)}</strong> → segmento de <strong>${segName}</strong>. Llegará en <strong style="color:var(--amber)">${row.delta} min</strong>.`;
+    setTimeout(() => document.getElementById('rouletteCardL').classList.add('visible'), 300);
   } else {
-    // Fórmula
-    const media = parseFloat(document.getElementById('mediaLlegada').value) || 5;
-    const fc = document.getElementById('formulaCard');
-    const ft = document.getElementById('formulaText');
-    ft.innerHTML = `<strong>RND Llegada = ${row.rndL.toFixed(4)}</strong> → t = (${media}) &middot; ln(1 / ${row.rndL.toFixed(4)}) = <strong style="color:var(--amber)">${row.delta} min</strong>`;
-    fc.style.display = 'flex';
-    setTimeout(() => fc.classList.add('visible'), 300);
+    const valL = parseFloat(document.getElementById('valLlegada').value) || 5;
+    const unitL = document.getElementById('unitLlegada').value;
+    const mediaL = unitL === 'rate' ? parseFloat((60 / valL).toFixed(2)) : valL;
+    const fcL = document.getElementById('formulaCardL');
+    document.getElementById('formulaTextL').innerHTML = `<strong>RND Llegada = ${row.rndL.toFixed(4)}</strong> → t = (${mediaL}) &middot; ln(1 / ${row.rndL.toFixed(4)}) = <strong style="color:var(--amber)">${row.delta} min</strong>`;
+    fcL.style.display = 'flex';
+    setTimeout(() => fcL.classList.add('visible'), 300);
+  }
+
+  // Motor Servicio
+  if(distS === 'fixed'){
+    const fcS = document.getElementById('fixedCardS');
+    document.getElementById('fixedTextS').innerHTML = `Tiempo constante configurado. Tardará <strong style="color:var(--emerald)">${row.svc} min</strong>.`;
+    fcS.style.display = 'flex';
+    setTimeout(() => fcS.classList.add('visible'), 300);
+  } else {
+    const valS = parseFloat(document.getElementById('valServicio').value) || 5;
+    const unitS = document.getElementById('unitServicio').value;
+    const mediaS = unitS === 'rate' ? parseFloat((60 / valS).toFixed(2)) : valS;
+    const fcS = document.getElementById('formulaCardS');
+    document.getElementById('formulaTextS').innerHTML = `<strong>RND Servicio = ${row.rndS.toFixed(4)}</strong> → t = (${mediaS}) &middot; ln(1 / ${row.rndS.toFixed(4)}) = <strong style="color:var(--emerald)">${row.svc} min</strong>`;
+    fcS.style.display = 'flex';
+    setTimeout(() => fcS.classList.add('visible'), 300);
   }
 }
 
-function showBottleneck(idx){
-  if(idx <= 0 || !simData[idx]) return;
-  const row = simData[idx], prev = simData[idx-1];
-  document.getElementById('cardA').innerHTML = `La <strong>Orden N° ${prev.n}</strong> inició servicio en el min ${prev.ini} y tardó ${prev.svc} min → la máquina se libera en el <strong>minuto ${prev.sal}</strong>.`;
-  document.getElementById('cardAhl').textContent = `Fin Servicio ${prev.n} = ${prev.sal}`;
-  document.getElementById('cardB').innerHTML = `La <strong>Orden N° ${row.n}</strong> llega en el <strong>minuto ${row.arr}</strong> (RND = ${row.rndL.toFixed(2)}, Δ = ${row.delta} min).`;
-  document.getElementById('cardBhl').textContent = `Llegada ${row.n} = ${row.arr}`;
-  if(row.esp > 0){
-    document.getElementById('cardC').innerHTML = `Como <strong>${prev.sal} > ${row.arr}</strong>, la Orden N° ${row.n} espera en cola.`;
-    document.getElementById('cardCmath').textContent = `Espera = max(${row.arr}, ${prev.sal}) − ${row.arr} = ${row.esp} min`;
-  } else {
-    document.getElementById('cardC').innerHTML = `La máquina ya está libre (Fin prev = ${prev.sal} ≤ ${row.arr}). <strong>Sin espera.</strong>`;
-    document.getElementById('cardCmath').textContent = `Espera = 0 min`;
-  }
-  document.getElementById('cardCwrap').style.display = '';
-}
+
 
 // ── STEP BY STEP ──
-function advanceStep(){
+async function advanceStep(){
+  if(isAnimating) return;
   if(currentStep >= simData.length){ document.getElementById('btnAdvance').disabled = true; return; }
+  isAnimating = true;
+  document.getElementById('btnAdvance').disabled = true;
+  document.getElementById('btnAuto').disabled = true;
+  
   const row = simData[currentStep];
   const maxSvc = Math.max(...simData.map(r=>r.svc));
   const maxEsp = Math.max(...simData.map(r=>r.esp));
@@ -564,11 +668,75 @@ function advanceStep(){
     <td>Min ${row.sal}</td>
     <td class="gantt-cell"><div class="mini-gantt"><div class="g-wait" style="width:${waitPct}%" title="Espera: ${row.esp}m"></div><div class="g-serv" style="width:${servPct}%" title="Servicio: ${row.svc}m"></div></div></td>`;
   tbody.appendChild(tr);
+
+  // A. Salidas y Servidor
+  for (let orderN in activeTokens) {
+    const tObj = activeTokens[orderN];
+    if (tObj.data.sal <= row.arr) {
+      const el = tObj.el;
+      el.classList.add('disappearing');
+      await sleep(800);
+      if(el.parentNode) el.parentNode.removeChild(el);
+      delete activeTokens[orderN];
+      updateQueueCounter();
+      document.getElementById('flow-server').classList.remove('occupied');
+    } else if (tObj.data.ini <= row.arr && tObj.data.sal > row.arr) {
+      if(!tObj.el.classList.contains('in-server')) {
+        const srv = document.getElementById('flow-server');
+        if(srv) {
+          srv.innerHTML = '';
+          srv.appendChild(tObj.el);
+          tObj.el.className = 'token in-server';
+          srv.classList.add('occupied');
+          updateQueueCounter();
+        }
+      }
+    }
+  }
+
+  // B. Llegadas y Fila
+  const token = document.createElement('div');
+  token.className = 'token in-portal';
+  token.textContent = '📦';
+  activeTokens[row.n] = { el: token, data: row };
+  
+  const portalIn = document.getElementById('portal-in');
+  if(portalIn) portalIn.appendChild(token);
+  await sleep(800);
+  
+  const queue = document.getElementById('flow-queue');
+  if(queue) {
+    queue.appendChild(token);
+    token.className = 'token in-queue';
+    updateQueueCounter();
+  }
+  await sleep(800);
+  
+  // C. Entrada a Servicio (inmediata si esp === 0)
+  if(row.esp === 0) {
+    const srv = document.getElementById('flow-server');
+    if(srv) {
+      srv.innerHTML = '';
+      srv.appendChild(token);
+      token.className = 'token in-server';
+      srv.classList.add('occupied');
+      updateQueueCounter();
+    }
+    await sleep(1000);
+  }
+
   showMod1(row);
   currentStep++;
+  
+  isAnimating = false;
+  if(!isAutoPlaying && !isFastForwarding) {
+    document.getElementById('btnAdvance').disabled = false;
+    document.getElementById('btnAuto').disabled = false;
+  }
+  
   if(currentStep >= simData.length){ 
-    clearInterval(autoPlayInterval);
-    if(isAutoPlaying) toggleAutoPlay();
+    isAutoPlaying = false;
+    isFastForwarding = false;
     document.getElementById('btnAdvance').disabled = true; 
     document.getElementById('btnAuto').disabled = true;
     document.getElementById('btnFastForward').disabled = true;
@@ -584,15 +752,25 @@ function showConclusion(){
   const card = document.getElementById('conclusionCard');
   const waitStr = simData.map(r => r.esp).join(' + ');
   document.getElementById('ccMath').innerHTML = `Promedio de Espera = (${waitStr}) / ${simData.length} = <strong>${avg.toFixed(2)} min</strong>`;
+  
+  let descHtml = "";
   if(avg <= kpi){
     card.className = 'conclusion-card visible approved';
     document.getElementById('ccIcon').textContent = '✅';
-    document.getElementById('ccDesc').innerHTML = `<strong>Aprobado.</strong> Espera media = <strong>${avg.toFixed(2)} min</strong>. Se cumplió la meta de <strong>${kpi.toFixed(1)} min</strong>.`;
+    descHtml = `<strong>Aprobado.</strong> Espera media = <strong>${avg.toFixed(2)} min</strong>. Se cumplió la meta de <strong>${kpi.toFixed(1)} min</strong>.`;
   } else {
     card.className = 'conclusion-card visible failed';
     document.getElementById('ccIcon').textContent = '🚨';
-    document.getElementById('ccDesc').innerHTML = `<strong>Reprobado.</strong> Espera media = <strong>${avg.toFixed(2)} min</strong>. Se superó la meta de <strong>${kpi.toFixed(1)} min</strong>. Considerar reducir tiempo de servicio o agregar un canal.`;
+    descHtml = `<strong>Reprobado.</strong> Espera media = <strong>${avg.toFixed(2)} min</strong>. Se superó la meta de <strong>${kpi.toFixed(1)} min</strong>. Considerar reducir tiempo de servicio o agregar un canal.`;
   }
+
+  const mediaLleg = simData.reduce((s,r) => s + r.delta, 0) / simData.length;
+  const mediaSvc = simData.reduce((s,r) => s + r.svc, 0) / simData.length;
+  if(mediaSvc > mediaLleg) {
+    descHtml += `<div style="margin-top: 1rem; padding: 1rem; background: rgba(244,63,94,0.1); border-left: 4px solid var(--rose); border-radius: 4px; color: var(--text-main);"><strong>⚠️ Alerta de Inestabilidad:</strong> El tiempo medio de servicio calculado (${mediaSvc.toFixed(2)} min) superó al tiempo medio entre llegadas (${mediaLleg.toFixed(2)} min). Esto indica que el sistema está matemáticamente saturado (&lambda; > &mu;). A largo plazo, la cola tenderá a infinito.</div>`;
+  }
+  
+  document.getElementById('ccDesc').innerHTML = descHtml;
   card.style.display = 'block';
 }
 
