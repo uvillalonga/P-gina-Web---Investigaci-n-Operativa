@@ -146,6 +146,15 @@ body {
 .module-title { font-size: 1.6rem; font-weight: 700; color: var(--text); margin-bottom: .5rem; }
 .module-desc  { color: var(--text2); font-size: .95rem; max-width: 800px; line-height: 1.6; }
 .module-header { margin-bottom: 1.5rem; }
+
+/* Tabla Compacta */
+.sim-table { font-size: 0.65rem !important; width: 100% !important; table-layout: fixed; }
+.sim-table th, .sim-table td { padding: 4px 2px !important; text-align: center; overflow: hidden; text-overflow: ellipsis; }
+.sim-table th { line-height: 1.1; vertical-align: bottom; height: 60px; white-space: normal; }
+/* Anchos específicos para las 15 columnas */
+.sim-table th:nth-child(1) { width: 3%; } /* N° */
+.sim-table th:nth-child(2), .sim-table th:nth-child(3) { width: 4.5%; } /* λ, μ */
+.sim-table th:nth-child(4), .sim-table th:nth-child(10) { width: 7%; } /* RNDs */
 </style>
 </head>
 <body>
@@ -157,6 +166,12 @@ body {
 </div>
 
 <div class="container">
+
+  <!-- CONSIGNA DEL PARCIAL -->
+  <div style="background: rgba(245,158,11,0.05); border-left: 4px solid var(--amber); padding: 1.5rem; margin-bottom: 2rem; border-radius: 4px;">
+    <h3 style="color: var(--amber); margin-bottom: 0.5rem;">Consigna del Ejercicio (M/M/2)</h3>
+    <p style="font-size: 0.95rem; line-height: 1.6;">Para conectar los compresores, los técnicos deben esperar que esté disponible uno de los <strong>2 especialistas</strong> en refrigeración. Las llegadas de las tareas al taller siguen una distribución de Poisson con media <strong>6 tareas por hora (<span style="text-transform: none;">&lambda;</span>)</strong>, y los especialistas tienen un tiempo de servicio exponencial con media de <strong>15 minutos (1/<span style="text-transform: none;">&mu;</span>)</strong>.</p>
+  </div>
 
   <!-- OVERVIEW TABLE -->
   <div>
@@ -222,7 +237,7 @@ body {
           <tr>
             <td>G</td>
             <td>Tiempo de Servicio</td>
-            <td>1/μ</td>
+            <td>1/<span style="text-transform: none;">&mu;</span></td>
             <td><span class="badge badge-amber">Fórmula / Fijo</span></td>
             <td>Duración de la atención</td>
           </tr>
@@ -275,7 +290,7 @@ body {
 =REDONDEAR.MAS(-media * LN(1 - A2); 0)</pre>
         <div class="note">
           <span class="note-icon">💡</span>
-          <span><strong>¿Por qué LN(1 - RND)?</strong> Es la inversa de la CDF exponencial: F⁻¹(u) = −(1/λ)·ln(1−u). Como 1−RND también es uniforme, se puede simplificar a −media·LN(RND) y el resultado es el mismo.</span>
+          <span><strong>¿Por qué LN(1 - RND)?</strong> Es la inversa de la CDF exponencial: F⁻¹(u) = −(1/<span style="text-transform: none;">&lambda;</span>)·ln(1−u). Como 1−RND también es uniforme, se puede simplificar a −media·LN(RND) y el resultado es el mismo.</span>
         </div>
       </div>
 
@@ -335,6 +350,29 @@ body {
         </div>
       </div>
 
+      <!-- PASO 3B -->
+      <div class="step-card blue wide">
+        <div class="step-header">
+          <div class="step-num">3B</div>
+          <div>
+            <div class="step-title">Múltiples Servidores (Ej: S1 y S2)</div>
+            <span class="step-col-tag">Condicional de Asignación</span>
+          </div>
+        </div>
+        <p class="step-desc">
+          En un modelo de 2 servidores, debemos decidir a qué servidor ingresa el cliente. Buscamos el primero libre, o si ambos están ocupados, el que se libere primero.
+        </p>
+        <pre class="formula-block">' Servidor Asignado
+=SI(Llegada >= S1; 1; SI(Llegada >= S2; 2; SI(S1 <= S2; 1; 2)))
+
+' Inicio de Servicio
+=MAX(Llegada_Sistema; MIN(Ocupación_S1; Ocupación_S2))</pre>
+        <div class="note">
+          <span class="note-icon">⚡</span>
+          <span>Si ambos servidores están ocupados al llegar, el cliente esperará en la cola y tomará el servidor que tenga el menor tiempo de ocupación (MIN).</span>
+        </div>
+      </div>
+
       <!-- PASO 4 -->
       <div class="step-card rose">
         <div class="step-header">
@@ -388,7 +426,7 @@ Wq promedio = =PROMEDIO(F2:F_n)
 W promedio  = =PROMEDIO(I2:I_n)</pre>
         <div class="note">
           <span class="note-icon">🎯</span>
-          <span>La relación <strong>W = Wq + (1/μ)</strong> siempre debe cumplirse en promedio. Si no cierra, revisá la columna D (Llegada al Servidor).</span>
+          <span>La relación <strong>W = Wq + (1/<span style="text-transform: none;">&mu;</span>)</strong> siempre debe cumplirse en promedio. Si no cierra, revisá la columna D (Llegada al Servidor).</span>
         </div>
       </div>
 
@@ -457,6 +495,125 @@ W promedio  = =PROMEDIO(I2:I_n)</pre>
       </table>
     </div>
   </div>
+
+  <!-- ARQUITECTURA DE LA PLANILLA -->
+  <section>
+    <div class="module-header">
+      <span class="module-tag">Formato de Examen</span>
+      <div class="module-title">Arquitectura de la Planilla</div>
+      <div class="module-desc">Así deben quedar ordenadas las columnas en el Excel según el formato de examen.</div>
+    </div>
+    <div style="overflow-x: auto; border-radius: 16px; border: 1px solid var(--border2); box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+      <table class="sim-table" style="width: 100%; border-collapse: collapse; white-space: nowrap; text-align: center;">
+        <thead style="position: sticky; top: 0; z-index: 10; background: var(--surface);">
+          <tr>
+            <th style="border-bottom: 1px solid var(--border2); color: var(--text3); text-transform: uppercase;">N°</th>
+            <th style="border-bottom: 1px solid var(--border2); color: var(--text3); text-transform: uppercase;"><span style="text-transform: none;">&lambda;</span></th>
+            <th style="border-bottom: 1px solid var(--border2); color: var(--text3); text-transform: uppercase;"><span style="text-transform: none;">&mu;</span></th>
+            <th style="border-bottom: 1px solid var(--border2); color: var(--amber); text-transform: uppercase;">Llegadas RND</th>
+            <th style="border-bottom: 1px solid var(--border2); color: var(--text3); text-transform: uppercase;">&Delta; Llegada</th>
+            <th style="border-bottom: 1px solid var(--border2); color: var(--text3); text-transform: uppercase;">Reloj Llegada</th>
+            <th style="border-bottom: 1px solid var(--border2); color: var(--text3); text-transform: uppercase;">Ocup. S1</th>
+            <th style="border-bottom: 1px solid var(--border2); color: var(--text3); text-transform: uppercase;">Ocup. S2</th>
+            <th style="border-bottom: 1px solid var(--border2); color: var(--text3); text-transform: uppercase;">Serv. Asign.</th>
+            <th style="border-bottom: 1px solid var(--border2); color: var(--amber); text-transform: uppercase;">Salidas RND</th>
+            <th style="border-bottom: 1px solid var(--border2); color: var(--text3); text-transform: uppercase;">T. Servicio</th>
+            <th style="border-bottom: 1px solid var(--border2); color: var(--text3); text-transform: uppercase;">Inicio Serv.</th>
+            <th style="border-bottom: 1px solid var(--border2); color: var(--emerald); text-transform: uppercase;">Reloj Salida</th>
+            <th style="border-bottom: 1px solid var(--border2); color: var(--emerald); text-transform: uppercase;">T. Sistema</th>
+            <th style="border-bottom: 1px solid var(--border2); color: var(--emerald); text-transform: uppercase;">Wq</th>
+          </tr>
+        </thead>
+        <tbody style="background: var(--surface);">
+          <tr>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">1</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">6</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">4</td>
+            <td style="border-bottom: 1px solid var(--border); color: var(--amber); font-weight: 600; text-align: center;">0.655</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">10.65</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">10.65</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">0.00</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">0.00</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">1</td>
+            <td style="border-bottom: 1px solid var(--border); color: var(--amber); font-weight: 600; text-align: center;">0.155</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">27.95</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">10.65</td>
+            <td style="border-bottom: 1px solid var(--border); color: var(--emerald); font-weight: 600; text-align: center;">38.60</td>
+            <td style="border-bottom: 1px solid var(--border); color: var(--emerald); font-weight: 600; text-align: center;">27.95</td>
+            <td style="border-bottom: 1px solid var(--border); color: var(--emerald); font-weight: 600; text-align: center;">0.00</td>
+          </tr>
+          <tr>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">2</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">6</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">4</td>
+            <td style="border-bottom: 1px solid var(--border); color: var(--amber); font-weight: 600; text-align: center;">0.963</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">0.38</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">11.03</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">38.60</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">0.00</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">2</td>
+            <td style="border-bottom: 1px solid var(--border); color: var(--amber); font-weight: 600; text-align: center;">0.722</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">4.88</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">11.03</td>
+            <td style="border-bottom: 1px solid var(--border); color: var(--emerald); font-weight: 600; text-align: center;">15.91</td>
+            <td style="border-bottom: 1px solid var(--border); color: var(--emerald); font-weight: 600; text-align: center;">4.88</td>
+            <td style="border-bottom: 1px solid var(--border); color: var(--emerald); font-weight: 600; text-align: center;">0.00</td>
+          </tr>
+          <tr>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">3</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">6</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">4</td>
+            <td style="border-bottom: 1px solid var(--border); color: var(--amber); font-weight: 600; text-align: center;">0.284</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">12.58</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">23.61</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">38.60</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">15.91</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">2</td>
+            <td style="border-bottom: 1px solid var(--border); color: var(--amber); font-weight: 600; text-align: center;">0.941</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">0.91</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">23.61</td>
+            <td style="border-bottom: 1px solid var(--border); color: var(--emerald); font-weight: 600; text-align: center;">24.52</td>
+            <td style="border-bottom: 1px solid var(--border); color: var(--emerald); font-weight: 600; text-align: center;">0.91</td>
+            <td style="border-bottom: 1px solid var(--border); color: var(--emerald); font-weight: 600; text-align: center;">0.00</td>
+          </tr>
+          <tr>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">4</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">6</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">4</td>
+            <td style="border-bottom: 1px solid var(--border); color: var(--amber); font-weight: 600; text-align: center;">0.985</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">0.15</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">23.76</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">38.60</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">24.52</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">2</td>
+            <td style="border-bottom: 1px solid var(--border); color: var(--amber); font-weight: 600; text-align: center;">0.817</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">3.03</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">24.52</td>
+            <td style="border-bottom: 1px solid var(--border); color: var(--emerald); font-weight: 600; text-align: center;">27.55</td>
+            <td style="border-bottom: 1px solid var(--border); color: var(--emerald); font-weight: 600; text-align: center;">3.79</td>
+            <td style="border-bottom: 1px solid var(--border); color: var(--emerald); font-weight: 600; text-align: center;">0.76</td>
+          </tr>
+          <tr>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">5</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">6</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">4</td>
+            <td style="border-bottom: 1px solid var(--border); color: var(--amber); font-weight: 600; text-align: center;">0.814</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">2.06</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">25.82</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">38.60</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">27.55</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">2</td>
+            <td style="border-bottom: 1px solid var(--border); color: var(--amber); font-weight: 600; text-align: center;">0.643</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">6.62</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">27.55</td>
+            <td style="border-bottom: 1px solid var(--border); color: var(--emerald); font-weight: 600; text-align: center;">34.17</td>
+            <td style="border-bottom: 1px solid var(--border); color: var(--emerald); font-weight: 600; text-align: center;">8.35</td>
+            <td style="border-bottom: 1px solid var(--border); color: var(--emerald); font-weight: 600; text-align: center;">1.73</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
 
 </div>
 
