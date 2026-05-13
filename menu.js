@@ -24,6 +24,7 @@
     { href: 'simulador_mmk.html',              label: 'Simulador M/M/k',  unit: 'u2' },
     // Unidad 4 · Simulación
     { href: 'simulador_montecarlo.html',       label: 'Filas de Espera', unit: 'u4' },
+    { href: 'tutorial_excel_montecarlo.html',  label: 'Guía Excel',      unit: 'u4' },
   ];
 
   // ── Helpers ────────────────────────────────────────────────────────────────

@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guía de Armado en Excel — Simulación Montecarlo</title>
+<meta name="description" content="Tutorial paso a paso: cómo construir la tabla de simulación Montecarlo en Excel para parciales de Investigación Operativa.">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+body {
+  background-image: radial-gradient(ellipse 80% 50% at 20% 0%, rgba(245,158,11,0.06), transparent),
+    radial-gradient(ellipse 60% 40% at 80% 100%, rgba(16,185,129,0.05), transparent);
+}
+.container { max-width: 1100px; margin: 0 auto; padding: 3rem 5%; display: flex; flex-direction: column; gap: 3rem; }
+
+/* Cards grid */
+.cards-grid { display: grid; grid-template-columns: 1fr; gap: 2rem; }
+@media(min-width:900px){ .cards-grid { grid-template-columns: 1fr 1fr; } }
+
+.step-card {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  position: relative;
+  overflow: hidden;
+  transition: transform .2s, box-shadow .2s;
+}
+.step-card:hover { transform: translateY(-3px); box-shadow: 0 16px 40px rgba(0,0,0,0.3); }
+.step-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 4px; height: 100%;
+  background: linear-gradient(to bottom, var(--amber), rgba(245,158,11,0.2));
+}
+.step-card.green::before { background: linear-gradient(to bottom, var(--emerald), rgba(16,185,129,0.2)); }
+.step-card.blue::before  { background: linear-gradient(to bottom, var(--accent), rgba(59,130,246,0.2)); }
+.step-card.rose::before  { background: linear-gradient(to bottom, var(--rose), rgba(244,63,94,0.2)); }
+.step-card.purple::before{ background: linear-gradient(to bottom, var(--purple), rgba(139,92,246,0.2)); }
+
+.step-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3);
+  font-size: .85rem; font-weight: 800; color: var(--amber);
+  flex-shrink: 0;
+}
+.step-card.green  .step-num { background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.3); color: var(--emerald); }
+.step-card.blue   .step-num { background: rgba(59,130,246,0.15); border-color: rgba(59,130,246,0.3); color: var(--accent); }
+.step-card.rose   .step-num { background: rgba(244,63,94,0.15); border-color: rgba(244,63,94,0.3); color: var(--rose); }
+.step-card.purple .step-num { background: rgba(139,92,246,0.15); border-color: rgba(139,92,246,0.3); color: var(--purple); }
+
+.step-header { display: flex; align-items: center; gap: .75rem; }
+.step-title { font-size: 1.05rem; font-weight: 700; color: var(--text); }
+.step-col-tag {
+  font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+  padding: .2rem .6rem; border-radius: 6px;
+  background: rgba(245,158,11,0.1); color: var(--amber); border: 1px solid rgba(245,158,11,0.2);
+}
+.step-card.green  .step-col-tag { background: rgba(16,185,129,0.1); color: var(--emerald); border-color: rgba(16,185,129,0.2); }
+.step-card.blue   .step-col-tag { background: rgba(59,130,246,0.1); color: var(--accent); border-color: rgba(59,130,246,0.2); }
+.step-card.rose   .step-col-tag { background: rgba(244,63,94,0.1); color: var(--rose); border-color: rgba(244,63,94,0.2); }
+.step-card.purple .step-col-tag { background: rgba(139,92,246,0.1); color: var(--purple); border-color: rgba(139,92,246,0.2); }
+
+.step-desc { font-size: .92rem; color: var(--text2); line-height: 1.65; }
+.step-desc strong { color: var(--text); }
+
+/* Formula block */
+.formula-block {
+  background: rgba(0,0,0,0.35);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+  font-family: 'Fira Code', monospace;
+  font-size: .88rem;
+  color: var(--amber);
+  line-height: 1.8;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.step-card.green  .formula-block { color: var(--emerald); }
+.step-card.blue   .formula-block { color: var(--accent); }
+.step-card.rose   .formula-block { color: var(--rose); }
+.step-card.purple .formula-block { color: var(--purple); }
+
+/* Note */
+.note {
+  display: flex; gap: .6rem; align-items: flex-start;
+  background: rgba(245,158,11,0.06); border-left: 3px solid var(--amber);
+  border-radius: 0 8px 8px 0; padding: .7rem 1rem;
+  font-size: .82rem; color: var(--text2); line-height: 1.5;
+}
+.step-card.green  .note { background: rgba(16,185,129,0.06); border-color: var(--emerald); }
+.step-card.blue   .note { background: rgba(59,130,246,0.06); border-color: var(--accent); }
+.step-card.rose   .note { background: rgba(244,63,94,0.06); border-color: var(--rose); }
+.step-card.purple .note { background: rgba(139,92,246,0.06); border-color: var(--purple); }
+.note-icon { font-size: 1rem; flex-shrink: 0; }
+
+/* Wide card (full width) */
+.step-card.wide { grid-column: 1 / -1; }
+
+/* Header table overview */
+.col-overview {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+.col-overview table { width: 100%; border-collapse: collapse; }
+.col-overview th {
+  background: rgba(0,0,0,0.25); padding: .7rem 1rem;
+  text-align: left; font-size: .72rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .8px;
+  color: var(--text3); border-bottom: 1px solid var(--border2);
+}
+.col-overview td {
+  padding: .65rem 1rem; font-size: .85rem;
+  border-bottom: 1px solid var(--border); color: var(--text);
+  vertical-align: top;
+}
+.col-overview tr:last-child td { border-bottom: none; }
+.col-overview tr:hover td { background: rgba(255,255,255,0.02); }
+.badge {
+  display: inline-block; font-size: .65rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .5px; padding: .15rem .5rem; border-radius: 5px;
+}
+.badge-amber  { background: rgba(245,158,11,0.15); color: var(--amber); }
+.badge-green  { background: rgba(16,185,129,0.15); color: var(--emerald); }
+.badge-blue   { background: rgba(59,130,246,0.15); color: var(--accent); }
+.badge-rose   { background: rgba(244,63,94,0.15); color: var(--rose); }
+.badge-purple { background: rgba(139,92,246,0.15); color: var(--purple); }
+
+.module-tag {
+  display: inline-block; font-size: .7rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1px; color: var(--amber); background: rgba(245,158,11,0.1);
+  padding: .3rem .8rem; border-radius: 6px; margin-bottom: .5rem;
+  border: 1px solid rgba(245,158,11,0.2);
+}
+.module-title { font-size: 1.6rem; font-weight: 700; color: var(--text); margin-bottom: .5rem; }
+.module-desc  { color: var(--text2); font-size: .95rem; max-width: 800px; line-height: 1.6; }
+.module-header { margin-bottom: 1.5rem; }
+</style>
+</head>
+<body>
+<div id="nav-container"></div>
+
+<div class="page-header u4">
+  <h1>Guía de Armado en Excel</h1>
+  <p>Fórmulas y lógica celda por celda para resolver parciales de Simulación.</p>
+</div>
+
+<div class="container">
+
+  <!-- OVERVIEW TABLE -->
+  <div>
+    <div class="module-header">
+      <span class="module-tag">Estructura General</span>
+      <div class="module-title">Columnas del Modelo de Simulación</div>
+      <div class="module-desc">La tabla de parcial tiene una columna por cada variable del sistema. Entendé la lógica de cada una antes de armar las fórmulas.</div>
+    </div>
+    <div class="col-overview">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Columna</th>
+            <th>Variable</th>
+            <th>Tipo</th>
+            <th>Descripción</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>A</td>
+            <td>N° Azar</td>
+            <td>RND</td>
+            <td><span class="badge badge-amber">Aleatorio</span></td>
+            <td>Número random uniforme [0,1)</td>
+          </tr>
+          <tr>
+            <td>B</td>
+            <td>Tiempo entre Arribos</td>
+            <td>Δt</td>
+            <td><span class="badge badge-amber">Fórmula</span></td>
+            <td>Inversa exponencial aplicada al RND</td>
+          </tr>
+          <tr>
+            <td>C</td>
+            <td>Reloj Llegada al Sistema</td>
+            <td>t_arr</td>
+            <td><span class="badge badge-green">Acumulado</span></td>
+            <td>Cuándo llega el cliente al sistema</td>
+          </tr>
+          <tr>
+            <td>D</td>
+            <td>Llegada al Servidor</td>
+            <td>t_ini</td>
+            <td><span class="badge badge-blue">MAX</span></td>
+            <td>Cuándo empieza a ser atendido</td>
+          </tr>
+          <tr>
+            <td>E</td>
+            <td>Estado del Servidor</td>
+            <td>—</td>
+            <td><span class="badge badge-rose">Condicional</span></td>
+            <td>Libre / Ocupado en el momento de llegada</td>
+          </tr>
+          <tr>
+            <td>F</td>
+            <td>Tiempo de Espera (Wq)</td>
+            <td>Wq</td>
+            <td><span class="badge badge-rose">Resta</span></td>
+            <td>D − C: cuánto esperó en la fila</td>
+          </tr>
+          <tr>
+            <td>G</td>
+            <td>Tiempo de Servicio</td>
+            <td>1/μ</td>
+            <td><span class="badge badge-amber">Fórmula / Fijo</span></td>
+            <td>Duración de la atención</td>
+          </tr>
+          <tr>
+            <td>H</td>
+            <td>Reloj Salida del Sistema</td>
+            <td>t_sal</td>
+            <td><span class="badge badge-green">D + G</span></td>
+            <td>D + G: cuándo sale del servidor</td>
+          </tr>
+          <tr>
+            <td>I</td>
+            <td>Tiempo Total en Sistema (W)</td>
+            <td>W</td>
+            <td><span class="badge badge-purple">Resta</span></td>
+            <td>H − C: tiempo total desde que llegó</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- STEP CARDS -->
+  <div>
+    <div class="module-header">
+      <span class="module-tag">Paso a Paso</span>
+      <div class="module-title">Fórmulas Celda por Celda</div>
+      <div class="module-desc">Cada sección explica la lógica y la fórmula exacta a escribir en Excel. Las celdas de ejemplo asumen que la fila 2 es la primera orden.</div>
+    </div>
+    <div class="cards-grid">
+
+      <!-- PASO 1 -->
+      <div class="step-card">
+        <div class="step-header">
+          <div class="step-num">1</div>
+          <div>
+            <div class="step-title">Generación de Azar y Tiempos</div>
+            <span class="step-col-tag">Col A y B</span>
+          </div>
+        </div>
+        <p class="step-desc">
+          La columna <strong>N° Azar (A)</strong> genera un número aleatorio uniforme entre 0 y 1.
+          La columna <strong>Tiempo entre Arribos (B)</strong> aplica la inversa de la exponencial negativa para convertir ese azar en un tiempo real.
+        </p>
+        <pre class="formula-block">' Columna A — Número Azar
+=ALEATORIO()
+
+' Columna B — Tiempo entre Arribos (Exponencial)
+' media = tiempo medio entre llegadas (p.ej. 5 min)
+=REDONDEAR.MAS(-media * LN(1 - A2); 0)</pre>
+        <div class="note">
+          <span class="note-icon">💡</span>
+          <span><strong>¿Por qué LN(1 - RND)?</strong> Es la inversa de la CDF exponencial: F⁻¹(u) = −(1/λ)·ln(1−u). Como 1−RND también es uniforme, se puede simplificar a −media·LN(RND) y el resultado es el mismo.</span>
+        </div>
+      </div>
+
+      <!-- PASO 2 -->
+      <div class="step-card green">
+        <div class="step-header">
+          <div class="step-num">2</div>
+          <div>
+            <div class="step-title">Reloj de Llegada al Sistema</div>
+            <span class="step-col-tag">Col C</span>
+          </div>
+        </div>
+        <p class="step-desc">
+          Esta columna acumula los tiempos entre arribos para obtener el <strong>instante exacto</strong> en que cada cliente entra al sistema (no al servidor, sino a la fila).
+          La primera orden siempre llega al tiempo igual a su propio delta.
+        </p>
+        <pre class="formula-block">' Fila 2 (primera orden)
+=B2
+
+' Fila 3 en adelante
+=C2 + B3
+' → generalizable: =C_anterior + B_actual</pre>
+        <div class="note">
+          <span class="note-icon">📌</span>
+          <span>Esta columna es el <strong>Reloj del Sistema</strong>. Solo registra cuándo llega el cliente, independientemente de si el servidor está libre u ocupado.</span>
+        </div>
+      </div>
+
+      <!-- PASO 3 -->
+      <div class="step-card blue wide">
+        <div class="step-header">
+          <div class="step-num">3</div>
+          <div>
+            <div class="step-title">Llegada al Servidor — El Choque</div>
+            <span class="step-col-tag">Col D — Celda Crítica</span>
+          </div>
+        </div>
+        <p class="step-desc">
+          Esta es la celda más importante del modelo. Responde a: <strong>¿cuándo empieza a ser atendido el cliente?</strong>
+          Hay dos posibilidades: si el servidor está libre, empieza inmediatamente al llegar. Si está ocupado, espera hasta que el anterior termine.
+          El <strong>MAX</strong> resuelve ambos casos de forma elegante.
+        </p>
+        <pre class="formula-block">' Fila 2 (primera orden — no hay Salida_Anterior)
+=C2
+
+' Fila 3 en adelante
+=MAX(C3 ; H2)
+' → MAX(Llegada_al_Sistema_Actual ; Reloj_Salida_Anterior)
+
+' Lectura en español:
+' "Empiezo a ser atendido cuando LLEGUE O cuando el servidor quede libre,
+'  lo que ocurra MÁS TARDE"</pre>
+        <div class="note">
+          <span class="note-icon">⚡</span>
+          <span>Si <strong>C3 ≥ H2</strong> → el servidor estaba libre, no hay espera, D = C.<br>
+          Si <strong>C3 &lt; H2</strong> → el servidor estaba ocupado, hay espera, D = H2 (hereda el fin del anterior).</span>
+        </div>
+      </div>
+
+      <!-- PASO 4 -->
+      <div class="step-card rose">
+        <div class="step-header">
+          <div class="step-num">4</div>
+          <div>
+            <div class="step-title">Estado del Servidor y Colas (Lq, L)</div>
+            <span class="step-col-tag">Col E</span>
+          </div>
+        </div>
+        <p class="step-desc">
+          Con un condicional <strong>SI</strong> determinamos si el cliente encontró el servidor libre u ocupado al llegar. Esto permite calcular el porcentaje de clientes que esperaron y estimar <em>L<sub>q</sub></em>.
+        </p>
+        <pre class="formula-block">' Columna E — Estado del Servidor
+=SI(C2 >= H1; "Libre"; "Ocupado")
+
+' C2 = Llegada al Sistema del cliente actual
+' H1 = Salida del cliente anterior
+
+' Para contar L_q (clientes en fila):
+=CONTAR.SI(E:E; "Ocupado")</pre>
+        <div class="note">
+          <span class="note-icon">📊</span>
+          <span>El estado "Ocupado" equivale a que el cliente tuvo que esperar en cola (Wq &gt; 0). La fracción de "Ocupado" sobre el total aproxima <strong>P(espera) = ρ</strong>.</span>
+        </div>
+      </div>
+
+      <!-- PASO 5 -->
+      <div class="step-card purple">
+        <div class="step-header">
+          <div class="step-num">5</div>
+          <div>
+            <div class="step-title">Cálculo de Tiempos (Wq y W)</div>
+            <span class="step-col-tag">Col F e I</span>
+          </div>
+        </div>
+        <p class="step-desc">
+          <strong>Wq</strong> (espera en cola) es simplemente la diferencia entre cuándo empezó a ser atendido y cuándo llegó. Si no esperó, da 0.
+          <strong>W</strong> (tiempo total en el sistema) es la diferencia entre cuándo salió y cuándo llegó.
+        </p>
+        <pre class="formula-block">' Columna F — Wq: Espera en Cola
+=D2 - C2
+' D = Llegada al Servidor, C = Llegada al Sistema
+' Siempre ≥ 0 (si servidor libre → D=C → Wq=0)
+
+' Columna I — W: Tiempo Total en el Sistema
+=H2 - C2
+' H = Reloj Salida, C = Llegada al Sistema
+
+' Métricas finales (en celdas aparte)
+Wq promedio = =PROMEDIO(F2:F_n)
+W promedio  = =PROMEDIO(I2:I_n)</pre>
+        <div class="note">
+          <span class="note-icon">🎯</span>
+          <span>La relación <strong>W = Wq + (1/μ)</strong> siempre debe cumplirse en promedio. Si no cierra, revisá la columna D (Llegada al Servidor).</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- REFERENCE CARD -->
+  <div>
+    <div class="module-header">
+      <span class="module-tag">Referencia Rápida</span>
+      <div class="module-title">Mapa de Dependencias</div>
+      <div class="module-desc">Cada columna depende de otras. Seguí este orden al construir la tabla para evitar referencias circulares.</div>
+    </div>
+    <div class="col-overview">
+      <table>
+        <thead>
+          <tr><th>Columna</th><th>Depende de</th><th>Fórmula clave</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="badge badge-amber">A — RND</span></td>
+            <td>—</td>
+            <td><code style="font-family:'Fira Code',monospace;color:var(--amber)">=ALEATORIO()</code></td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-amber">B — Δt Arribo</span></td>
+            <td>A (RND)</td>
+            <td><code style="font-family:'Fira Code',monospace;color:var(--amber)">=REDONDEAR.MAS(-media*LN(1-A2);0)</code></td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-green">C — Reloj Llegada</span></td>
+            <td>C anterior, B actual</td>
+            <td><code style="font-family:'Fira Code',monospace;color:var(--emerald)">=C2 + B3</code></td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-blue">D — Inicio Servicio</span></td>
+            <td>C actual, H anterior</td>
+            <td><code style="font-family:'Fira Code',monospace;color:var(--accent)">=MAX(C3; H2)</code></td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-rose">E — Estado</span></td>
+            <td>C actual, H anterior</td>
+            <td><code style="font-family:'Fira Code',monospace;color:var(--rose)">=SI(C2>=H1;"Libre";"Ocupado")</code></td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-rose">F — Wq</span></td>
+            <td>D, C</td>
+            <td><code style="font-family:'Fira Code',monospace;color:var(--rose)">=D2 - C2</code></td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-amber">G — T. Servicio</span></td>
+            <td>RND servicio (o fijo)</td>
+            <td><code style="font-family:'Fira Code',monospace;color:var(--amber)">=REDONDEAR.MAS(-mu*LN(1-RND);0)</code></td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-green">H — Reloj Salida</span></td>
+            <td>D, G</td>
+            <td><code style="font-family:'Fira Code',monospace;color:var(--emerald)">=D2 + G2</code></td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-purple">I — W</span></td>
+            <td>H, C</td>
+            <td><code style="font-family:'Fira Code',monospace;color:var(--purple)">=H2 - C2</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script src="menu.js"></script>
+</body>
+</html>
