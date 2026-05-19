@@ -150,11 +150,8 @@ body {
 /* Tabla Compacta */
 .sim-table { font-size: 0.65rem !important; width: 100% !important; table-layout: fixed; }
 .sim-table th, .sim-table td { padding: 4px 2px !important; text-align: center; overflow: hidden; text-overflow: ellipsis; }
-.sim-table th { line-height: 1.1; vertical-align: bottom; height: 60px; white-space: normal; }
-/* Anchos específicos para las 15 columnas */
-.sim-table th:nth-child(1) { width: 3%; } /* N° */
-.sim-table th:nth-child(2), .sim-table th:nth-child(3) { width: 4.5%; } /* λ, μ */
-.sim-table th:nth-child(4), .sim-table th:nth-child(10) { width: 7%; } /* RNDs */
+.sim-table th { line-height: 1.1; vertical-align: bottom; height: 60px; white-space: normal; overflow-wrap: break-word; }
+
 </style>
 </head>
 <body>
@@ -169,332 +166,92 @@ body {
 
   <!-- CONSIGNA DEL PARCIAL -->
   <div style="background: rgba(245,158,11,0.05); border-left: 4px solid var(--amber); padding: 1.5rem; margin-bottom: 2rem; border-radius: 4px;">
-    <h3 style="color: var(--amber); margin-bottom: 0.5rem;">Consigna del Ejercicio (M/M/2)</h3>
-    <p style="font-size: 0.95rem; line-height: 1.6;">Para conectar los compresores, los técnicos deben esperar que esté disponible uno de los <strong>2 especialistas</strong> en refrigeración. Las llegadas de las tareas al taller siguen una distribución de Poisson con media <strong>6 tareas por hora (<span style="text-transform: none;">&lambda;</span>)</strong>, y los especialistas tienen un tiempo de servicio exponencial con media de <strong>15 minutos (1/<span style="text-transform: none;">&mu;</span>)</strong>.</p>
+    <h3 style="color: var(--amber); margin-bottom: 0.5rem;">Consigna del Ejercicio (M/M/1)</h3>
+    <p style="font-size: 0.95rem; line-height: 1.6;">Durante el entrenamiento del personal técnico, se implementa una instancia de prueba del sistema. Los técnicos deben resolver solicitudes de prueba que llegan cada 12 minutos. Cada técnico, en promedio, no debería tardar más de 10 minutos por solicitud. Sólo hay un técnico asignado.</p>
+    <p style="font-size: 0.95rem; line-height: 1.6; margin-top: 0.5rem; color: var(--text2);">Datos transformados a horas: Tasa de Llegada (&lambda;) = 5 un/h. Tasa de Servicio (&mu;) = 6 un/h.</p>
   </div>
 
-  <!-- OVERVIEW TABLE -->
-  <div>
+  <!-- DICCIONARIO DE COLUMNAS -->
+  <section style="margin-bottom: 3rem;">
     <div class="module-header">
-      <span class="module-tag">Estructura General</span>
-      <div class="module-title">Columnas del Modelo de Simulación</div>
-      <div class="module-desc">La tabla de parcial tiene una columna por cada variable del sistema. Entendé la lógica de cada una antes de armar las fórmulas.</div>
+      <span class="module-tag">Guía Definitiva</span>
+      <div class="module-title">Diccionario de Columnas</div>
+      <div class="module-desc">Fórmulas y definiciones exactas a utilizar en el simulador Montecarlo.</div>
     </div>
-    <div class="col-overview">
-      <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Columna</th>
-            <th>Variable</th>
-            <th>Tipo</th>
-            <th>Descripción</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>A</td>
-            <td>N° Azar</td>
-            <td>RND</td>
-            <td><span class="badge badge-amber">Aleatorio</span></td>
-            <td>Número random uniforme [0,1)</td>
-          </tr>
-          <tr>
-            <td>B</td>
-            <td>Tiempo entre Arribos</td>
-            <td>Δt</td>
-            <td><span class="badge badge-amber">Fórmula</span></td>
-            <td>Inversa exponencial aplicada al RND</td>
-          </tr>
-          <tr>
-            <td>C</td>
-            <td>Reloj Llegada al Sistema</td>
-            <td>t_arr</td>
-            <td><span class="badge badge-green">Acumulado</span></td>
-            <td>Cuándo llega el cliente al sistema</td>
-          </tr>
-          <tr>
-            <td>D</td>
-            <td>Llegada al Servidor</td>
-            <td>t_ini</td>
-            <td><span class="badge badge-blue">MAX</span></td>
-            <td>Cuándo empieza a ser atendido</td>
-          </tr>
-          <tr>
-            <td>E</td>
-            <td>Estado del Servidor</td>
-            <td>—</td>
-            <td><span class="badge badge-rose">Condicional</span></td>
-            <td>Libre / Ocupado en el momento de llegada</td>
-          </tr>
-          <tr>
-            <td>F</td>
-            <td>Tiempo de Espera (Wq)</td>
-            <td>Wq</td>
-            <td><span class="badge badge-rose">Resta</span></td>
-            <td>D − C: cuánto esperó en la fila</td>
-          </tr>
-          <tr>
-            <td>G</td>
-            <td>Tiempo de Servicio</td>
-            <td>1/<span style="text-transform: none;">&mu;</span></td>
-            <td><span class="badge badge-amber">Fórmula / Fijo</span></td>
-            <td>Duración de la atención</td>
-          </tr>
-          <tr>
-            <td>H</td>
-            <td>Reloj Salida del Sistema</td>
-            <td>t_sal</td>
-            <td><span class="badge badge-green">D + G</span></td>
-            <td>D + G: cuándo sale del servidor</td>
-          </tr>
-          <tr>
-            <td>I</td>
-            <td>Tiempo Total en Sistema (W)</td>
-            <td>W</td>
-            <td><span class="badge badge-purple">Resta</span></td>
-            <td>H − C: tiempo total desde que llegó</td>
-          </tr>
-        </tbody>
-      </table>
+    
+    <div style="background: var(--surface); border: 1px solid var(--border2); border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.2); padding: 2rem;">
+      <ul style="list-style-type: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 1.5rem;">
+        
+        <li style="border-bottom: 1px solid var(--border); padding-bottom: 1.5rem;">
+          <strong style="color: var(--amber); font-size: 1.1rem;">ID:</strong> Número de Cliente.
+        </li>
+        
+        <li style="border-bottom: 1px solid var(--border); padding-bottom: 1.5rem;">
+          <strong style="color: var(--amber); font-size: 1.1rem;">N° azar (Llegada):</strong> <code style="background: rgba(0,0,0,0.3); padding: 0.2rem 0.5rem; border-radius: 4px; font-family: 'Fira Code', monospace; color: var(--amber);">=ALEATORIO()</code>. Determina la aleatoriedad de la llegada al sistema.
+        </li>
+        
+        <li style="border-bottom: 1px solid var(--border); padding-bottom: 1.5rem;">
+          <strong style="color: var(--amber); font-size: 1.1rem;">&lambda;:</strong> Tasa de llegada.
+        </li>
+        
+        <li style="border-bottom: 1px solid var(--border); padding-bottom: 1.5rem;">
+          <strong style="color: var(--amber); font-size: 1.1rem;">Tiempo entre arribos:</strong> <code style="background: rgba(0,0,0,0.3); padding: 0.2rem 0.5rem; border-radius: 4px; font-family: 'Fira Code', monospace; color: var(--amber);">=+(1/&lambda;)*LN(1/Azar)</code>. Es el intervalo de tiempo hasta que llega la siguiente persona.
+        </li>
+        
+        <li style="border-bottom: 1px solid var(--border); padding-bottom: 1.5rem;">
+          <strong style="color: var(--emerald); font-size: 1.1rem;">Llegada al sistema:</strong> <code style="background: rgba(0,0,0,0.3); padding: 0.2rem 0.5rem; border-radius: 4px; font-family: 'Fira Code', monospace; color: var(--emerald);">=Llegada_Anterior + Tiempo_entre_arribos_Actual</code>. Tiempo acumulado (Reloj absoluto) en el que llega la persona.
+        </li>
+        
+        <li style="border-bottom: 1px solid var(--border); padding-bottom: 1.5rem;">
+          <strong style="color: var(--rose); font-size: 1.1rem;">Lq:</strong> <code style="background: rgba(0,0,0,0.3); padding: 0.2rem 0.5rem; border-radius: 4px; font-family: 'Fira Code', monospace; color: var(--rose);">=+Lq_Anterior + 1 - Despachos_Periodo</code>. Largo de la cola.
+        </li>
+        
+        <li style="border-bottom: 1px solid var(--border); padding-bottom: 1.5rem;">
+          <strong style="color: var(--text); font-size: 1.1rem;">Nro despachos acumulado:</strong> <code style="background: rgba(0,0,0,0.3); padding: 0.2rem 0.5rem; border-radius: 4px; font-family: 'Fira Code', monospace; color: var(--text);">=CONTAR.SI($Rango_Salidas;"<"&amp;Llegada_Actual)</code>. Cantidad de personas que ya se fueron del sistema tras ser atendidas.
+        </li>
+        
+        <li style="border-bottom: 1px solid var(--border); padding-bottom: 1.5rem;">
+          <strong style="color: var(--text); font-size: 1.1rem;">Despachos en el último periodo:</strong> <code style="background: rgba(0,0,0,0.3); padding: 0.2rem 0.5rem; border-radius: 4px; font-family: 'Fira Code', monospace; color: var(--text);">=Despachos_Acum_Actual - Despachos_Acum_Anterior</code>. Indicador de cuántas personas se fueron entre una fila y otra.
+        </li>
+        
+        <li style="border-bottom: 1px solid var(--border); padding-bottom: 1.5rem;">
+          <strong style="color: var(--rose); font-size: 1.1rem;">Estado del servicio:</strong> <code style="background: rgba(0,0,0,0.3); padding: 0.2rem 0.5rem; border-radius: 4px; font-family: 'Fira Code', monospace; color: var(--rose);">=+SI(Llegada_Actual > Salida_Anterior, 0, 1)</code>. Indica si está libre (0) u ocupado (1).
+        </li>
+        
+        <li style="border-bottom: 1px solid var(--border); padding-bottom: 1.5rem;">
+          <strong style="color: var(--purple); font-size: 1.1rem;">L:</strong> <code style="background: rgba(0,0,0,0.3); padding: 0.2rem 0.5rem; border-radius: 4px; font-family: 'Fira Code', monospace; color: var(--purple);">=Lq + Estado_Servicio</code>. Largo total del sistema.
+        </li>
+        
+        <li style="border-bottom: 1px solid var(--border); padding-bottom: 1.5rem;">
+          <strong style="color: var(--rose); font-size: 1.1rem;">Wq:</strong> <code style="background: rgba(0,0,0,0.3); padding: 0.2rem 0.5rem; border-radius: 4px; font-family: 'Fira Code', monospace; color: var(--rose);">=Llegada_Servidor - Llegada_Sistema</code>. Tiempo de espera en la cola.
+        </li>
+        
+        <li style="border-bottom: 1px solid var(--border); padding-bottom: 1.5rem;">
+          <strong style="color: var(--accent); font-size: 1.1rem;">Llegada al servidor:</strong> <code style="background: rgba(0,0,0,0.3); padding: 0.2rem 0.5rem; border-radius: 4px; font-family: 'Fira Code', monospace; color: var(--accent);">=+SI(Llegada_Sistema > Salida_Anterior, Llegada_Sistema, Salida_Anterior)</code>. Momento exacto en el que la persona empieza a ser atendida.
+        </li>
+        
+        <li style="border-bottom: 1px solid var(--border); padding-bottom: 1.5rem;">
+          <strong style="color: var(--amber); font-size: 1.1rem;">N° azar (Servicio):</strong> <code style="background: rgba(0,0,0,0.3); padding: 0.2rem 0.5rem; border-radius: 4px; font-family: 'Fira Code', monospace; color: var(--amber);">=ALEATORIO()</code>. Determina la aleatoriedad del servicio.
+        </li>
+        
+        <li style="border-bottom: 1px solid var(--border); padding-bottom: 1.5rem;">
+          <strong style="color: var(--amber); font-size: 1.1rem;">&mu;:</strong> Tasa de servicio.
+        </li>
+        
+        <li style="border-bottom: 1px solid var(--border); padding-bottom: 1.5rem;">
+          <strong style="color: var(--amber); font-size: 1.1rem;">Tiempo entre despachos:</strong> <code style="background: rgba(0,0,0,0.3); padding: 0.2rem 0.5rem; border-radius: 4px; font-family: 'Fira Code', monospace; color: var(--amber);">=+(1/&mu;)*LN(1/Azar)</code>. Tiempo que dura la atención de esa persona.
+        </li>
+        
+        <li style="border-bottom: 1px solid var(--border); padding-bottom: 1.5rem;">
+          <strong style="color: var(--emerald); font-size: 1.1rem;">Tiempo salida sistema:</strong> <code style="background: rgba(0,0,0,0.3); padding: 0.2rem 0.5rem; border-radius: 4px; font-family: 'Fira Code', monospace; color: var(--emerald);">=Llegada_Servidor + Tiempo_entre_despachos</code>. Reloj absoluto en el que la persona termina de ser atendida y sale.
+        </li>
+        
+        <li style="border-bottom: none; padding-bottom: 0;">
+          <strong style="color: var(--purple); font-size: 1.1rem;">W:</strong> <code style="background: rgba(0,0,0,0.3); padding: 0.2rem 0.5rem; border-radius: 4px; font-family: 'Fira Code', monospace; color: var(--purple);">=Tiempo_Salida - Llegada_Sistema</code>. Tiempo total que pasó la persona en el sistema (cola + atención).
+        </li>
+      </ul>
     </div>
-  </div>
-
-  <!-- STEP CARDS -->
-  <div>
-    <div class="module-header">
-      <span class="module-tag">Paso a Paso</span>
-      <div class="module-title">Fórmulas Celda por Celda</div>
-      <div class="module-desc">Cada sección explica la lógica y la fórmula exacta a escribir en Excel. Las celdas de ejemplo asumen que la fila 2 es la primera orden.</div>
-    </div>
-    <div class="cards-grid">
-
-      <!-- PASO 1 -->
-      <div class="step-card">
-        <div class="step-header">
-          <div class="step-num">1</div>
-          <div>
-            <div class="step-title">Generación de Azar y Tiempos</div>
-            <span class="step-col-tag">Col A y B</span>
-          </div>
-        </div>
-        <p class="step-desc">
-          La columna <strong>N° Azar (A)</strong> genera un número aleatorio uniforme entre 0 y 1.
-          La columna <strong>Tiempo entre Arribos (B)</strong> aplica la inversa de la exponencial negativa para convertir ese azar en un tiempo real.
-        </p>
-        <pre class="formula-block">' Columna A — Número Azar
-=ALEATORIO()
-
-' Columna B — Tiempo entre Arribos (Exponencial)
-' media = tiempo medio entre llegadas (p.ej. 5 min)
-=REDONDEAR.MAS(-media * LN(1 - A2); 0)</pre>
-        <div class="note">
-          <span class="note-icon">💡</span>
-          <span><strong>¿Por qué LN(1 - RND)?</strong> Es la inversa de la CDF exponencial: F⁻¹(u) = −(1/<span style="text-transform: none;">&lambda;</span>)·ln(1−u). Como 1−RND también es uniforme, se puede simplificar a −media·LN(RND) y el resultado es el mismo.</span>
-        </div>
-      </div>
-
-      <!-- PASO 2 -->
-      <div class="step-card green">
-        <div class="step-header">
-          <div class="step-num">2</div>
-          <div>
-            <div class="step-title">Reloj de Llegada al Sistema</div>
-            <span class="step-col-tag">Col C</span>
-          </div>
-        </div>
-        <p class="step-desc">
-          Esta columna acumula los tiempos entre arribos para obtener el <strong>instante exacto</strong> en que cada cliente entra al sistema (no al servidor, sino a la fila).
-          La primera orden siempre llega al tiempo igual a su propio delta.
-        </p>
-        <pre class="formula-block">' Fila 2 (primera orden)
-=B2
-
-' Fila 3 en adelante
-=C2 + B3
-' → generalizable: =C_anterior + B_actual</pre>
-        <div class="note">
-          <span class="note-icon">📌</span>
-          <span>Esta columna es el <strong>Reloj del Sistema</strong>. Solo registra cuándo llega el cliente, independientemente de si el servidor está libre u ocupado.</span>
-        </div>
-      </div>
-
-      <!-- PASO 3 -->
-      <div class="step-card blue wide">
-        <div class="step-header">
-          <div class="step-num">3</div>
-          <div>
-            <div class="step-title">Llegada al Servidor — El Choque</div>
-            <span class="step-col-tag">Col D — Celda Crítica</span>
-          </div>
-        </div>
-        <p class="step-desc">
-          Esta es la celda más importante del modelo. Responde a: <strong>¿cuándo empieza a ser atendido el cliente?</strong>
-          Hay dos posibilidades: si el servidor está libre, empieza inmediatamente al llegar. Si está ocupado, espera hasta que el anterior termine.
-          El <strong>MAX</strong> resuelve ambos casos de forma elegante.
-        </p>
-        <pre class="formula-block">' Fila 2 (primera orden — no hay Salida_Anterior)
-=C2
-
-' Fila 3 en adelante
-=MAX(C3 ; H2)
-' → MAX(Llegada_al_Sistema_Actual ; Reloj_Salida_Anterior)
-
-' Lectura en español:
-' "Empiezo a ser atendido cuando LLEGUE O cuando el servidor quede libre,
-'  lo que ocurra MÁS TARDE"</pre>
-        <div class="note">
-          <span class="note-icon">⚡</span>
-          <span>Si <strong>C3 ≥ H2</strong> → el servidor estaba libre, no hay espera, D = C.<br>
-          Si <strong>C3 &lt; H2</strong> → el servidor estaba ocupado, hay espera, D = H2 (hereda el fin del anterior).</span>
-        </div>
-      </div>
-
-      <!-- PASO 3B -->
-      <div class="step-card blue wide">
-        <div class="step-header">
-          <div class="step-num">3B</div>
-          <div>
-            <div class="step-title">Múltiples Servidores (Ej: S1 y S2)</div>
-            <span class="step-col-tag">Condicional de Asignación</span>
-          </div>
-        </div>
-        <p class="step-desc">
-          En un modelo de 2 servidores, debemos decidir a qué servidor ingresa el cliente. Buscamos el primero libre, o si ambos están ocupados, el que se libere primero.
-        </p>
-        <pre class="formula-block">' Servidor Asignado
-=SI(Llegada >= S1; 1; SI(Llegada >= S2; 2; SI(S1 <= S2; 1; 2)))
-
-' Inicio de Servicio
-=MAX(Llegada_Sistema; MIN(Ocupación_S1; Ocupación_S2))</pre>
-        <div class="note">
-          <span class="note-icon">⚡</span>
-          <span>Si ambos servidores están ocupados al llegar, el cliente esperará en la cola y tomará el servidor que tenga el menor tiempo de ocupación (MIN).</span>
-        </div>
-      </div>
-
-      <!-- PASO 4 -->
-      <div class="step-card rose">
-        <div class="step-header">
-          <div class="step-num">4</div>
-          <div>
-            <div class="step-title">Estado del Servidor y Colas (Lq, L)</div>
-            <span class="step-col-tag">Col E</span>
-          </div>
-        </div>
-        <p class="step-desc">
-          Con un condicional <strong>SI</strong> determinamos si el cliente encontró el servidor libre u ocupado al llegar. Esto permite calcular el porcentaje de clientes que esperaron y estimar <em>L<sub>q</sub></em>.
-        </p>
-        <pre class="formula-block">' Columna E — Estado del Servidor
-=SI(C2 >= H1; "Libre"; "Ocupado")
-
-' C2 = Llegada al Sistema del cliente actual
-' H1 = Salida del cliente anterior
-
-' Para contar L_q (clientes en fila):
-=CONTAR.SI(E:E; "Ocupado")</pre>
-        <div class="note">
-          <span class="note-icon">📊</span>
-          <span>El estado "Ocupado" equivale a que el cliente tuvo que esperar en cola (Wq &gt; 0). La fracción de "Ocupado" sobre el total aproxima <strong>P(espera) = ρ</strong>.</span>
-        </div>
-      </div>
-
-      <!-- PASO 5 -->
-      <div class="step-card purple">
-        <div class="step-header">
-          <div class="step-num">5</div>
-          <div>
-            <div class="step-title">Cálculo de Tiempos (Wq y W)</div>
-            <span class="step-col-tag">Col F e I</span>
-          </div>
-        </div>
-        <p class="step-desc">
-          <strong>Wq</strong> (espera en cola) es simplemente la diferencia entre cuándo empezó a ser atendido y cuándo llegó. Si no esperó, da 0.
-          <strong>W</strong> (tiempo total en el sistema) es la diferencia entre cuándo salió y cuándo llegó.
-        </p>
-        <pre class="formula-block">' Columna F — Wq: Espera en Cola
-=D2 - C2
-' D = Llegada al Servidor, C = Llegada al Sistema
-' Siempre ≥ 0 (si servidor libre → D=C → Wq=0)
-
-' Columna I — W: Tiempo Total en el Sistema
-=H2 - C2
-' H = Reloj Salida, C = Llegada al Sistema
-
-' Métricas finales (en celdas aparte)
-Wq promedio = =PROMEDIO(F2:F_n)
-W promedio  = =PROMEDIO(I2:I_n)</pre>
-        <div class="note">
-          <span class="note-icon">🎯</span>
-          <span>La relación <strong>W = Wq + (1/<span style="text-transform: none;">&mu;</span>)</strong> siempre debe cumplirse en promedio. Si no cierra, revisá la columna D (Llegada al Servidor).</span>
-        </div>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- REFERENCE CARD -->
-  <div>
-    <div class="module-header">
-      <span class="module-tag">Referencia Rápida</span>
-      <div class="module-title">Mapa de Dependencias</div>
-      <div class="module-desc">Cada columna depende de otras. Seguí este orden al construir la tabla para evitar referencias circulares.</div>
-    </div>
-    <div class="col-overview">
-      <table>
-        <thead>
-          <tr><th>Columna</th><th>Depende de</th><th>Fórmula clave</th></tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><span class="badge badge-amber">A — RND</span></td>
-            <td>—</td>
-            <td><code style="font-family:'Fira Code',monospace;color:var(--amber)">=ALEATORIO()</code></td>
-          </tr>
-          <tr>
-            <td><span class="badge badge-amber">B — Δt Arribo</span></td>
-            <td>A (RND)</td>
-            <td><code style="font-family:'Fira Code',monospace;color:var(--amber)">=REDONDEAR.MAS(-media*LN(1-A2);0)</code></td>
-          </tr>
-          <tr>
-            <td><span class="badge badge-green">C — Reloj Llegada</span></td>
-            <td>C anterior, B actual</td>
-            <td><code style="font-family:'Fira Code',monospace;color:var(--emerald)">=C2 + B3</code></td>
-          </tr>
-          <tr>
-            <td><span class="badge badge-blue">D — Inicio Servicio</span></td>
-            <td>C actual, H anterior</td>
-            <td><code style="font-family:'Fira Code',monospace;color:var(--accent)">=MAX(C3; H2)</code></td>
-          </tr>
-          <tr>
-            <td><span class="badge badge-rose">E — Estado</span></td>
-            <td>C actual, H anterior</td>
-            <td><code style="font-family:'Fira Code',monospace;color:var(--rose)">=SI(C2>=H1;"Libre";"Ocupado")</code></td>
-          </tr>
-          <tr>
-            <td><span class="badge badge-rose">F — Wq</span></td>
-            <td>D, C</td>
-            <td><code style="font-family:'Fira Code',monospace;color:var(--rose)">=D2 - C2</code></td>
-          </tr>
-          <tr>
-            <td><span class="badge badge-amber">G — T. Servicio</span></td>
-            <td>RND servicio (o fijo)</td>
-            <td><code style="font-family:'Fira Code',monospace;color:var(--amber)">=REDONDEAR.MAS(-mu*LN(1-RND);0)</code></td>
-          </tr>
-          <tr>
-            <td><span class="badge badge-green">H — Reloj Salida</span></td>
-            <td>D, G</td>
-            <td><code style="font-family:'Fira Code',monospace;color:var(--emerald)">=D2 + G2</code></td>
-          </tr>
-          <tr>
-            <td><span class="badge badge-purple">I — W</span></td>
-            <td>H, C</td>
-            <td><code style="font-family:'Fira Code',monospace;color:var(--purple)">=H2 - C2</code></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
+  </section>
 
   <!-- ARQUITECTURA DE LA PLANILLA -->
   <section>
@@ -507,108 +264,63 @@ W promedio  = =PROMEDIO(I2:I_n)</pre>
       <table class="sim-table" style="width: 100%; border-collapse: collapse; white-space: nowrap; text-align: center;">
         <thead style="position: sticky; top: 0; z-index: 10; background: var(--surface);">
           <tr>
-            <th style="border-bottom: 1px solid var(--border2); color: var(--text3); text-transform: uppercase;">N°</th>
+            <th style="border-bottom: 1px solid var(--border2); color: var(--text3); text-transform: uppercase;">ID</th>
+            <th style="border-bottom: 1px solid var(--border2); color: var(--amber); text-transform: uppercase;">N° Azar</th>
             <th style="border-bottom: 1px solid var(--border2); color: var(--text3); text-transform: uppercase;"><span style="text-transform: none;">&lambda;</span></th>
-            <th style="border-bottom: 1px solid var(--border2); color: var(--text3); text-transform: uppercase;"><span style="text-transform: none;">&mu;</span></th>
-            <th style="border-bottom: 1px solid var(--border2); color: var(--amber); text-transform: uppercase;">Llegadas RND</th>
-            <th style="border-bottom: 1px solid var(--border2); color: var(--text3); text-transform: uppercase;">&Delta; Llegada</th>
-            <th style="border-bottom: 1px solid var(--border2); color: var(--text3); text-transform: uppercase;">Reloj Llegada</th>
-            <th style="border-bottom: 1px solid var(--border2); color: var(--text3); text-transform: uppercase;">Ocup. S1</th>
-            <th style="border-bottom: 1px solid var(--border2); color: var(--text3); text-transform: uppercase;">Ocup. S2</th>
-            <th style="border-bottom: 1px solid var(--border2); color: var(--text3); text-transform: uppercase;">Serv. Asign.</th>
-            <th style="border-bottom: 1px solid var(--border2); color: var(--amber); text-transform: uppercase;">Salidas RND</th>
-            <th style="border-bottom: 1px solid var(--border2); color: var(--text3); text-transform: uppercase;">T. Servicio</th>
-            <th style="border-bottom: 1px solid var(--border2); color: var(--text3); text-transform: uppercase;">Inicio Serv.</th>
-            <th style="border-bottom: 1px solid var(--border2); color: var(--emerald); text-transform: uppercase;">Reloj Salida</th>
-            <th style="border-bottom: 1px solid var(--border2); color: var(--emerald); text-transform: uppercase;">T. Sistema</th>
+            <th style="border-bottom: 1px solid var(--border2); color: var(--text3); text-transform: uppercase;">Tiempo entre arribos</th>
+            <th style="border-bottom: 1px solid var(--border2); color: var(--text3); text-transform: uppercase;">Llegada al sistema</th>
+            <th style="border-bottom: 1px solid var(--border2); color: var(--text3); text-transform: uppercase;">Lq</th>
+            <th style="border-bottom: 1px solid var(--border2); color: var(--text3); text-transform: uppercase;">Nro despachos acumulado</th>
+            <th style="border-bottom: 1px solid var(--border2); color: var(--text3); text-transform: uppercase;">Despachos en el último periodo</th>
+            <th style="border-bottom: 1px solid var(--border2); color: var(--text3); text-transform: uppercase;">Estado Servidor</th>
+            <th style="border-bottom: 1px solid var(--border2); color: var(--text3); text-transform: uppercase;">L</th>
             <th style="border-bottom: 1px solid var(--border2); color: var(--emerald); text-transform: uppercase;">Wq</th>
+            <th style="border-bottom: 1px solid var(--border2); color: var(--text3); text-transform: uppercase;">Llegada al servidor</th>
+            <th style="border-bottom: 1px solid var(--border2); color: var(--amber); text-transform: uppercase;">N° Azar</th>
+            <th style="border-bottom: 1px solid var(--border2); color: var(--text3); text-transform: uppercase;"><span style="text-transform: none;">&mu;</span></th>
+            <th style="border-bottom: 1px solid var(--border2); color: var(--text3); text-transform: uppercase;">Tiempo entre despachos</th>
+            <th style="border-bottom: 1px solid var(--border2); color: var(--text3); text-transform: uppercase;">Tiempo salida sistema</th>
+            <th style="border-bottom: 1px solid var(--border2); color: var(--emerald); text-transform: uppercase;">W</th>
           </tr>
         </thead>
         <tbody style="background: var(--surface);">
           <tr>
             <td style="border-bottom: 1px solid var(--border); text-align: center;">1</td>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">6</td>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">4</td>
-            <td style="border-bottom: 1px solid var(--border); color: var(--amber); font-weight: 600; text-align: center;">0.655</td>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">10.65</td>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">10.65</td>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">0.00</td>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">0.00</td>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">1</td>
-            <td style="border-bottom: 1px solid var(--border); color: var(--amber); font-weight: 600; text-align: center;">0.155</td>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">27.95</td>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">10.65</td>
-            <td style="border-bottom: 1px solid var(--border); color: var(--emerald); font-weight: 600; text-align: center;">38.60</td>
-            <td style="border-bottom: 1px solid var(--border); color: var(--emerald); font-weight: 600; text-align: center;">27.95</td>
-            <td style="border-bottom: 1px solid var(--border); color: var(--emerald); font-weight: 600; text-align: center;">0.00</td>
-          </tr>
-          <tr>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">2</td>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">6</td>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">4</td>
-            <td style="border-bottom: 1px solid var(--border); color: var(--amber); font-weight: 600; text-align: center;">0.963</td>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">0.38</td>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">11.03</td>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">38.60</td>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">0.00</td>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">2</td>
-            <td style="border-bottom: 1px solid var(--border); color: var(--amber); font-weight: 600; text-align: center;">0.722</td>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">4.88</td>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">11.03</td>
-            <td style="border-bottom: 1px solid var(--border); color: var(--emerald); font-weight: 600; text-align: center;">15.91</td>
-            <td style="border-bottom: 1px solid var(--border); color: var(--emerald); font-weight: 600; text-align: center;">4.88</td>
-            <td style="border-bottom: 1px solid var(--border); color: var(--emerald); font-weight: 600; text-align: center;">0.00</td>
-          </tr>
-          <tr>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">3</td>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">6</td>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">4</td>
-            <td style="border-bottom: 1px solid var(--border); color: var(--amber); font-weight: 600; text-align: center;">0.284</td>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">12.58</td>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">23.61</td>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">38.60</td>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">15.91</td>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">2</td>
-            <td style="border-bottom: 1px solid var(--border); color: var(--amber); font-weight: 600; text-align: center;">0.941</td>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">0.91</td>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">23.61</td>
-            <td style="border-bottom: 1px solid var(--border); color: var(--emerald); font-weight: 600; text-align: center;">24.52</td>
-            <td style="border-bottom: 1px solid var(--border); color: var(--emerald); font-weight: 600; text-align: center;">0.91</td>
-            <td style="border-bottom: 1px solid var(--border); color: var(--emerald); font-weight: 600; text-align: center;">0.00</td>
-          </tr>
-          <tr>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">4</td>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">6</td>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">4</td>
-            <td style="border-bottom: 1px solid var(--border); color: var(--amber); font-weight: 600; text-align: center;">0.985</td>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">0.15</td>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">23.76</td>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">38.60</td>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">24.52</td>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">2</td>
-            <td style="border-bottom: 1px solid var(--border); color: var(--amber); font-weight: 600; text-align: center;">0.817</td>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">3.03</td>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">24.52</td>
-            <td style="border-bottom: 1px solid var(--border); color: var(--emerald); font-weight: 600; text-align: center;">27.55</td>
-            <td style="border-bottom: 1px solid var(--border); color: var(--emerald); font-weight: 600; text-align: center;">3.79</td>
-            <td style="border-bottom: 1px solid var(--border); color: var(--emerald); font-weight: 600; text-align: center;">0.76</td>
-          </tr>
-          <tr>
+            <td style="border-bottom: 1px solid var(--border); color: var(--amber); font-weight: 600; text-align: center;">0.123</td>
             <td style="border-bottom: 1px solid var(--border); text-align: center;">5</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">0.42</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">0.42</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">0</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">0</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">0</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">1</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">1</td>
+            <td style="border-bottom: 1px solid var(--border); color: var(--emerald); font-weight: 600; text-align: center;">0.00</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">0.42</td>
+            <td style="border-bottom: 1px solid var(--border); color: var(--amber); font-weight: 600; text-align: center;">0.543</td>
             <td style="border-bottom: 1px solid var(--border); text-align: center;">6</td>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">4</td>
-            <td style="border-bottom: 1px solid var(--border); color: var(--amber); font-weight: 600; text-align: center;">0.814</td>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">2.06</td>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">25.82</td>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">38.60</td>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">27.55</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">0.10</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">0.52</td>
+            <td style="border-bottom: 1px solid var(--border); color: var(--emerald); font-weight: 600; text-align: center;">0.10</td>
+          </tr>
+          <tr>
             <td style="border-bottom: 1px solid var(--border); text-align: center;">2</td>
-            <td style="border-bottom: 1px solid var(--border); color: var(--amber); font-weight: 600; text-align: center;">0.643</td>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">6.62</td>
-            <td style="border-bottom: 1px solid var(--border); text-align: center;">27.55</td>
-            <td style="border-bottom: 1px solid var(--border); color: var(--emerald); font-weight: 600; text-align: center;">34.17</td>
-            <td style="border-bottom: 1px solid var(--border); color: var(--emerald); font-weight: 600; text-align: center;">8.35</td>
-            <td style="border-bottom: 1px solid var(--border); color: var(--emerald); font-weight: 600; text-align: center;">1.73</td>
+            <td style="border-bottom: 1px solid var(--border); color: var(--amber); font-weight: 600; text-align: center;">0.887</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">5</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">0.02</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">0.44</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">1</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">0</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">0</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">1</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">2</td>
+            <td style="border-bottom: 1px solid var(--border); color: var(--emerald); font-weight: 600; text-align: center;">0.08</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">0.52</td>
+            <td style="border-bottom: 1px solid var(--border); color: var(--amber); font-weight: 600; text-align: center;">0.112</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">6</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">0.36</td>
+            <td style="border-bottom: 1px solid var(--border); text-align: center;">0.88</td>
+            <td style="border-bottom: 1px solid var(--border); color: var(--emerald); font-weight: 600; text-align: center;">0.44</td>
           </tr>
         </tbody>
       </table>
