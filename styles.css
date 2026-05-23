@@ -96,6 +96,7 @@ body {
   transition: all 0.3s ease;
 }
 .nav-logo .dot.u2 { background: var(--emerald); box-shadow: 0 0 8px var(--emerald); }
+.nav-logo .dot.u3 { background: var(--purple-accent, #a855f7); box-shadow: 0 0 8px var(--purple-accent, #a855f7); }
 .nav-logo .dot.u4 { background: linear-gradient(135deg, var(--amber), var(--rose)); box-shadow: 0 0 8px var(--amber); }
 
 .nav-unit {
@@ -108,6 +109,7 @@ body {
   margin-right: 8px;
 }
 .nav-unit.u2 { color: var(--emerald); }
+.nav-unit.u3 { color: var(--purple-accent, #a855f7); }
 .nav-unit.u4 { color: var(--amber); }
 
 a.nav-link {
@@ -126,6 +128,7 @@ a.nav-link {
 a.nav-link:hover  { color: var(--text); }
 a.nav-link.active { color: var(--text); border-bottom-color: var(--accent); font-weight: 600; }
 a.nav-link.active.u2 { border-bottom-color: var(--emerald); }
+a.nav-link.active.u3 { border-bottom-color: var(--purple-accent, #a855f7); }
 a.nav-link.active.u4 { border-bottom-color: var(--amber); }
 
 .nav-sep {
@@ -163,6 +166,13 @@ a.nav-link.active.u4 { border-bottom-color: var(--amber); }
 /* Unit 2 specific gradient (Green) */
 .page-header.u2 h1 {
   background: linear-gradient(135deg, #6ee7b7 0%, #10b981 50%, #047857 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Unit 3 specific gradient (Purple) */
+.page-header.u3 h1 {
+  background: linear-gradient(135deg, #c084fc 0%, #a855f7 50%, #7e22ce 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }

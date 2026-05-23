@@ -22,6 +22,8 @@
     { href: 'resolvedor_nacimiento_muerte.html', label: 'Nac. y Muerte',    unit: 'u1' },
     // Unidad 2 · Teoría de Colas
     { href: 'simulador_mmk.html',              label: 'Simulador M/M/k',  unit: 'u2' },
+    // Unidad 3 · Proyectos
+    { href: 'simulador_pert_cpm.html',         label: 'PERT / CPM',       unit: 'u3' },
     // Unidad 4 · Simulación
     { href: 'simulador_montecarlo.html',       label: 'Filas de Espera', unit: 'u4' },
     { href: 'tutorial_excel_montecarlo.html',  label: 'Guía Excel',      unit: 'u4' },
@@ -42,6 +44,7 @@
 
   const u1Links = NAV_LINKS.filter(l => l.unit === 'u1').map(buildLink).join('\n  ');
   const u2Links = NAV_LINKS.filter(l => l.unit === 'u2').map(buildLink).join('\n  ');
+  const u3Links = NAV_LINKS.filter(l => l.unit === 'u3').map(buildLink).join('\n  ');
   const u4Links = NAV_LINKS.filter(l => l.unit === 'u4').map(buildLink).join('\n  ');
 
   const navHTML = `<nav class="site-nav">
@@ -54,6 +57,9 @@
   <div class="nav-sep"></div>
   <span class="nav-unit u2">U2 · Colas</span>
   ${u2Links}
+  <div class="nav-sep"></div>
+  <span class="nav-unit u3" style="color: var(--purple-accent, #a855f7);">U3 · Proyectos</span>
+  ${u3Links}
   <div class="nav-sep"></div>
   <span class="nav-unit u4">U4 · Simulación</span>
   ${u4Links}
