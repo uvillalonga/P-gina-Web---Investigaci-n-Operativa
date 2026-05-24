@@ -304,6 +304,8 @@ body.mode-pert .col-cpm  { display: none; }
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
+body.show-costs #financial-params { display: flex !important; }
+body.show-costs #financial-results { display: block !important; }
 </style>
 </head>
 <body class="mode-cpm">
@@ -352,6 +354,25 @@ body.mode-pert .col-cpm  { display: none; }
       <div class="formula-hint" id="pert-formula-hint">
         <span>📐</span>
         <span>Fórmula PERT: <code>Te = (To + 4·Tn + Tp) / 6</code> &nbsp;|&nbsp; Varianza: <code>σ² = ((Tp − To) / 6)²</code></span>
+      </div>
+    </div>
+
+    <div id="financial-params" class="cost-col" style="display: none; background: rgba(16,185,129,0.05); border: 1px solid rgba(16,185,129,0.2); padding: 1rem; border-radius: 8px; margin-bottom: 2rem; flex-wrap: wrap; gap: 1.5rem; justify-content: space-between; align-items: center;">
+      <div style="flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 0.35rem;">
+        <label for="tasa-interes" style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text2); letter-spacing: 0.5px;">Tasa de Interés ($i$ % por periodo)</label>
+        <input type="number" id="tasa-interes" class="cell-input" style="width: 100%; text-align: left;" value="1" step="any" min="0">
+      </div>
+      <div style="flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 0.35rem;">
+        <label for="inversion-inicial" style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text2); letter-spacing: 0.5px;">Inversión Inicial/Presupuesto ($)</label>
+        <input type="number" id="inversion-inicial" class="cell-input" style="width: 100%; text-align: left;" value="500" step="any" min="0">
+      </div>
+      <div style="flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 0.35rem;">
+        <label for="porcentaje-mp" style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text2); letter-spacing: 0.5px;">% Materia Prima (MP - Pago al Inicio)</label>
+        <input type="number" id="porcentaje-mp" class="cell-input" style="width: 100%; text-align: left;" value="60" step="any" min="0" max="100">
+      </div>
+      <div style="flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 0.35rem;">
+        <label for="porcentaje-mod" style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text2); letter-spacing: 0.5px;">% Mano de Obra (MOD - Pago al Fin)</label>
+        <input type="number" id="porcentaje-mod" class="cell-input" style="width: 100%; text-align: left;" value="40" step="any" min="0" max="100">
       </div>
     </div>
 
@@ -466,6 +487,11 @@ body.mode-pert .col-cpm  { display: none; }
       </div>
     </div>
 
+    <section id="financial-results" class="cost-col" style="display: none; margin-top: 2rem;">
+      <h3 style="color: var(--emerald); margin-bottom: 1.2rem; font-size: 1.25rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">Gantt Financiero y Rentabilidad</h3>
+      <div id="financial-output"></div>
+    </section>
+
     <!-- PERT Probability Section -->
     <div class="pert-prob-section" id="pert-prob-section">
       <div class="module-title" style="margin-bottom:.25rem;">📐 Análisis Probabilístico PERT</div>
@@ -502,7 +528,8 @@ let rowCount = 0;
 // ═══════════════════════════════════════════
 function setMode(mode) {
   currentMode = mode;
-  document.body.className = 'mode-' + mode;
+  document.body.classList.remove('mode-cpm', 'mode-pert');
+  document.body.classList.add('mode-' + mode);
 
   const btnCpm  = document.getElementById('btn-cpm');
   const btnPert = document.getElementById('btn-pert');
@@ -556,15 +583,15 @@ function loadPrefabExample() {
   const tbody = document.getElementById('tasks-tbody');
   tbody.innerHTML = '';
   const prefabData = [
-    { id: 1, tarea: 'EST', desc: 'EREGIR LA ESTRUCTURA', prec: '2', te: 5, to: 0, tn: 0, tp: 0, cost: 1000 },
-    { id: 2, tarea: 'CIM', desc: 'HACER LOS CIMIENTOS', prec: '-', te: 3, to: 0, tn: 0, tp: 0, cost: 2000 },
-    { id: 3, tarea: 'VITE', desc: 'PONER LAS VIGAS TECHO', prec: '1', te: 2, to: 0, tn: 0, tp: 0, cost: 800 },
-    { id: 4, tarea: 'RETE', desc: 'REVESTIR EL TECHO', prec: '3', te: 3, to: 0, tn: 0, tp: 0, cost: 1200 },
-    { id: 5, tarea: 'ELEC', desc: 'CABLEADO ELECTRICO', prec: '1', te: 4, to: 0, tn: 0, tp: 0, cost: 1500 },
-    { id: 6, tarea: 'EXT', desc: 'TABLAS PAREDES EXTERIORES', prec: '7', te: 4, to: 0, tn: 0, tp: 0, cost: 1100 },
-    { id: 7, tarea: 'VENT', desc: 'COLOCAR LAS VENTANAS', prec: '1', te: 2, to: 0, tn: 0, tp: 0, cost: 500 },
-    { id: 8, tarea: 'INT', desc: 'TABLAS PAREDES INTERIORES', prec: '5 ; 7', te: 3, to: 0, tn: 0, tp: 0, cost: 600 },
-    { id: 9, tarea: 'PINT', desc: 'PINTURA EXT. E INT.', prec: '4 ; 6 ; 8', te: 2, to: 0, tn: 0, tp: 0, cost: 900 }
+    { id: 1, tarea: 'EST', desc: 'EREGIR LA ESTRUCTURA', prec: '2', te: 5, to: 0, tn: 0, tp: 0, cost: 100 },
+    { id: 2, tarea: 'CIM', desc: 'HACER LOS CIMIENTOS', prec: '-', te: 3, to: 0, tn: 0, tp: 0, cost: 50 },
+    { id: 3, tarea: 'VITE', desc: 'PONER LAS VIGAS TECHO', prec: '1', te: 2, to: 0, tn: 0, tp: 0, cost: 80 },
+    { id: 4, tarea: 'RETE', desc: 'REVESTIR EL TECHO', prec: '3', te: 3, to: 0, tn: 0, tp: 0, cost: 80 },
+    { id: 5, tarea: 'ELEC', desc: 'CABLEADO ELECTRICO', prec: '1', te: 4, to: 0, tn: 0, tp: 0, cost: 60 },
+    { id: 6, tarea: 'EXT', desc: 'TABLAS PAREDES EXTERIORES', prec: '7', te: 4, to: 0, tn: 0, tp: 0, cost: 100 },
+    { id: 7, tarea: 'VENT', desc: 'COLOCAR LAS VENTANAS', prec: '1', te: 2, to: 0, tn: 0, tp: 0, cost: 30 },
+    { id: 8, tarea: 'INT', desc: 'TABLAS PAREDES INTERIORES', prec: '5 ; 7', te: 3, to: 0, tn: 0, tp: 0, cost: 180 },
+    { id: 9, tarea: 'PINT', desc: 'PINTURA EXT. E INT.', prec: '4 ; 6 ; 8', te: 2, to: 0, tn: 0, tp: 0, cost: 500 }
   ];
   rowCount = 0;
   prefabData.forEach(d => addRow(d));
@@ -1117,6 +1144,9 @@ function calculate() {
   renderResultsTable(edges, totalCost);
   if (currentMode === 'pert') renderPertSection(criticalActs, projectDuration);
   renderNetwork(nodes, edges);
+  if (showCosts) {
+    renderFinancialAnalysis(nodes, edges, projectDuration);
+  }
 
   const ra = document.getElementById('results-area');
   ra.style.display = 'flex';
@@ -1358,6 +1388,22 @@ function renderNetwork(nodes, edges) {
   networkInstance.on('afterDrawing', function () {
     if (!isLayoutUnlocked) {
       isLayoutUnlocked = true;
+      
+      // Get the hierarchical positions and save them into the dataset to freeze them in place
+      const positions = networkInstance.getPositions();
+      const updates = [];
+      for (const id in positions) {
+        if (positions.hasOwnProperty(id)) {
+          updates.push({
+            id: Number(id),
+            x: positions[id].x,
+            y: positions[id].y
+          });
+        }
+      }
+      data.nodes.update(updates);
+      
+      // Now safe to disable hierarchical layout for free dragging
       networkInstance.setOptions({
         layout: { hierarchical: { enabled: false } }
       });
@@ -1366,17 +1412,209 @@ function renderNetwork(nodes, edges) {
 }
 
 // ═══════════════════════════════════════════
+//  FINANCIAL ANALYSIS
+// ═══════════════════════════════════════════
+function calcularVAN(flujoEgresos, tasa, inversionInicial) {
+  let sum = 0;
+  for (let t = 0; t < flujoEgresos.length; t++) {
+    sum += flujoEgresos[t] / Math.pow(1 + tasa, t);
+  }
+  return sum;
+}
+
+function calcularTIR(flujoEgresos, inversionInicial) {
+  let low = -0.999;
+  let high = 2.0;
+
+  const getSum = (r) => {
+    let sum = 0;
+    for (let t = 0; t < flujoEgresos.length; t++) {
+      sum += flujoEgresos[t] / Math.pow(1 + r, t + 1);
+    }
+    return sum;
+  };
+
+  let valLow = getSum(low);
+  let valHigh = getSum(high);
+
+  if ((valLow - inversionInicial) * (valHigh - inversionInicial) > 0) {
+    let found = false;
+    for (let h = 2.0; h <= 100.0; h *= 2) {
+      high = h;
+      valHigh = getSum(high);
+      if ((valLow - inversionInicial) * (valHigh - inversionInicial) <= 0) {
+        found = true;
+        break;
+      }
+    }
+    if (!found) return null;
+  }
+
+  for (let i = 0; i < 100; i++) {
+    let mid = (low + high) / 2;
+    let valMid = getSum(mid);
+    if (Math.abs(valMid - inversionInicial) < 1e-7) {
+      return mid;
+    }
+    if (valMid > inversionInicial) {
+      low = mid;
+    } else {
+      high = mid;
+    }
+  }
+  return (low + high) / 2;
+}
+
+function renderFinancialAnalysis(nodes, edges, projectDuration) {
+  const tasa = parseFloat(document.getElementById('tasa-interes').value) / 100;
+  const inversion = parseFloat(document.getElementById('inversion-inicial').value);
+  const pctMP = parseFloat(document.getElementById('porcentaje-mp').value);
+  const pctMOD = parseFloat(document.getElementById('porcentaje-mod').value);
+
+  const maxT = Math.round(projectDuration);
+  const cashFlowTemprano = new Array(maxT + 1).fill(0);
+  const cashFlowTardio = new Array(maxT + 1).fill(0);
+
+  edges.forEach(e => {
+    const cost = parseFloat(e.cost) || 0;
+    if (cost === 0) return;
+
+    const esT = Math.round(e.ES);
+    const efT = Math.round(e.EF);
+    const lsT = Math.round(e.LS);
+    const lfT = Math.round(e.LF);
+
+    // Flujo Temprano
+    if (esT <= maxT) cashFlowTemprano[esT] += cost * (pctMP / 100);
+    if (efT <= maxT) cashFlowTemprano[efT] += cost * (pctMOD / 100);
+
+    // Flujo Tardío
+    if (lsT <= maxT) cashFlowTardio[lsT] += cost * (pctMP / 100);
+    if (lfT <= maxT) cashFlowTardio[lfT] += cost * (pctMOD / 100);
+  });
+
+  const vanTemprano = calcularVAN(cashFlowTemprano, tasa, inversion);
+  const tirTemprano = calcularTIR(cashFlowTemprano, inversion);
+  const vanTardio = calcularVAN(cashFlowTardio, tasa, inversion);
+  const tirTardio = calcularTIR(cashFlowTardio, inversion);
+
+  const fmt = val => {
+    if (typeof val !== 'number' || isNaN(val)) return '0,00';
+    try {
+      return val.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    } catch (e) {
+      return val.toFixed(2).replace('.', ',');
+    }
+  };
+  const fmtTir = val => val === null ? 'N/D' : `${fmt(val * 100)}%`;
+
+  const tirT_val = tirTemprano !== null ? tirTemprano : -Infinity;
+  const tirTa_val = tirTardio !== null ? tirTardio : -Infinity;
+  let DSSConclusion = '';
+  if (tirT_val > tirTa_val) {
+    DSSConclusion = 'Conclusión Práctica: Conviene ejecutar el proyecto según las Fechas Tempranas, ya que ofrece una mayor Tasa Interna de Retorno (TIR).';
+  } else {
+    DSSConclusion = 'Conclusión Práctica: Conviene retrasar las tareas no críticas y ejecutar el proyecto según las Fechas Tardías para maximizar la TIR.';
+  }
+
+  let tableRows = '';
+  for (let t = 0; t <= maxT; t++) {
+    tableRows += `
+      <tr>
+        <td style="font-family:'Fira Code',monospace; font-weight:700;">Período ${t}</td>
+        <td style="color: var(--text2);">$ ${fmt(cashFlowTemprano[t])}</td>
+        <td style="color: var(--text2);">$ ${fmt(cashFlowTardio[t])}</td>
+      </tr>
+    `;
+  }
+
+  const outputHTML = `
+    <!-- Tabla Comparativa -->
+    <div class="results-table-wrapper" style="margin-bottom: 1.5rem;">
+      <div class="rtw-header">
+        <span class="rtw-title" style="color: var(--emerald);">Comparación de Escenarios Financieros</span>
+      </div>
+      <div class="rtw-scroll">
+        <table class="res-table">
+          <thead>
+            <tr>
+              <th>Métrica</th>
+              <th>Calendario Fecha Temprana (FT)</th>
+              <th>Calendario Fecha Tardía (ft)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="font-weight:700; text-align:left;">VAN ($)</td>
+              <td style="font-family:'Fira Code',monospace; font-weight:700; color:var(--accent);">$ ${fmt(vanTemprano)}</td>
+              <td style="font-family:'Fira Code',monospace; font-weight:700; color:var(--purple-accent, #a855f7);">$ ${fmt(vanTardio)}</td>
+            </tr>
+            <tr>
+              <td style="font-weight:700; text-align:left;">TIR (%)</td>
+              <td style="font-family:'Fira Code',monospace; font-weight:700; color:var(--accent);">${fmtTir(tirTemprano)}</td>
+              <td style="font-family:'Fira Code',monospace; font-weight:700; color:var(--purple-accent, #a855f7);">${fmtTir(tirTardio)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Recomendación Automática (DSS) -->
+    <div style="background: rgba(16, 185, 129, 0.08); border-left: 4px solid var(--emerald); border-radius: 8px; padding: 1.25rem; font-size: 0.95rem; line-height: 1.6; margin-bottom: 1.5rem;">
+      <strong style="color: var(--emerald); display: block; margin-bottom: 0.4rem; font-size: 1.05rem;">📊 Recomendación del Sistema (DSS)</strong>
+      <span>${DSSConclusion}</span>
+    </div>
+
+    <!-- Detalles del Flujo de Egresos -->
+    <div class="results-table-wrapper" style="margin-bottom: 0.5rem;">
+      <div class="rtw-header">
+        <span class="rtw-title" style="color: var(--text2);">Detalle de Egresos Consolidados por Período</span>
+      </div>
+      <div class="rtw-scroll">
+        <table class="res-table">
+          <thead>
+            <tr>
+              <th>Período (t)</th>
+              <th>Egresos Tempranos (MP + MOD)</th>
+              <th>Egresos Tardíos (MP + MOD)</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${tableRows}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('financial-output').innerHTML = outputHTML;
+}
+
+// ═══════════════════════════════════════════
 //  COST MANAGEMENT
 // ═══════════════════════════════════════════
 function toggleCostManagement() {
   showCosts = !showCosts;
   document.body.classList.toggle('show-costs', showCosts);
+
+  // Toggle visibility of the block/flex cost containers manually
+  const paramDiv = document.getElementById('financial-params');
+  const resultSec = document.getElementById('financial-results');
+  if (paramDiv) paramDiv.style.display = showCosts ? 'flex' : 'none';
+  if (resultSec) resultSec.style.display = showCosts ? 'block' : 'none';
+
   const btn = document.getElementById('btnToggleCost');
   if (showCosts) {
     btn.innerHTML = '💰 Ocultar Costos';
     btn.style.background = 'rgba(244,63,94,0.15)';
     btn.style.color = 'var(--rose)';
     btn.style.borderColor = 'rgba(244,63,94,0.3)';
+
+    // If the results are already calculated, recalculate to populate the financial output
+    const ra = document.getElementById('results-area');
+    if (ra && (ra.style.display === 'flex' || ra.classList.contains('show'))) {
+      calculate();
+    }
   } else {
     btn.innerHTML = '💰 Activar Costos';
     btn.style.background = 'rgba(16,185,129,0.15)';
