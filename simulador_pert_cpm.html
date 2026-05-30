@@ -583,15 +583,15 @@ function loadPrefabExample() {
   const tbody = document.getElementById('tasks-tbody');
   tbody.innerHTML = '';
   const prefabData = [
-    { id: 1, tarea: 'EST', desc: 'EREGIR LA ESTRUCTURA', prec: '2', te: 5, to: 0, tn: 0, tp: 0, cost: 100 },
-    { id: 2, tarea: 'CIM', desc: 'HACER LOS CIMIENTOS', prec: '-', te: 3, to: 0, tn: 0, tp: 0, cost: 50 },
-    { id: 3, tarea: 'VITE', desc: 'PONER LAS VIGAS TECHO', prec: '1', te: 2, to: 0, tn: 0, tp: 0, cost: 80 },
-    { id: 4, tarea: 'RETE', desc: 'REVESTIR EL TECHO', prec: '3', te: 3, to: 0, tn: 0, tp: 0, cost: 80 },
-    { id: 5, tarea: 'ELEC', desc: 'CABLEADO ELECTRICO', prec: '1', te: 4, to: 0, tn: 0, tp: 0, cost: 60 },
-    { id: 6, tarea: 'EXT', desc: 'TABLAS PAREDES EXTERIORES', prec: '7', te: 4, to: 0, tn: 0, tp: 0, cost: 100 },
-    { id: 7, tarea: 'VENT', desc: 'COLOCAR LAS VENTANAS', prec: '1', te: 2, to: 0, tn: 0, tp: 0, cost: 30 },
-    { id: 8, tarea: 'INT', desc: 'TABLAS PAREDES INTERIORES', prec: '5 ; 7', te: 3, to: 0, tn: 0, tp: 0, cost: 180 },
-    { id: 9, tarea: 'PINT', desc: 'PINTURA EXT. E INT.', prec: '4 ; 6 ; 8', te: 2, to: 0, tn: 0, tp: 0, cost: 500 }
+    { id: 1, tarea: 'EST', desc: 'EREGIR LA ESTRUCTURA', prec: '2', te: 5, to: 3, tn: 4, tp: 11, cost: 100 },
+    { id: 2, tarea: 'CIM', desc: 'HACER LOS CIMIENTOS', prec: '-', te: 3, to: 1, tn: 3, tp: 5, cost: 50 },
+    { id: 3, tarea: 'VITE', desc: 'PONER LAS VIGAS TECHO', prec: '1', te: 2, to: 1, tn: 2, tp: 3, cost: 80 },
+    { id: 4, tarea: 'RETE', desc: 'REVESTIR EL TECHO', prec: '3', te: 3, to: 1, tn: 3, tp: 5, cost: 80 },
+    { id: 5, tarea: 'ELEC', desc: 'CABLEADO ELECTRICO', prec: '1', te: 4, to: 2, tn: 4, tp: 6, cost: 60 },
+    { id: 6, tarea: 'EXT', desc: 'TABLAS PAREDES EXTERIORES', prec: '7', te: 4, to: 2, tn: 4, tp: 6, cost: 100 },
+    { id: 7, tarea: 'VENT', desc: 'COLOCAR LAS VENTANAS', prec: '1', te: 2, to: 1, tn: 2, tp: 3, cost: 30 },
+    { id: 8, tarea: 'INT', desc: 'TABLAS PAREDES INTERIORES', prec: '5 ; 7', te: 3, to: 2, tn: 3, tp: 4, cost: 180 },
+    { id: 9, tarea: 'PINT', desc: 'PINTURA EXT. E INT.', prec: '4 ; 6 ; 8', te: 2, to: 1, tn: 2, tp: 3, cost: 500 }
   ];
   rowCount = 0;
   prefabData.forEach(d => addRow(d));
