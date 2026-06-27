@@ -10,7 +10,7 @@
   // ── CONFIGURACIÓN DE BLOQUEO POR EXAMEN ───────────────────────────────────
   // Cambiar a true para desactivar la página completa durante la prueba.
   // Al finalizar, volver a poner en false y subir los cambios a GitHub.
-  const IS_LOCKED = true; 
+  const IS_LOCKED = false; 
 
   if (IS_LOCKED) {
     const blockPage = () => {
