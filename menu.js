@@ -1,15 +1,14 @@
 /**
- * menu.js — Navegación dinámica del Portal IO · UTN
+ * menu.js — Navegación dinámica con desplegable de unidades del Portal IO · UTN
  *
- * Inyecta el <nav class="site-nav"> en el #nav-container de la página actual
- * y marca automáticamente el enlace activo según window.location.pathname.
+ * Inyecta el <nav class="site-nav"> en el #nav-container de la página actual,
+ * provee un menú desplegable para cambiar de Unidad y muestra en la barra superior
+ * únicamente las subunidades / herramientas asociadas a la Unidad activa.
  */
 (function () {
   'use strict';
 
   // ── CONFIGURACIÓN DE BLOQUEO POR EXAMEN ───────────────────────────────────
-  // Cambiar a true para desactivar la página completa durante la prueba.
-  // Al finalizar, volver a poner en false y subir los cambios a GitHub.
   const IS_LOCKED = false; 
 
   if (IS_LOCKED) {
@@ -45,16 +44,11 @@
             align-items: center;
           ">
             <div style="
-              width: 80px;
-              height: 80px;
-              border-radius: 50%;
+              width: 80px; height: 80px; border-radius: 50%;
               background: rgba(239, 68, 68, 0.1);
               border: 1px solid rgba(239, 68, 68, 0.3);
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              margin-bottom: 2rem;
-              box-shadow: 0 0 30px rgba(239, 68, 68, 0.2);
+              display: flex; align-items: center; justify-content: center;
+              margin-bottom: 2rem; box-shadow: 0 0 30px rgba(239, 68, 68, 0.2);
             ">
               <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
@@ -63,34 +57,15 @@
             </div>
             
             <h1 style="
-              font-size: 1.8rem;
-              font-weight: 800;
-              margin-bottom: 1rem;
+              font-size: 1.8rem; font-weight: 800; margin-bottom: 1rem;
               background: linear-gradient(135deg, #f3f4f6 0%, #9ca3af 100%);
-              -webkit-background-clip: text;
-              -webkit-text-fill-color: transparent;
-              letter-spacing: -0.5px;
+              -webkit-background-clip: text; -webkit-text-fill-color: transparent;
             ">Acceso Restringido</h1>
             
-            <p style="
-              font-size: 1rem;
-              line-height: 1.6;
-              color: #9ca3af;
-              margin-bottom: 0;
-            ">
-              El simulador y las herramientas de resolución de Investigación Operativa se encuentran <strong>desactivados temporalmente</strong> por examen en curso. 
-              <br><br>
-              El portal volverá a estar disponible automáticamente una vez finalizado el examen.
+            <p style="font-size: 1rem; line-height: 1.6; color: #9ca3af; margin-bottom: 0;">
+              El simulador y las herramientas de Investigación Operativa se encuentran <strong>desactivados temporalmente</strong> por examen en curso. 
+              <br><br>El portal volverá a estar disponible automáticamente al finalizar el examen.
             </p>
-          </div>
-          
-          <div style="
-            position: absolute;
-            bottom: 2rem;
-            font-size: 0.8rem;
-            color: #4b5563;
-          ">
-            Investigación Operativa · UTN · Comisión Sábados
           </div>
         </div>
       `;
@@ -103,67 +78,94 @@
     return;
   }
 
-
   // ── Detectar la página actual ──────────────────────────────────────────────
-  // Funciona tanto en file:// como en http://
   const pathname = window.location.pathname;
   const currentPage = pathname.split('/').pop() || 'index.html';
 
-  // ── Definición de todos los enlaces del portal ─────────────────────────────
-  // unit: 'u1' | 'u2' | 'u4'
-  const NAV_LINKS = [
-    // Unidad 1 · Procesos Estocásticos / Markov
-    { href: 'simulador_markov.html',           label: 'Simulador',         unit: 'u1' },
-    { href: 'ejercicio_call_center.html',      label: 'Call Center',       unit: 'u1' },
-    { href: 'resolvedor_markov.html',          label: 'Resolvedor',        unit: 'u1' },
-    { href: 'resolvedor_nacimiento_muerte.html', label: 'Nac. y Muerte',    unit: 'u1' },
-    // Unidad 2 · Teoría de Colas
-    { href: 'simulador_mmk.html',              label: 'Simulador M/M/k',  unit: 'u2' },
-    // Unidad 3 · Proyectos
-    { href: 'simulador_pert_cpm.html',         label: 'PERT / CPM',       unit: 'u3' },
-    // Unidad 4 · Simulación
-    { href: 'simulador_montecarlo.html',       label: 'Filas de Espera', unit: 'u4' },
-    { href: 'tutorial_excel_montecarlo.html',  label: 'Guía Excel',      unit: 'u4' },
+  // ── Definición de Unidades del Cursado ─────────────────────────────────────
+  const UNITS = [
+    { id: 'u1', name: 'U1 · Markov',       defaultHref: 'simulador_markov.html' },
+    { id: 'u2', name: 'U2 · Colas',        defaultHref: 'simulador_mmk.html' },
+    { id: 'u3', name: 'U3 · Proyectos',    defaultHref: 'simulador_pert_cpm.html' },
+    { id: 'u4', name: 'U4 · Simulación',   defaultHref: 'simulador_montecarlo.html' },
+    { id: 'u5', name: 'U5 · Inventarios',  defaultHref: 'simulador_inventarios.html' },
   ];
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
-  function buildLink(link) {
-    const isActive = currentPage === link.href;
-    // Clase base + clase de unidad (u2 / u4) si aplica + active si corresponde
-    const unitClass = (link.unit !== 'u1') ? ` ${link.unit}` : '';
-    const activeClass = isActive ? ' active' : '';
-    return `<a href="${link.href}" class="nav-link${unitClass}${activeClass}">${link.label}</a>`;
+  // ── Definición de Subunidades / Herramientas por Unidad ───────────────────
+  const NAV_LINKS = [
+    // U1
+    { href: 'simulador_markov.html',           label: 'Simulador Markov',   unit: 'u1' },
+    { href: 'ejercicio_call_center.html',      label: 'Call Center',         unit: 'u1' },
+    { href: 'resolvedor_markov.html',          label: 'Resolvedor Markov',  unit: 'u1' },
+    { href: 'resolvedor_nacimiento_muerte.html', label: 'Nac. y Muerte',      unit: 'u1' },
+    // U2
+    { href: 'simulador_mmk.html',              label: 'Simulador M/M/k',    unit: 'u2' },
+    // U3
+    { href: 'simulador_pert_cpm.html',         label: 'Simulador PERT / CPM', unit: 'u3' },
+    // U4
+    { href: 'simulador_montecarlo.html',       label: 'Filas de Espera',    unit: 'u4' },
+    { href: 'tutorial_excel_montecarlo.html',  label: 'Guía Excel',         unit: 'u4' },
+    // U5
+    { href: 'simulador_inventarios.html',      label: 'Simulador EOQ',      unit: 'u5' },
+  ];
+
+  // Identificar unidad activa
+  const currentLink = NAV_LINKS.find(l => l.href === currentPage);
+  const currentUnitId = currentLink ? currentLink.unit : (currentPage === 'index.html' ? 'home' : 'u1');
+
+  // ── Opciones del Selector Desplegable de Unidad ────────────────────────────
+  const selectOptionsHTML = UNITS.map(u => {
+    const isSelected = u.id === currentUnitId ? 'selected' : '';
+    return `<option value="${u.defaultHref}" ${isSelected}>${u.name}</option>`;
+  }).join('');
+
+  const homeOption = `<option value="index.html" ${currentUnitId === 'home' ? 'selected' : ''}>📍 Portal Principal (Inicio)</option>`;
+  const dropdownHTML = `
+    <div class="unit-select-wrapper">
+      <select class="unit-select ${currentUnitId !== 'home' ? currentUnitId : 'u1'}" onchange="window.location.href=this.value;">
+        ${homeOption}
+        ${selectOptionsHTML}
+      </select>
+    </div>
+  `;
+
+  // ── Filtrar Subunidades / Pestañas de la Unidad Activa ─────────────────────
+  let subLinksHTML = '';
+  if (currentUnitId === 'home') {
+    // Si estamos en la Home, mostrar accesos directos principales de cada unidad
+    subLinksHTML = UNITS.map(u => {
+      return `<a href="${u.defaultHref}" class="nav-link ${u.id}">${u.name}</a>`;
+    }).join('');
+  } else {
+    // Si estamos en una unidad, mostrar ÚNICAMENTE sus pestañas/herramientas
+    subLinksHTML = NAV_LINKS
+      .filter(l => l.unit === currentUnitId)
+      .map(l => {
+        const isActive = currentPage === l.href;
+        return `<a href="${l.href}" class="nav-link ${l.unit}${isActive ? ' active' : ''}">${l.label}</a>`;
+      })
+      .join('');
   }
 
-  // ── Construir el HTML completo del nav ─────────────────────────────────────
-  const currentLink = NAV_LINKS.find(l => l.href === currentPage);
-  const currentUnit = currentLink ? currentLink.unit : 'u1';
-
-  const u1Links = NAV_LINKS.filter(l => l.unit === 'u1').map(buildLink).join('\n  ');
-  const u2Links = NAV_LINKS.filter(l => l.unit === 'u2').map(buildLink).join('\n  ');
-  const u3Links = NAV_LINKS.filter(l => l.unit === 'u3').map(buildLink).join('\n  ');
-  const u4Links = NAV_LINKS.filter(l => l.unit === 'u4').map(buildLink).join('\n  ');
-
-  const navHTML = `<nav class="site-nav">
-  <a href="index.html" class="nav-logo">
-    <div class="dot ${currentUnit}"></div>
+  // ── Construir HTML final del Navbar ────────────────────────────────────────
+  const navHTML = `
+<nav class="site-nav">
+  <a href="index.html" class="nav-logo" title="Ir al Portal Principal">
+    <div class="dot ${currentUnitId !== 'home' ? currentUnitId : 'u1'}"></div>
     IO · UTN
   </a>
-  <span class="nav-unit">U1 · Markov</span>
-  ${u1Links}
-  <div class="nav-sep"></div>
-  <span class="nav-unit u2">U2 · Colas</span>
-  ${u2Links}
-  <div class="nav-sep"></div>
-  <span class="nav-unit u3" style="color: var(--purple-accent, #a855f7);">U3 · Proyectos</span>
-  ${u3Links}
-  <div class="nav-sep"></div>
-  <span class="nav-unit u4">U4 · Simulación</span>
-  ${u4Links}
-</nav>`;
+  
+  ${dropdownHTML}
 
-  // ── Inyectar en #nav-container ─────────────────────────────────────────────
-  // outerHTML reemplaza el <div> placeholder por el <nav> real
+  <div class="nav-sep"></div>
+
+  <div style="display: flex; align-items: center; gap: 4px; overflow-x: auto; scrollbar-width: none;">
+    ${subLinksHTML}
+  </div>
+</nav>
+  `;
+
+  // ── Inyectar en el DOM ─────────────────────────────────────────────────────
   const container = document.getElementById('nav-container');
   if (container) {
     container.outerHTML = navHTML;

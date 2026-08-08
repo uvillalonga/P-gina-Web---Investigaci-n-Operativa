@@ -1,0 +1,2258 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unidad 5 · Gestión de Inventarios — Portal IO · UTN</title>
+<meta name="description" content="Simulador interactivo, validador de parciales, machete dinámico y quiz de autoevaluación para modelos de inventarios (EOQ, Lagrange y Descuentos) · UTN Investigación Operativa.">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+
+<!-- Librerías Externas via CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+
+<style>
+/* ── EXCLUSIVE STYLES FOR UNIDAD 5 INVENTARIOS ── */
+
+.mod-tab-bar {
+  display: flex;
+  gap: .75rem;
+  justify-content: center;
+  margin: 1.5rem 0 2rem;
+  flex-wrap: wrap;
+}
+
+.mod-tab-btn {
+  background: var(--surface);
+  border: 1px solid var(--border-med);
+  color: var(--text2);
+  padding: .75rem 1.25rem;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: .9rem;
+  cursor: pointer;
+  transition: all .25s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mod-tab-btn:hover {
+  color: var(--text);
+  border-color: rgba(236, 72, 153, 0.4);
+  transform: translateY(-2px);
+}
+
+.mod-tab-btn.active {
+  background: rgba(236, 72, 153, 0.15);
+  border-color: #ec4899;
+  color: #f472b6;
+  box-shadow: 0 4px 20px rgba(236, 72, 153, 0.2);
+}
+
+.print-btn {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid #10b981;
+  color: #6ee7b7;
+}
+.print-btn:hover {
+  background: rgba(16, 185, 129, 0.25);
+  color: white;
+}
+
+.mod-content {
+  display: none;
+  animation: fadeIn .4s ease;
+}
+
+.mod-content.active {
+  display: block;
+}
+
+/* ── MÓDULO 1: GAME & PARAMETERS STYLES ── */
+.game-container {
+  background: var(--surface);
+  border: 1px solid rgba(236, 72, 153, 0.2);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  margin-bottom: 2rem;
+}
+
+.case-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(236, 72, 153, 0.12);
+  color: #ec4899;
+  border: 1px solid rgba(236, 72, 153, 0.3);
+  padding: .3rem .8rem;
+  border-radius: 999px;
+  font-size: .78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  margin-bottom: 1rem;
+}
+
+/* Panel de Selección de Escenarios */
+.scenario-selector {
+  display: flex;
+  gap: .5rem;
+  flex-wrap: wrap;
+  margin: .5rem 0 1rem;
+}
+
+.scenario-btn {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid var(--border-med);
+  color: var(--text2);
+  padding: .55rem .95rem;
+  border-radius: 10px;
+  font-size: .85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s;
+}
+.scenario-btn:hover {
+  border-color: #ec4899;
+  color: var(--text);
+}
+.scenario-btn.active {
+  background: rgba(236, 72, 153, 0.15);
+  border-color: #ec4899;
+  color: #f472b6;
+}
+
+/* Panel de Edición de Variables */
+.param-editor {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(236, 72, 153, 0.2);
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1.25rem;
+}
+
+.param-group {
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+}
+.param-group label {
+  font-size: .75rem;
+  font-weight: 700;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+.param-input {
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid var(--border-med);
+  color: var(--text);
+  padding: .55rem .75rem;
+  border-radius: 8px;
+  font-family: 'Fira Code', monospace;
+  font-size: .95rem;
+  font-weight: 600;
+  width: 100%;
+}
+.param-input:focus {
+  outline: none;
+  border-color: #ec4899;
+  box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.2);
+}
+
+.slider-card {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.5rem 1.75rem;
+  margin: 1.5rem 0;
+  text-align: center;
+}
+
+.slider-val-display {
+  font-family: 'Fira Code', monospace;
+  font-size: 2.6rem;
+  font-weight: 800;
+  color: #f472b6;
+  margin: .4rem 0 .8rem;
+  text-shadow: 0 0 15px rgba(236, 72, 153, 0.3);
+}
+
+.giant-slider {
+  width: 100%;
+  height: 12px;
+  border-radius: 8px;
+  background: #1e293b;
+  outline: none;
+  appearance: none;
+  cursor: pointer;
+  transition: background .2s;
+}
+
+.giant-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #ec4899;
+  box-shadow: 0 0 15px rgba(236, 72, 153, 0.8);
+  cursor: pointer;
+  transition: transform .15s;
+}
+.giant-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.presets-row {
+  display: flex;
+  gap: .5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.preset-chip {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  padding: .4rem .8rem;
+  border-radius: 8px;
+  font-size: .8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s;
+}
+.preset-chip:hover {
+  background: rgba(236, 72, 153, 0.2);
+  color: var(--text);
+  border-color: #ec4899;
+}
+
+/* Balanza Indicators */
+.balance-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.25rem;
+  margin: 1.5rem 0;
+}
+
+.cost-card {
+  background: rgba(15, 23, 42, 0.7);
+  border-radius: 12px;
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.cost-card.pedidos { border-top: 4px solid #f59e0b; }
+.cost-card.almacen { border-top: 4px solid #3b82f6; }
+.cost-card.adquisicion { border-top: 4px solid #10b981; }
+.cost-card.total   { border-top: 4px solid #ec4899; background: rgba(236, 72, 153, 0.05); }
+
+.cost-card .lbl {
+  font-size: .82rem;
+  font-weight: 700;
+  color: var(--text2);
+  text-transform: uppercase;
+}
+
+.cost-card .val {
+  font-family: 'Fira Code', monospace;
+  font-size: 1.6rem;
+  font-weight: 800;
+  margin: .5rem 0;
+}
+
+.cost-card.pedidos .val { color: #f59e0b; }
+.cost-card.almacen .val { color: #60a5fa; }
+.cost-card.adquisicion .val { color: #6ee7b7; }
+.cost-card.total .val   { color: #f472b6; }
+
+.cost-bar-outer {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.cost-bar-inner {
+  height: 100%;
+  border-radius: 999px;
+  transition: width .3s ease;
+}
+
+/* Warnings and Victory Banner */
+.feedback-banner {
+  padding: 1.25rem;
+  border-radius: 12px;
+  font-weight: 600;
+  margin: 1.5rem 0;
+  display: none;
+  animation: fadeIn .3s ease;
+}
+
+.feedback-banner.bancarrota {
+  display: block;
+  background: rgba(244, 63, 94, 0.15);
+  border: 1px solid rgba(244, 63, 94, 0.4);
+  color: #fca5a5;
+}
+
+.feedback-banner.galpon {
+  display: block;
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  color: #93c5fd;
+}
+
+.feedback-banner.victoria {
+  display: block;
+  background: linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(16, 185, 129, 0.2));
+  border: 2px solid #ec4899;
+  color: #f472b6;
+  box-shadow: 0 0 30px rgba(236, 72, 153, 0.3);
+  text-align: center;
+}
+
+/* ROP KPI Box */
+.rop-card {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(236, 72, 153, 0.08));
+  border: 1px solid rgba(236, 72, 153, 0.25);
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  margin: 1.5rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.rop-title {
+  font-size: .85rem;
+  font-weight: 700;
+  color: #f472b6;
+  text-transform: uppercase;
+}
+.rop-value {
+  font-family: 'Fira Code', monospace;
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #60a5fa;
+}
+
+/* Layout para los 2 Gráficos Apilados Verticalmente */
+.charts-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.chart-card-large {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(236, 72, 153, 0.2);
+  border-radius: 14px;
+  padding: 1.5rem;
+}
+
+.chart-box-large {
+  height: 480px;
+  position: relative;
+  width: 100%;
+}
+
+/* ── MÓDULO 2 STYLES & TABLES ── */
+.subtabs-bar {
+  display: flex;
+  gap: .75rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.subtab-btn {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid var(--border-med);
+  color: var(--text2);
+  padding: .75rem 1.25rem;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: .88rem;
+  cursor: pointer;
+  transition: all .2s ease;
+}
+
+.subtab-btn:hover {
+  border-color: #ec4899;
+  color: var(--text);
+}
+
+.subtab-btn.active {
+  background: rgba(236, 72, 153, 0.15);
+  border-color: #ec4899;
+  color: #f472b6;
+  box-shadow: 0 4px 15px rgba(236, 72, 153, 0.2);
+}
+
+.config-panel {
+  background: var(--surface);
+  border: 1px solid rgba(236, 72, 153, 0.2);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  margin-bottom: 2rem;
+}
+
+.input-num {
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid var(--border-med);
+  color: var(--text);
+  padding: .6rem .8rem;
+  border-radius: 8px;
+  font-family: 'Fira Code', monospace;
+  font-size: 1rem;
+  font-weight: 600;
+}
+.input-num:focus {
+  outline: none;
+  border-color: #ec4899;
+  box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.2);
+}
+
+.btn-primary {
+  background: #ec4899;
+  color: white;
+  border: none;
+  padding: .75rem 1.4rem;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: .9rem;
+  cursor: pointer;
+  transition: all .2s ease;
+  box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3);
+}
+.btn-primary:hover {
+  background: #db2777;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(236, 72, 153, 0.4);
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  border: 1px solid var(--border-med);
+  padding: .75rem 1.25rem;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: .88rem;
+  cursor: pointer;
+  transition: all .2s;
+}
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(236, 72, 153, 0.4);
+}
+
+/* Tablas Generales Centradas sin Scroll Horizontal */
+.data-table, #sensitivityTable {
+  width: 100%;
+  table-layout: auto;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(236, 72, 153, 0.25);
+  margin: 1.25rem 0;
+  background: rgba(15, 23, 42, 0.6);
+}
+
+.data-table th, #sensitivityTable th {
+  background: rgba(236, 72, 153, 0.12);
+  color: #f472b6;
+  font-weight: 800;
+  font-size: .78rem;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  padding: .75rem .5rem;
+  border-bottom: 2px solid rgba(236, 72, 153, 0.3);
+  text-align: center;
+}
+
+.data-table td, #sensitivityTable td {
+  padding: .75rem .5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  vertical-align: middle;
+  font-size: .88rem;
+  text-align: center;
+}
+
+.data-table tr:hover td, #sensitivityTable tr:hover td {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.data-table input {
+  background: rgba(30, 41, 59, 0.9);
+  border: 1px solid rgba(236, 72, 153, 0.25);
+  color: var(--text);
+  padding: .5rem .5rem;
+  border-radius: 8px;
+  font-family: 'Fira Code', monospace;
+  font-size: .88rem;
+  text-align: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.data-table input:focus {
+  outline: none;
+  border-color: #ec4899;
+  box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.25);
+}
+
+/* ── MÓDULO 3: MACHETE DINÁMICO STYLES ── */
+.machete-grid {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 1.75rem;
+}
+@media (max-width: 850px) {
+  .machete-grid { grid-template-columns: 1fr; }
+}
+
+.machete-menu {
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+}
+
+.machete-btn {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid var(--border-med);
+  color: var(--text2);
+  padding: 1.1rem 1.25rem;
+  border-radius: 14px;
+  text-align: left;
+  font-weight: 700;
+  font-size: .92rem;
+  cursor: pointer;
+  transition: all .25s ease;
+  display: flex;
+  flex-direction: column;
+  gap: .25rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.machete-btn:hover {
+  background: rgba(236, 72, 153, 0.08);
+  border-color: rgba(236, 72, 153, 0.4);
+  color: var(--text);
+  transform: translateX(4px);
+}
+
+.machete-btn.active {
+  background: linear-gradient(135deg, rgba(236, 72, 153, 0.15), rgba(15, 23, 42, 0.9));
+  border-color: #ec4899;
+  color: #f472b6;
+  box-shadow: 0 4px 20px rgba(236, 72, 153, 0.2);
+}
+
+.machete-btn.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: #ec4899;
+}
+
+.equations {
+  display: flex;
+  flex-direction: column;
+  gap: .85rem;
+  margin: 1.5rem 0;
+}
+
+.equations > div {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(236, 72, 153, 0.2);
+  border-left: 4px solid #ec4899;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  transition: all .2s ease;
+}
+
+.equations > div:hover {
+  border-color: rgba(236, 72, 153, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.svg-diagram {
+  width: 100%;
+  height: 210px;
+  background: rgba(15, 23, 42, 0.6);
+  border-radius: 14px;
+  border: 1px solid rgba(236, 72, 153, 0.2);
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+}
+
+.excel-box {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(15, 23, 42, 0.8));
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  margin-top: 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.1);
+}
+
+.excel-code {
+  font-family: 'Fira Code', monospace;
+  font-size: 1.05rem;
+  color: #6ee7b7;
+  font-weight: 700;
+  letter-spacing: .5px;
+}
+
+.copy-btn {
+  background: rgba(16, 185, 129, 0.18);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #6ee7b7;
+  padding: .55rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: .85rem;
+  transition: all .2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.copy-btn:hover {
+  background: #10b981;
+  color: white;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+  transform: translateY(-2px);
+}
+
+/* Resolution Box */
+.resolution-box {
+  display: none;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 16px;
+  padding: 2rem;
+  margin-top: 2rem;
+  animation: fadeIn .5s ease;
+}
+
+.math-block {
+  background: rgba(15, 23, 42, 0.8);
+  padding: 1.25rem;
+  border-radius: 10px;
+  overflow-x: auto;
+  margin-bottom: 1rem;
+  border: 1px solid var(--border-med);
+}
+
+/* ── QUIZ STYLES ── */
+.quiz-card {
+  background: var(--surface);
+  border: 1px solid var(--border-med);
+  border-radius: 14px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.quiz-question {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 1rem;
+}
+
+.quiz-options {
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+}
+
+.quiz-opt-btn {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  padding: .8rem 1rem;
+  border-radius: 10px;
+  text-align: left;
+  font-size: .9rem;
+  cursor: pointer;
+  transition: all .2s;
+}
+
+.quiz-opt-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+}
+
+.quiz-opt-btn.correct {
+  background: rgba(16, 185, 129, 0.2) !important;
+  border-color: #10b981 !important;
+  color: #6ee7b7 !important;
+}
+
+.quiz-opt-btn.wrong {
+  background: rgba(244, 63, 94, 0.2) !important;
+  border-color: #f43f5e !important;
+  color: #fca5a5 !important;
+}
+
+.quiz-explain {
+  display: none;
+  font-size: .85rem;
+  margin-top: .75rem;
+  padding: .75rem;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid var(--border);
+  color: var(--text2);
+}
+
+/* ── PRINT STYLES ── */
+@media print {
+  body { background: white !important; color: black !important; }
+  .site-nav, .mod-tab-bar, .scenario-selector, .presets-row, .giant-slider, .scenario-btn, .print-btn { display: none !important; }
+  .game-container, .config-panel { border: none !important; box-shadow: none !important; background: white !important; color: black !important; }
+  .cost-card { border: 1px solid #ccc !important; background: #f9f9f9 !important; color: black !important; }
+  .val { color: black !important; }
+}
+
+</style>
+</head>
+<body>
+
+<div id="nav-container"></div>
+
+<!-- HEADER -->
+<section class="page-header u5">
+  <div class="case-badge">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+    Unidad 5 · Modelos de Inventarios
+  </div>
+  <h1>Simulador & Resolvedor de Inventarios</h1>
+  <p>Entorno interactivo de experimentación, validador de parciales, machete dinámico y trivia autoevaluativa para optimizar la balanza entre pedir y almacenar.</p>
+</section>
+
+<div class="content" style="max-width: 1150px; margin: 0 auto; padding: 2rem 5%;">
+
+  <!-- PESTAÑAS PRINCIPALES -->
+  <div class="mod-tab-bar">
+    <button class="mod-tab-btn active" onclick="switchModule('mod1', this)">
+      <span>🎮</span> Módulo 1: El Juego de la Bancarrota (EOQ)
+    </button>
+    <button class="mod-tab-btn" onclick="switchModule('mod2', this)">
+      <span>🛠️</span> Módulo 2: El Oráculo (Validador)
+    </button>
+    <button class="mod-tab-btn" onclick="switchModule('mod3', this)">
+      <span>📚</span> Módulo 3: Machete Dinámico
+    </button>
+    <button class="mod-tab-btn" onclick="switchModule('mod4', this)">
+      <span>🧩</span> Módulo 4: Trivia de Parcial
+    </button>
+    <button class="mod-tab-btn print-btn" onclick="window.print()">
+      <span>📥</span> Imprimir / Exportar Reporte
+    </button>
+  </div>
+
+  <!-- ═════════════════════════════════════════════════════════════════════════
+       MÓDULO 1: JUEGO DE LA BANCARROTA, DIENTE DE SIERRA Y SENSIBILIDAD
+       ═════════════════════════════════════════════════════════════════════════ -->
+  <div id="mod1" class="mod-content active">
+
+    <div class="game-container" id="gameCard">
+      
+      <!-- SELECCIÓN DE ESCENARIO -->
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+        <div>
+          <h2 style="font-size: 1.4rem; font-weight: 800; color: var(--text);">Simulador de Lote Óptimo (EOQ)</h2>
+          <p style="font-size: .88rem; color: var(--text2);">Seleccioná un caso de estudio o personalizá las 6 variables fundamentales del modelo.</p>
+        </div>
+
+        <div class="scenario-selector">
+          <button class="scenario-btn active" id="btnScenGolo" onclick="loadScenario('golo')">📌 Caso Golo S.A. (Ej 4)</button>
+          <button class="scenario-btn" id="btnScenParcial" onclick="loadScenario('parcial')">📌 Parcial 10.000 u (Horizonte 400d)</button>
+          <button class="scenario-btn" id="btnScenCustom" onclick="loadScenario('custom')">⚙️ Personalizado</button>
+        </div>
+      </div>
+
+      <!-- EDITOR DE PARÁMETROS DEL MODELO -->
+      <div class="param-editor">
+        <div class="param-group">
+          <label for="paramD">Demanda (D):</label>
+          <input type="number" id="paramD" class="param-input" value="937.5" step="10" oninput="onParamChange()">
+        </div>
+        <div class="param-group">
+          <label for="paramT">Horizonte (T días):</label>
+          <input type="number" id="paramT" class="param-input" value="1" step="1" oninput="onParamChange()">
+        </div>
+        <div class="param-group">
+          <label for="paramK">Costo Pedido (k):</label>
+          <input type="number" id="paramK" class="param-input" value="100" step="10" oninput="onParamChange()">
+        </div>
+        <div class="param-group">
+          <label for="paramC1">Costo Almacén (c₁):</label>
+          <input type="number" id="paramC1" class="param-input" value="0.10" step="0.01" oninput="onParamChange()">
+        </div>
+        <div class="param-group">
+          <label for="paramB">Costo Adquisición (b):</label>
+          <input type="number" id="paramB" class="param-input" value="0" step="0.5" oninput="onParamChange()">
+        </div>
+        <div class="param-group">
+          <label for="paramL">Lead Time Proveedor (L días):</label>
+          <input type="number" id="paramL" class="param-input" value="5" step="1" oninput="onParamChange()">
+        </div>
+      </div>
+
+      <!-- SLIDER GIGANTE -->
+      <div class="slider-card">
+        <div style="font-size: .85rem; font-weight: 700; color: var(--text2); text-transform: uppercase;">
+          ¿Cuántas unidades vas a comprar por pedido? (Tamaño del Lote Q)
+        </div>
+        <div class="slider-val-display" id="qValDisplay">1,369 u</div>
+        <input type="range" min="10" max="5000" step="5" value="1369" class="giant-slider" id="eoqSlider" oninput="updateEOQGame(this.value)">
+
+        <div class="presets-row" id="presetsContainer">
+          <!-- Presets dinámicos -->
+        </div>
+      </div>
+
+      <!-- TARJETA KPI ROP (PUNTO DE REORDEN) -->
+      <div class="rop-card">
+        <div>
+          <div class="rop-title">🚚 Punto de Reorden (ROP - Reorder Point)</div>
+          <div style="font-size: .85rem; color: var(--text2); margin-top: .2rem;" id="ropDesc">
+            Emitir la orden de compra al proveedor cuando el stock físico baje a esta cota.
+          </div>
+        </div>
+        <div class="rop-value" id="ropValDisplay">0 u</div>
+      </div>
+
+      <!-- BALANZA DE COSTOS -->
+      <div class="balance-container">
+        <div class="cost-card pedidos">
+          <div class="lbl">Costo de Pedidos / Reorden (Cp)</div>
+          <div class="val" id="cpVal">$0.00</div>
+          <div class="cost-bar-outer">
+            <div class="cost-bar-inner" id="cpBar" style="width: 50%; background: #f59e0b;"></div>
+          </div>
+          <div style="font-size: .75rem; color: var(--text3); margin-top: .5rem;" id="cpDetail">(D / Q) × k</div>
+        </div>
+
+        <div class="cost-card almacen">
+          <div class="lbl">Costo de Almacenamiento (Ca)</div>
+          <div class="val" id="caVal">$0.00</div>
+          <div class="cost-bar-outer">
+            <div class="cost-bar-inner" id="caBar" style="width: 50%; background: #3b82f6;"></div>
+          </div>
+          <div style="font-size: .75rem; color: var(--text3); margin-top: .5rem;" id="caDetail">0.5 × Q × c₁ × T</div>
+        </div>
+
+        <div class="cost-card adquisicion">
+          <div class="lbl">Costo de Adquisición (Cadq)</div>
+          <div class="val" id="cadqVal">$0.00</div>
+          <div class="cost-bar-outer">
+            <div class="cost-bar-inner" id="cadqBar" style="width: 100%; background: #10b981;"></div>
+          </div>
+          <div style="font-size: .75rem; color: var(--text3); margin-top: .5rem;" id="cadqDetail">b × D</div>
+        </div>
+
+        <div class="cost-card total">
+          <div class="lbl">Costo Total Esperado (CTE)</div>
+          <div class="val" id="cteVal">$0.00</div>
+          <div class="cost-bar-outer">
+            <div class="cost-bar-inner" id="cteBar" style="width: 100%; background: #ec4899;"></div>
+          </div>
+          <div style="font-size: .75rem; color: var(--text3); margin-top: .5rem;" id="cteDetail">Cadq + Cp + Ca</div>
+        </div>
+      </div>
+
+      <!-- BANNERS DE FEEDBACK -->
+      <div id="bannerBancarrota" class="feedback-banner bancarrota">
+        ⚠️ <strong>¡DEMASIADOS PEDIDOS! LOS FLETES TE ARRUINAN.</strong><br>
+        Estás pidiendo cantidades muy pequeñas (<span id="ordersPerDay">0</span> pedidos en el horizonte). El costo administrativo de emitir tantas órdenes arruinó tu presupuesto ($<span id="cpBancarrota">0</span> solo en órdenes).
+      </div>
+
+      <div id="bannerGalpon" class="feedback-banner galpon">
+        ⚠️ <strong>¡LOTES INMENSOS! EL GALPÓN EXPLOTA.</strong><br>
+        Compraste una masa física excesiva. El costo acumulado de almacenar tanto stock en el depósito es impagable ($<span id="caGalpon">0</span> en almacenamiento).
+      </div>
+
+      <div id="bannerVictoria" class="feedback-banner victoria">
+        <div style="font-size: 1.3rem; margin-bottom: .25rem;">🎉 <strong>¡PUNTO DULCE ALCANZADO (EOQ)!</strong></div>
+        ¡Felicidades! Encontraste el equilibrio óptimo donde el costo de pedir ($<span id="eqCostPrep">0</span>) se iguala exactamente al costo de almacenar ($<span id="eqCostAlm">0</span>). A este lote se lo conoce como <strong>Lote Óptimo EOQ (q₀)</strong>.
+      </div>
+
+      <!-- DOS GRÁFICOS APILADOS VERTICALMENTE (TAMAÑO GRANDE) -->
+      <div class="charts-stack">
+        <div class="chart-card-large">
+          <h3 style="font-size: 1.1rem; font-weight: 800; color: #f472b6; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px;">
+            <span>📈</span> 1. Curvas Económicas de Costos vs. Cantidad de Lote (Q)
+          </h3>
+          <div class="chart-box-large">
+            <canvas id="eoqChart"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card-large">
+          <h3 style="font-size: 1.1rem; font-weight: 800; color: #60a5fa; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px;">
+            <span>📉</span> 2. Evolución Física del Nivel de Stock q(t) en el Tiempo (Diente de Sierra)
+          </h3>
+          <div class="chart-box-large">
+            <canvas id="sawtoothChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- LABORATORIO DE SENSIBILIDAD E IMPACTO (WHAT-IF) -->
+      <div class="config-panel" style="margin-top: 2rem; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(236, 72, 153, 0.3);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+          <div>
+            <h3 style="font-size: 1.2rem; font-weight: 800; color: #ec4899; display: flex; align-items: center; gap: 8px;">
+              <span>🎯</span> Laboratorio de Sensibilidad & Impacto "What-If"
+            </h3>
+            <p style="font-size: .88rem; color: var(--text2);">
+              Seleccioná un cambio en el entorno para analizar la respuesta del lote óptimo y ver la explicación matemática.
+            </p>
+          </div>
+
+          <div>
+            <label style="font-size: .78rem; font-weight: 700; color: var(--text2); text-transform: uppercase; display: block; margin-bottom: .3rem;">Seleccionar Escenario a Simular:</label>
+            <select id="whatifSelect" onchange="onWhatIfScenarioChange(this.value)" class="param-input" style="min-width: 280px; border-color: #ec4899; color: #f472b6; font-weight: bold;">
+              <option value="d_up" selected>📈 Demanda sube +25% (1.25 × D)</option>
+              <option value="d_down">📉 Demanda cae a la mitad (0.50 × D)</option>
+              <option value="c1_up">📦 Costo Almacén se duplica (2 × c₁)</option>
+              <option value="k_up">🚚 Costo Pedido se cuadruplica (4 × k)</option>
+              <option value="t_up">⏱️ Horizonte de Tiempo se duplica (2 × T)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- TARJETA EXPLICATIVA DINÁMICA EN TIEMPO REAL -->
+        <div id="whatifExplanationCard" style="background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(236, 72, 153, 0.3); border-radius: 14px; padding: 1.5rem; margin-bottom: 1.5rem;">
+          <!-- Inyectado dinámicamente por JS -->
+        </div>
+
+        <h4 style="font-size: .9rem; font-weight: 700; color: var(--text2); text-transform: uppercase; margin-bottom: .75rem;">Matriz Comparativa de Escenarios:</h4>
+        <div style="overflow-x: auto;">
+          <table class="data-table" id="sensitivityTable">
+            <thead>
+              <tr>
+                <th>Escenario</th>
+                <th>Demanda (D)</th>
+                <th>Costo Pedido (k)</th>
+                <th>Costo Almacén (c₁)</th>
+                <th>Lote Óptimo (q₀)</th>
+                <th>Costo Total (CTE₀)</th>
+                <th>Variación Lote Δq₀</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Se puebla con JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- RESOLUCIÓN PASO A PASO -->
+      <div id="resolution-section" class="resolution-box">
+        <h2 style="font-size: 1.3rem; font-weight: 800; color: #10b981; margin-bottom: 1rem;">🎉 ¡Excelente! Has resuelto el Lote Óptimo (EOQ)</h2>
+        <p style="font-size: .95rem; color: var(--text); margin-bottom: 1.5rem;">
+          Matemáticamente, la cantidad exacta es <strong style="color: #ec4899;" id="resOptQText">0 u</strong>. Notarás un fenómeno físico clave de la Investigación Operativa: 
+          en el punto óptimo del modelo básico, <strong>el costo de almacenamiento es exactamente igual al costo de preparación/pedido</strong>.
+        </p>
+
+        <div class="math-block">
+          <strong>1. Cálculo del Lote Óptimo ($q_0$):</strong>
+          <p style="font-size: .88rem; color: var(--text2); margin: .4rem 0;">Derivando la ecuación de Costo Total e igualando a cero, obtenemos la fórmula del Lote Óptimo (EOQ):</p>
+          <div id="mathStep1">$$ q_0 = \sqrt{\frac{2 \cdot k \cdot D}{T \cdot c_1}} $$</div>
+        </div>
+
+        <div class="math-block">
+          <strong>2. Cálculo del Número de Pedidos ($n$):</strong>
+          <div id="mathStep2">$$ n = \frac{D}{q_0} $$</div>
+        </div>
+
+        <div class="math-block">
+          <strong>3. Comprobación del Costo Total Esperado Mínimo ($CTE_0$):</strong>
+          <div id="mathStep3">$$ CTE_0 = C_{adq} + C_{prep} + C_{alm} $$</div>
+        </div>
+
+        <p style="color: var(--text2); font-size: .9rem; margin-top: 1rem; background: rgba(236, 72, 153, 0.08); padding: 1rem; border-radius: 8px; border: 1px solid rgba(236, 72, 153, 0.2);">
+          💡 <strong>Insight para tu Excel:</strong> Cuando resuelvas esto en el parcial, si la columna de $C_{prep}$ (o reorden) y la de $C_{alm}$ no te dan el mismo número, significa que cometiste un error en la fórmula del lote o no respetaste las unidades de tiempo de la Tasa ($c_1$ o $T$).
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ═════════════════════════════════════════════════════════════════════════
+       MÓDULO 2: EL ORÁCULO (VALIDADOR DE PARCIALES)
+       ═════════════════════════════════════════════════════════════════════════ -->
+  <div id="mod2" class="mod-content">
+
+    <div class="subtabs-bar">
+      <button class="subtab-btn active" onclick="switchSubTab('lagrange', this)">📍 Restricción de Volumen (Lagrange)</button>
+      <button class="subtab-btn" onclick="switchSubTab('descuentos', this)">🏷️ Descuentos por Cantidad (Tramos)</button>
+    </div>
+
+    <!-- SUBTAB 2.1: LAGRANGE -->
+    <div id="subtab-lagrange" class="subtab-content">
+      <div class="config-panel">
+        <h2 style="font-size: 1.3rem; font-weight: 800; color: var(--text); margin-bottom: .5rem;">Calculadora de Restricción de Superficie / Volumen (Lagrange)</h2>
+        <p style="font-size: .88rem; color: var(--text2); margin-bottom: 1.5rem;">
+          Resuelve la optimización simultánea de múltiples artículos cuando el galpón o depósito tiene una capacidad límite $S_{max}$.
+        </p>
+
+        <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
+          <div style="flex: 1; min-width: 240px;">
+            <label style="font-size: .8rem; font-weight: 700; color: var(--text2); text-transform: uppercase;">Superficie / Volumen Máximo Disponible (S_max)</label>
+            <input type="number" id="lagrangeSmax" value="450" class="input-num" style="width: 100%; margin-top: .4rem;" placeholder="Ej: 450 m²">
+          </div>
+          <div style="display: flex; align-items: flex-end; gap: .75rem;">
+            <button class="btn-secondary" onclick="loadLagrangePreset()">Cargar Ejemplo de Examen</button>
+            <button class="btn-primary" style="background: #ec4899;" onclick="solveLagrange()">⚡ Resolver por Lagrange</button>
+          </div>
+        </div>
+
+        <h3 style="font-size: 1rem; font-weight: 700; color: var(--text2); margin-bottom: .5rem;">Artículos en Inventario:</h3>
+        <div style="overflow-x: auto;">
+          <table class="data-table" id="lagrangeTable">
+            <thead>
+              <tr>
+                <th>Artículo</th>
+                <th>Demanda D (unid/año)</th>
+                <th>Costo Pedido k ($)</th>
+                <th>Costo Almacén c₁ ($/u/año)</th>
+                <th>Espacio sᵢ (m²/unidad)</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Se puebla con JS -->
+            </tbody>
+          </table>
+        </div>
+        <button class="btn-secondary" onclick="addLagrangeRow()" style="font-size: .82rem;">+ Agregar Artículo</button>
+
+        <!-- RESULTADOS LAGRANGE -->
+        <div id="lagrangeResults" class="results-area" style="margin-top: 2rem;">
+          <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border-med); border-radius: 12px; padding: 1.5rem;">
+            <h3 style="font-size: 1.1rem; font-weight: 800; color: #ec4899; margin-bottom: 1rem;">Resultados de Optimización Ajustada</h3>
+            <div id="lagrangeSummary"></div>
+            <div style="overflow-x: auto; margin-top: 1rem;">
+              <table class="data-table" id="lagrangeResTable">
+                <thead>
+                  <tr>
+                    <th>Artículo</th>
+                    <th>EOQ Sin Restricción (q₀)</th>
+                    <th>Lote Ajustado por Lagrange (q*)</th>
+                    <th>Espacio Requerido</th>
+                    <th>Costo Sin Restricción</th>
+                    <th>Costo Ajustado</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SUBTAB 2.2: DESCUENTOS POR CANTIDAD -->
+    <div id="subtab-descuentos" class="subtab-content" style="display: none;">
+      <div class="config-panel">
+        <h2 style="font-size: 1.3rem; font-weight: 800; color: var(--text); margin-bottom: .5rem;">Calculadora de Descuentos por Cantidad (Tramos de Precio)</h2>
+        <p style="font-size: .88rem; color: var(--text2); margin-bottom: 1.5rem;">
+          Valida los lotes óptimos tentativos $q_0$ por tramo, realiza los ajustes necesarios a las cotas inferiores y determina la opción con el menor Costo Total Esperado (CTE).
+        </p>
+
+        <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
+          <div>
+            <label style="font-size: .8rem; font-weight: 700; color: var(--text2); text-transform: uppercase;">Demanda Anual (D)</label>
+            <input type="number" id="discD" value="5000" class="input-num" style="width: 160px; margin-top: .4rem;">
+          </div>
+          <div>
+            <label style="font-size: .8rem; font-weight: 700; color: var(--text2); text-transform: uppercase;">Costo de Pedido (k)</label>
+            <input type="number" id="disck" value="200" class="input-num" style="width: 160px; margin-top: .4rem;">
+          </div>
+          <div style="display: flex; align-items: flex-end; gap: .75rem;">
+            <button class="btn-secondary" onclick="loadDiscountPreset()">Cargar Ejemplo de Tramos</button>
+            <button class="btn-primary" style="background: #ec4899;" onclick="solveDiscounts()">📊 Evaluar Mejor Opción</button>
+          </div>
+        </div>
+
+        <h3 style="font-size: 1rem; font-weight: 700; color: var(--text2); margin-bottom: .5rem;">Tramos de Precios y Almacenamiento:</h3>
+        <div style="overflow-x: auto;">
+          <table class="data-table" id="discountTable">
+            <thead>
+              <tr>
+                <th>Tramo</th>
+                <th>Rango Mín (q_min)</th>
+                <th>Rango Máx (q_max)</th>
+                <th>Precio Unitario b ($)</th>
+                <th>Costo Almacén c₁ ($/u/año)</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Se puebla con JS -->
+            </tbody>
+          </table>
+        </div>
+        <button class="btn-secondary" onclick="addDiscountRow()" style="font-size: .82rem;">+ Agregar Tramo</button>
+
+        <!-- RESULTADOS DESCUENTOS -->
+        <div id="discountResults" class="results-area" style="margin-top: 2rem;">
+          <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border-med); border-radius: 12px; padding: 1.5rem;">
+            <h3 style="font-size: 1.1rem; font-weight: 800; color: #10b981; margin-bottom: 1rem;">Análisis de Factibilidad y Selección de Lote</h3>
+            <div id="discountSummary"></div>
+            <div style="overflow-x: auto; margin-top: 1rem;">
+              <table class="data-table" id="discountResTable">
+                <thead>
+                  <tr>
+                    <th>Tramo</th>
+                    <th>Lote Calculado (q₀)</th>
+                    <th>Estado de Rango</th>
+                    <th>Lote Candidato (q_c)</th>
+                    <th>Costo Adquisición (b·D)</th>
+                    <th>Costo Pedidos + Almacén</th>
+                    <th>Costo Total (CTE)</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═════════════════════════════════════════════════════════════════════════
+       MÓDULO 3: MACHETE DINÁMICO (CHEAT SHEET)
+       ═════════════════════════════════════════════════════════════════════════ -->
+  <div id="mod3" class="mod-content">
+
+    <div class="machete-grid">
+      <!-- MENÚ DE MODELOS -->
+      <div class="machete-menu">
+        <button class="machete-btn active" onclick="showMachete('basic', this)">
+          🔹 Modelo Básico (EOQ)<br>
+          <span style="font-size: .78rem; color: var(--text3);">Diente de sierra perfecto</span>
+        </button>
+        <button class="machete-btn" onclick="showMachete('stock', this)">
+          🛡️ Stock de Protección (Sp)<br>
+          <span style="font-size: .78rem; color: var(--text3);">Colchón de seguridad permanente</span>
+        </button>
+        <button class="machete-btn" onclick="showMachete('deficit', this)">
+          ⚠️ Agotamiento Admitido<br>
+          <span style="font-size: .78rem; color: var(--text3);">Faltantes con costo c₂</span>
+        </button>
+      </div>
+
+      <!-- DETALLE DEL MACHETE -->
+      <div class="config-panel" style="background: rgba(15, 23, 42, 0.7);">
+        
+        <!-- MODELO BÁSICO -->
+        <div id="mach-basic" class="mach-detail">
+          <h2 style="font-size: 1.3rem; font-weight: 800; color: #ec4899; margin-bottom: .5rem;">Modelo Básico Determinístico (EOQ)</h2>
+          <p style="font-size: .88rem; color: var(--text2); margin-bottom: 1.5rem;">
+            Supone demanda constante $D$, reposición instantánea ($p \to \infty$) y cero déficit.
+          </p>
+
+          <svg class="svg-diagram" viewBox="0 0 500 180">
+            <polyline points="40,30 140,150 140,30 240,150 240,30 340,150 340,30 440,150" fill="none" stroke="#ec4899" stroke-width="3"/>
+            <line x1="30" y1="150" x2="460" y2="150" stroke="var(--text3)" stroke-width="2"/>
+            <line x1="40" y1="20" x2="40" y2="160" stroke="var(--text3)" stroke-width="2"/>
+            <line x1="30" y1="30" x2="450" y2="30" stroke="rgba(236, 72, 153, 0.3)" stroke-dasharray="4"/>
+            <text x="15" y="35" fill="#ec4899" font-size="12" font-weight="bold">q₀</text>
+            <text x="465" y="154" fill="var(--text2)" font-size="12">Tiempo</text>
+          </svg>
+
+          <div class="equations">
+            <div><strong>Lote Óptimo:</strong> $$q_0 = \sqrt{\frac{2 k D}{T c_1}}$$</div>
+            <div><strong>Número de Pedidos:</strong> $$N = \frac{D}{q_0}$$</div>
+            <div><strong>Tiempo entre Pedidos:</strong> $$t_0 = \frac{T}{N}$$</div>
+            <div><strong>Costo Total Esperado:</strong> $$CTE = (b \cdot D) + \left(\frac{D}{q_0} k\right) + \left(\frac{q_0}{2} c_1 T\right)$$</div>
+          </div>
+
+          <div class="excel-box">
+            <div>
+              <div style="font-size: .78rem; color: var(--text2); text-transform: uppercase; font-weight: 700;">Fórmula lista para copiar a Excel:</div>
+              <div class="excel-code" id="codeBasic">=RAIZ((2*K*D)/(T*C1))</div>
+            </div>
+            <button class="copy-btn" onclick="copyExcel('codeBasic')">📋 Copiar Fórmula</button>
+          </div>
+        </div>
+
+        <!-- STOCK DE PROTECCIÓN -->
+        <div id="mach-stock" class="mach-detail" style="display: none;">
+          <h2 style="font-size: 1.3rem; font-weight: 800; color: #10b981; margin-bottom: .5rem;">Modelo con Stock de Protección (Sp)</h2>
+          <p style="font-size: .88rem; color: var(--text2); margin-bottom: 1.5rem;">
+            Mantiene un colchón de reserva $S_p$ constante para amortiguar incertidumbres en el tiempo de entrega o la demanda.
+          </p>
+
+          <svg class="svg-diagram" viewBox="0 0 500 180">
+            <polyline points="40,20 140,110 140,20 240,110 240,20 340,110 340,20 440,110" fill="none" stroke="#10b981" stroke-width="3"/>
+            <line x1="30" y1="110" x2="460" y2="110" stroke="#10b981" stroke-width="1.5" stroke-dasharray="4"/>
+            <line x1="30" y1="150" x2="460" y2="150" stroke="var(--text3)" stroke-width="2"/>
+            <line x1="40" y1="15" x2="40" y2="160" stroke="var(--text3)" stroke-width="2"/>
+            <text x="15" y="25" fill="#10b981" font-size="12" font-weight="bold">S_max</text>
+            <text x="15" y="115" fill="#10b981" font-size="12">Sp</text>
+          </svg>
+
+          <div class="equations">
+            <div><strong>Lote Óptimo:</strong> $$q_0 = \sqrt{\frac{2 k D}{T c_1}}$$</div>
+            <div><strong>Inventario Máximo:</strong> $$S_{max} = q_0 + S_p$$</div>
+            <div><strong>Costo Total Esperado:</strong> $$CTE = (b \cdot D) + \left(\frac{D}{q_0} k\right) + \left(\frac{q_0}{2} c_1 T\right) + (S_p c_1 T)$$</div>
+          </div>
+
+          <div class="excel-box">
+            <div>
+              <div style="font-size: .78rem; color: var(--text2); text-transform: uppercase; font-weight: 700;">Fórmula lista para copiar a Excel:</div>
+              <div class="excel-code" id="codeStock">=RAIZ((2*K*D)/(T*C1)) + Sp</div>
+            </div>
+            <button class="copy-btn" onclick="copyExcel('codeStock')">📋 Copiar Fórmula</button>
+          </div>
+        </div>
+
+        <!-- AGOTAMIENTO ADMITIDO -->
+        <div id="mach-deficit" class="mach-detail" style="display: none;">
+          <h2 style="font-size: 1.3rem; font-weight: 800; color: #f43f5e; margin-bottom: .5rem;">Modelo con Agotamiento / Deficit Admitido (c₂)</h2>
+          <p style="font-size: .88rem; color: var(--text2); margin-bottom: 1.5rem;">
+            Permite la existencia temporal de clientes pendientes (demanda insatisfecha) penalizada con costo $c_2$.
+          </p>
+
+          <svg class="svg-diagram" viewBox="0 0 500 180">
+            <polyline points="40,20 140,160 140,20 240,160 240,20 340,160" fill="none" stroke="#f43f5e" stroke-width="3"/>
+            <line x1="30" y1="100" x2="460" y2="100" stroke="var(--text3)" stroke-width="2"/>
+            <line x1="40" y1="15" x2="40" y2="170" stroke="var(--text3)" stroke-width="2"/>
+            <text x="15" y="25" fill="#f43f5e" font-size="12" font-weight="bold">S</text>
+            <text x="15" y="165" fill="#f43f5e" font-size="12">-S₂</text>
+          </svg>
+
+          <div class="equations">
+            <div><strong>Lote Óptimo:</strong> $$q_0 = \sqrt{\frac{2 k D (c_1 + c_2)}{T c_1 c_2}}$$</div>
+            <div><strong>Inventario Máximo (S):</strong> $$S = q_0 \left( \frac{c_2}{c_1 + c_2} \right)$$</div>
+            <div><strong>Agotamiento Máximo (S₂):</strong> $$S_2 = q_0 - S = q_0 \left( \frac{c_1}{c_1 + c_2} \right)$$</div>
+          </div>
+
+          <div class="excel-box">
+            <div>
+              <div style="font-size: .78rem; color: var(--text2); text-transform: uppercase; font-weight: 700;">Fórmula lista para copiar a Excel:</div>
+              <div class="excel-code" id="codeDeficit">=RAIZ((2*K*D*(C1+C2))/(T*C1*C2))</div>
+            </div>
+            <button class="copy-btn" onclick="copyExcel('codeDeficit')">📋 Copiar Fórmula</button>
+          </div>
+        </div>
+          </div>
+
+          <div class="excel-box">
+            <div>
+              <div style="font-size: .78rem; color: var(--text2); text-transform: uppercase; font-weight: 700;">Fórmula lista para copiar a Excel:</div>
+              <div class="excel-code" id="codeEpq">=RAIZ((2*K*D)/(T*C1*(1-(d/p))))</div>
+            </div>
+            <button class="copy-btn" onclick="copyExcel('codeEpq')">📋 Copiar Fórmula</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═════════════════════════════════════════════════════════════════════════
+       MÓDULO 4: TRIVIA & QUIZ DE AUTOEVALUACIÓN DE PARCIAL
+       ═════════════════════════════════════════════════════════════════════════ -->
+  <div id="mod4" class="mod-content">
+    <div class="config-panel">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+        <div>
+          <h2 style="font-size: 1.4rem; font-weight: 800; color: #ec4899;">🧩 Desafío de Parcial: Quiz de Autoevaluación</h2>
+          <p style="font-size: .9rem; color: var(--text2);">Poné a prueba tus conocimientos sobre trampas teóricas y propiedades matemáticas de inventarios.</p>
+        </div>
+        <div id="quizScoreBadge" style="background: rgba(236, 72, 153, 0.15); border: 1px solid #ec4899; color: #f472b6; padding: .5rem 1rem; border-radius: 999px; font-family: 'Fira Code', monospace; font-weight: 700;">
+          Puntaje: 0 / 4
+        </div>
+      </div>
+
+      <div id="quizContainer">
+        <!-- PREGUNTA 1 -->
+        <div class="quiz-card" id="qCard1">
+          <div class="quiz-question">1. Si el costo administrativo de reorden ($k$) se cuadruplica ($4 \times k$), ¿qué le ocurre al Lote Óptimo ($q_0$)?</div>
+          <div class="quiz-options">
+            <button class="quiz-opt-btn" onclick="checkQuiz(1, 0, false)">A) Permanecerá exactamente igual.</button>
+            <button class="quiz-opt-btn" onclick="checkQuiz(1, 1, true)">B) Se duplicará (se multiplica por 2).</button>
+            <button class="quiz-opt-btn" onclick="checkQuiz(1, 2, false)">C) Se cuadruplicará (se multiplica por 4).</button>
+            <button class="quiz-opt-btn" onclick="checkQuiz(1, 3, false)">D) Se reducirá a la mitad.</button>
+          </div>
+          <div class="quiz-explain" id="qExp1">
+            💡 <strong>Explicación:</strong> Debido a la raíz cuadrada en la fórmula del Lote Óptimo $q_0 = \sqrt{\frac{2 k D}{T c_1}}$, multiplicar $k$ por $4$ genera $\sqrt{4} = 2$. Por lo tanto, el lote óptimo exactamente se duplica.
+          </div>
+        </div>
+
+        <!-- PREGUNTA 2 -->
+        <div class="quiz-card" id="qCard2">
+          <div class="quiz-question">2. En el modelo básico EOQ, ¿cuál es la relación matemática entre el Costo de Preparación ($C_p$) y el Costo de Almacenamiento ($C_a$) en la cantidad óptima $q_0$?</div>
+          <div class="quiz-options">
+            <button class="quiz-opt-btn" onclick="checkQuiz(2, 0, false)">A) El Costo de Preparación es mayor al de Almacenamiento.</button>
+            <button class="quiz-opt-btn" onclick="checkQuiz(2, 1, false)">B) El Costo de Almacenamiento es mayor al de Preparación.</button>
+            <button class="quiz-opt-btn" onclick="checkQuiz(2, 2, true)">C) Son exactamente iguales ($C_p = C_a$).</button>
+            <button class="quiz-opt-btn" onclick="checkQuiz(2, 3, false)">D) La relación depende del costo de adquisición unitario $b$.</button>
+          </div>
+          <div class="quiz-explain" id="qExp2">
+            💡 <strong>Explicación:</strong> El mínimo de la curva en "U" ocurre en la intersección donde la curva decreciente de pedidos se cruza con la línea creciente de almacén. En $q_0$, $C_{prep} = C_{alm}$.
+          </div>
+        </div>
+
+        <!-- PREGUNTA 3 -->
+        <div class="quiz-card" id="qCard3">
+          <div class="quiz-question">3. Si una empresa decide comprar en lotes $Q$ equivalentes a la MITAD del lote óptimo ($Q = q_0 / 2$), ¿qué sucede con su costo de almacenamiento diario?</div>
+          <div class="quiz-options">
+            <button class="quiz-opt-btn" onclick="checkQuiz(3, 0, true)">A) Se reduce exactamente a la mitad.</button>
+            <button class="quiz-opt-btn" onclick="checkQuiz(3, 1, false)">B) Se duplica.</button>
+            <button class="quiz-opt-btn" onclick="checkQuiz(3, 2, false)">C) Se cuadruplica.</button>
+            <button class="quiz-opt-btn" onclick="checkQuiz(3, 3, false)">D) Se mantiene constante porque $c_1$ es fijo.</button>
+          </div>
+          <div class="quiz-explain" id="qExp3">
+            💡 <strong>Explicación:</strong> Como $C_a = 0.5 \cdot Q \cdot c_1 \cdot T$ es directamente proporcional a $Q$, reducir $Q$ a la mitad reduce el costo de mantener inventario a la mitad (a costa de duplicar los fletes).
+          </div>
+        </div>
+
+        <!-- PREGUNTA 4 -->
+        <div class="quiz-card" id="qCard4">
+          <div class="quiz-question">4. En un modelo con Descuentos por Cantidad, si el lote calculado $q_0$ para un determinado tramo es MENOR que el límite inferior $Q_{min}$ de dicho tramo, ¿qué lote candidato debemos evaluar?</div>
+          <div class="quiz-options">
+            <button class="quiz-opt-btn" onclick="checkQuiz(4, 0, false)">A) Se descarta el tramo por ser infactible.</button>
+            <button class="quiz-opt-btn" onclick="checkQuiz(4, 1, true)">B) Se evalúa la cota inferior exacta $Q_{min}$.</button>
+            <button class="quiz-opt-btn" onclick="checkQuiz(4, 2, false)">C) Se evalúa el lote $q_0$ calculado.</button>
+            <button class="quiz-opt-btn" onclick="checkQuiz(4, 3, false)">D) Se evalúa la cota superior $Q_{max}$.</button>
+          </div>
+          <div class="quiz-explain" id="qExp4">
+            💡 <strong>Explicación:</strong> Como el costo total $CTE$ es estrictamente creciente para $Q > q_0$, el punto de menor costo posible dentro del rango permitido del tramo es el piso mínimo $Q_{min}$.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <strong>Investigación Operativa · UTN · Comisión Sábados 2026</strong><br>
+  Módulo de Inventarios · Herramienta educativa interactiva para uso en clase y resolución de parciales.
+</footer>
+
+<script src="menu.js"></script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   LÓGICA JAVASCRIPT COMPLETA Y REACTIVA DEL SIMULADOR DE INVENTARIOS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+// VARIABLES GLOBALES REACTIVAS DEL MÓDULO 1
+let activeParams = {
+  D: 937.5,
+  T: 1,
+  k: 100,
+  c1: 0.10,
+  b: 0,
+  L: 5
+};
+
+let optimalQ = 1369.3;
+let eoqChartInstance = null;
+let sawtoothChartInstance = null;
+let solvedState = false;
+let quizScores = { 1: false, 2: false, 3: false, 4: false };
+
+// CAMBIO DE MÓDULOS PRINCIPALES
+function switchModule(modId, btn) {
+  document.querySelectorAll('.mod-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.mod-tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById(modId).classList.add('active');
+  btn.classList.add('active');
+
+  if (modId === 'mod1') {
+    if (eoqChartInstance) eoqChartInstance.update();
+    if (sawtoothChartInstance) sawtoothChartInstance.update();
+  }
+}
+
+// CAMBIO DE SUBTABS MÓDULO 2
+function switchSubTab(subId, btn) {
+  document.querySelectorAll('.subtab-content').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('.subtab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('subtab-' + subId).style.display = 'block';
+  btn.classList.add('active');
+}
+
+// CAMBIO DE TABS MÓDULO 3 (MACHETE)
+function showMachete(machId, btn) {
+  document.querySelectorAll('.mach-detail').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('.machete-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('mach-' + machId).style.display = 'block';
+  btn.classList.add('active');
+}
+
+// COPIAR FÓRMULA DE EXCEL
+function copyExcel(codeId) {
+  const text = document.getElementById(codeId).innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    alert("¡Fórmula copiada al portapapeles!\n\n" + text);
+  });
+}
+
+// ── MÓDULO 1: MANEJO DE ESCENARIOS Y PARÁMETROS ─────────────────────────────
+
+function loadScenario(type) {
+  document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('active'));
+
+  if (type === 'golo') {
+    document.getElementById('btnScenGolo').classList.add('active');
+    activeParams = { D: 937.5, T: 1, k: 100, c1: 0.10, b: 0, L: 5 };
+  } else if (type === 'parcial') {
+    document.getElementById('btnScenParcial').classList.add('active');
+    activeParams = { D: 10000, T: 400, k: 1000, c1: 0.10, b: 1.0, L: 10 };
+  } else {
+    document.getElementById('btnScenCustom').classList.add('active');
+    readParamsFromDOM();
+    return;
+  }
+
+  document.getElementById('paramD').value = activeParams.D;
+  document.getElementById('paramT').value = activeParams.T;
+  document.getElementById('paramK').value = activeParams.k;
+  document.getElementById('paramC1').value = activeParams.c1;
+  document.getElementById('paramB').value = activeParams.b;
+  document.getElementById('paramL').value = activeParams.L;
+
+  recalculateAll();
+}
+
+function readParamsFromDOM() {
+  activeParams.D = parseFloat(document.getElementById('paramD').value) || 1;
+  activeParams.T = parseFloat(document.getElementById('paramT').value) || 1;
+  activeParams.k = parseFloat(document.getElementById('paramK').value) || 1;
+  activeParams.c1 = parseFloat(document.getElementById('paramC1').value) || 0.01;
+  activeParams.b = parseFloat(document.getElementById('paramB').value) || 0;
+  activeParams.L = parseFloat(document.getElementById('paramL').value) || 0;
+}
+
+function onParamChange() {
+  document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('btnScenCustom').classList.add('active');
+  readParamsFromDOM();
+  recalculateAll();
+}
+
+function recalculateAll() {
+  const { D, T, k, c1 } = activeParams;
+  optimalQ = Math.sqrt((2 * k * D) / (T * c1));
+  solvedState = false;
+
+  // Ajustar Slider
+  const slider = document.getElementById('eoqSlider');
+  const minQ = Math.max(10, Math.floor(optimalQ * 0.05));
+  const maxQ = Math.ceil(optimalQ * 3.5);
+  const stepQ = Math.max(1, Math.floor(optimalQ / 100));
+
+  slider.min = minQ;
+  slider.max = maxQ;
+  slider.step = stepQ;
+  slider.value = Math.round(optimalQ);
+
+  renderPresets(optimalQ, minQ, maxQ);
+  const selWhatIf = document.getElementById('whatifSelect');
+  onWhatIfScenarioChange(selWhatIf ? selWhatIf.value : 'd_up');
+  updateEOQChart();
+  updateEOQGame(slider.value);
+}
+
+function renderPresets(qOpt, minQ, maxQ) {
+  const container = document.getElementById('presetsContainer');
+  const qOptInt = Math.round(qOpt);
+  const qLow = Math.round(qOpt * 0.2);
+  const qMid = Math.round(qOpt * 0.5);
+  const qHigh = Math.round(qOpt * 2.0);
+
+  container.innerHTML = `
+    <button class="preset-chip" onclick="setEOQValue(${qLow})">${qLow.toLocaleString()} u (Lote Pequeño)</button>
+    <button class="preset-chip" onclick="setEOQValue(${qMid})">${qMid.toLocaleString()} u</button>
+    <button class="preset-chip" style="border-color: #ec4899; color: #f472b6;" onclick="setEOQValue(${qOptInt})">⭐ ${qOptInt.toLocaleString()} u (EOQ Óptimo)</button>
+    <button class="preset-chip" onclick="setEOQValue(${qHigh})">${qHigh.toLocaleString()} u</button>
+    <button class="preset-chip" onclick="setEOQValue(${maxQ})">${maxQ.toLocaleString()} u (Lote Gigante)</button>
+  `;
+}
+
+// ── JUEGO, ROP Y BALANZA EN TIEMPO REAL ─────────────────────────────────────
+
+function updateEOQGame(qVal) {
+  qVal = parseFloat(qVal) || 1;
+  document.getElementById('qValDisplay').innerText = qVal.toLocaleString('es-AR') + ' u';
+
+  const { D, T, k, c1, b, L } = activeParams;
+
+  const cp = (D / qVal) * k;
+  const ca = 0.5 * qVal * c1 * T;
+  const cadq = b * D;
+  const cte = cadq + cp + ca;
+
+  document.getElementById('cpVal').innerText = '$' + cp.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  document.getElementById('caVal').innerText = '$' + ca.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  document.getElementById('cadqVal').innerText = '$' + cadq.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  document.getElementById('cteVal').innerText = '$' + cte.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+  // Cálculo ROP (Punto de Reorden)
+  const d_daily = D / T;
+  const ropBruto = d_daily * L;
+  const cycleDays = qVal / d_daily;
+
+  let ropDisplayVal = Math.round(ropBruto);
+  let ropText = `Consumo diario: ${d_daily.toFixed(1)} u/día. Al demorar el proveedor ${L} días, se debe reordenar al llegar a ${ropDisplayVal.toLocaleString('es-AR')} u.`;
+
+  if (L > cycleDays && cycleDays > 0) {
+    const m = Math.floor(ropBruto / qVal);
+    const ropEfectivo = ropBruto - (m * qVal);
+    ropText = `💡 <strong>Punto de Reorden Efectivo:</strong> Como la demora del proveedor (${L}d) supera la duración de un lote (${cycleDays.toFixed(1)}d), existen <strong>${m} pedido(s) pendientes en tránsito</strong>. Se debe emitir una nueva orden cuando el stock físico en galpón baje a <strong style="color: #60a5fa;">${Math.round(ropEfectivo).toLocaleString('es-AR')} u</strong>.`;
+  }
+
+  document.getElementById('ropValDisplay').innerText = Math.round(ropBruto).toLocaleString('es-AR') + ' u';
+  document.getElementById('ropDesc').innerHTML = ropText;
+
+  // Animación de Barras
+  const maxCost = Math.max(cp, ca, 100);
+  document.getElementById('cpBar').style.width = Math.min(100, (cp / maxCost) * 100) + '%';
+  document.getElementById('caBar').style.width = Math.min(100, (ca / maxCost) * 100) + '%';
+  document.getElementById('cadqBar').style.width = '100%';
+  document.getElementById('cteBar').style.width = '100%';
+
+  // Feedback y Banners
+  const card = document.getElementById('gameCard');
+  const bBancarrota = document.getElementById('bannerBancarrota');
+  const bGalpon = document.getElementById('bannerGalpon');
+  const bVictoria = document.getElementById('bannerVictoria');
+
+  bBancarrota.style.display = 'none';
+  bGalpon.style.display = 'none';
+  bVictoria.style.display = 'none';
+  card.classList.remove('shake');
+
+  const diffRatio = qVal / optimalQ;
+
+  if (diffRatio < 0.45) {
+    bBancarrota.style.display = 'block';
+    document.getElementById('ordersPerDay').innerText = (D / qVal).toFixed(1);
+    document.getElementById('cpBancarrota').innerText = cp.toLocaleString('es-AR', {maximumFractionDigits: 2});
+    if (diffRatio < 0.2) card.classList.add('shake');
+  } else if (diffRatio > 2.2) {
+    bGalpon.style.display = 'block';
+    document.getElementById('caGalpon').innerText = ca.toLocaleString('es-AR', {maximumFractionDigits: 2});
+  } else if (Math.abs(qVal - optimalQ) / optimalQ <= 0.035) {
+    bVictoria.style.display = 'block';
+    document.getElementById('eqCostPrep').innerText = cp.toLocaleString('es-AR', {maximumFractionDigits: 2});
+    document.getElementById('eqCostAlm').innerText = ca.toLocaleString('es-AR', {maximumFractionDigits: 2});
+
+    if (!solvedState) {
+      solvedState = true;
+      renderResolutionStepByStep(optimalQ);
+    }
+  }
+
+  // Actualizar Gráficos
+  updateChartMarker(qVal, cte);
+  updateSawtoothChart(qVal);
+}
+
+function setEOQValue(val) {
+  document.getElementById('eoqSlider').value = val;
+  updateEOQGame(val);
+}
+
+// RENDERIZADO DE RESOLUCIÓN PASO A PASO
+function renderResolutionStepByStep(qOpt) {
+  const { D, T, k, c1, b } = activeParams;
+  const n = D / qOpt;
+  const C_adq = b * D;
+  const C_prep = (D / qOpt) * k;
+  const C_alm = 0.5 * qOpt * c1 * T;
+  const CTE_opt = C_adq + C_prep + C_alm;
+
+  document.getElementById('resOptQText').innerText = qOpt.toFixed(2) + ' unidades';
+
+  const step1Math = `q_0 = \\sqrt{\\frac{2 \\cdot ${k} \\cdot ${D}}{${T} \\cdot ${c1}}} = \\sqrt{${((2*k*D)/(T*c1)).toFixed(2)}} \\approx ${qOpt.toFixed(2)} \\text{ unidades}`;
+  const step2Math = `n = \\frac{D}{q_0} = \\frac{${D}}{${qOpt.toFixed(2)}} \\approx ${n.toFixed(2)} \\text{ pedidos en el horizonte}`;
+  const step3Math = `CTE_0 = (${b} \\cdot ${D}) + \\left(${k} \\cdot \\frac{${D}}{${qOpt.toFixed(2)}}\\right) + \\left(0.5 \\cdot ${qOpt.toFixed(2)} \\cdot ${c1} \\cdot ${T}\\right) = \\$ ${C_adq.toFixed(2)} + \\$ ${C_prep.toFixed(2)} + \\$ ${C_alm.toFixed(2)} = \\$ ${CTE_opt.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+  const el1 = document.getElementById('mathStep1');
+  const el2 = document.getElementById('mathStep2');
+  const el3 = document.getElementById('mathStep3');
+
+  if (typeof katex !== 'undefined') {
+    katex.render(step1Math, el1, { displayMode: true, throwOnError: false });
+    katex.render(step2Math, el2, { displayMode: true, throwOnError: false });
+    katex.render(step3Math, el3, { displayMode: true, throwOnError: false });
+  } else {
+    el1.innerText = step1Math;
+    el2.innerText = step2Math;
+    el3.innerText = step3Math;
+  }
+
+  const resSection = document.getElementById('resolution-section');
+  resSection.style.display = 'block';
+}
+
+// ── PLUGIN CHART.JS: LÍNEAS PUNTEADAS Cmin Y Qo ────────────────────────────
+const eoqGridLinesPlugin = {
+  id: 'eoqGridLines',
+  afterDraw(chart) {
+    const { ctx, chartArea: { left, right, top, bottom }, scales: { y } } = chart;
+    if (!left || !right || !top || !bottom || !y) return;
+
+    const { D, T, k, c1, b } = activeParams;
+    const cpOpt = (D / optimalQ) * k;
+    const caOpt = 0.5 * optimalQ * c1 * T;
+    const cadqOpt = b * D;
+    const minCost = cadqOpt + cpOpt + caOpt;
+
+    const labels = chart.data.labels;
+    if (!labels || labels.length === 0) return;
+    const minQ = labels[0];
+    const maxQ = labels[labels.length - 1];
+
+    const xPixel = left + ((optimalQ - minQ) / (maxQ - minQ)) * (right - left);
+    const yPixel = y.getPixelForValue(minCost);
+
+    if (xPixel >= left && xPixel <= right && yPixel >= top && yPixel <= bottom) {
+      ctx.save();
+
+      ctx.setLineDash([5, 5]);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#ec4899';
+
+      // Línea vertical (Qo)
+      ctx.beginPath();
+      ctx.moveTo(xPixel, yPixel);
+      ctx.lineTo(xPixel, bottom);
+      ctx.stroke();
+
+      // Línea horizontal (Cmin)
+      ctx.beginPath();
+      ctx.moveTo(xPixel, yPixel);
+      ctx.lineTo(left, yPixel);
+      ctx.stroke();
+
+      // Intersección
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#ec4899';
+      ctx.beginPath();
+      ctx.arc(xPixel, yPixel, 6, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Etiquetas
+      ctx.font = '700 12px Inter, sans-serif';
+      ctx.fillStyle = '#ec4899';
+      ctx.textAlign = 'center';
+      ctx.fillText(`Q₀ = ${Math.round(optimalQ)}`, xPixel, bottom + 18);
+
+      ctx.textAlign = 'right';
+      ctx.fillText(`Cmin = $${Math.round(minCost).toLocaleString('es-AR')}`, left - 8, yPixel + 4);
+
+      ctx.restore();
+    }
+  }
+};
+
+// ── GRÁFICO DINÁMICO U-CURVE ────────────────────────────────────────────────
+
+function updateEOQChart() {
+  const ctx = document.getElementById('eoqChart').getContext('2d');
+  const { D, T, k, c1, b } = activeParams;
+
+  const minQ = Math.max(10, Math.floor(optimalQ * 0.1));
+  const maxQ = Math.ceil(optimalQ * 3.0);
+  const step = Math.max(1, Math.floor((maxQ - minQ) / 50));
+
+  const labels = [];
+  const cpData = [];
+  const caData = [];
+  const cteData = [];
+  const cadq = b * D;
+
+  for (let q = minQ; q <= maxQ; q += step) {
+    labels.push(q);
+    const cp = (D / q) * k;
+    const ca = 0.5 * q * c1 * T;
+    cpData.push(cp);
+    caData.push(ca);
+    cteData.push(cadq + cp + ca);
+  }
+
+  if (eoqChartInstance) eoqChartInstance.destroy();
+
+  eoqChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        { label: 'Costo Total (CTE)', data: cteData, borderColor: '#ec4899', borderWidth: 3, tension: 0.3, pointRadius: 0 },
+        { label: 'Costo Almacén (Ca)', data: caData, borderColor: '#3b82f6', borderWidth: 2, borderDash: [5, 5], tension: 0.1, pointRadius: 0 },
+        { label: 'Costo Pedidos (Cp)', data: cpData, borderColor: '#f59e0b', borderWidth: 2, borderDash: [5, 5], tension: 0.3, pointRadius: 0 },
+        { label: 'Selección Actual (Q)', data: Array(labels.length).fill(null), borderColor: '#ffffff', backgroundColor: '#ffffff', pointRadius: 6, showLine: false }
+      ]
+    },
+    plugins: [eoqGridLinesPlugin],
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'top', labels: { color: '#f8fafc', font: { family: 'Inter' } } } },
+      scales: {
+        x: { title: { display: true, text: 'Cantidad de Lote (Q)', color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } },
+        y: { title: { display: true, text: 'Costos ($)', color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } }
+      }
+    }
+  });
+}
+
+function updateChartMarker(qVal, cte) {
+  if (!eoqChartInstance) return;
+  const labels = eoqChartInstance.data.labels;
+
+  let closestIdx = 0;
+  let minDiff = Infinity;
+  labels.forEach((l, i) => {
+    let diff = Math.abs(l - qVal);
+    if (diff < minDiff) {
+      minDiff = diff;
+      closestIdx = i;
+    }
+  });
+
+  const markerData = Array(labels.length).fill(null);
+  markerData[closestIdx] = cte;
+  eoqChartInstance.data.datasets[3].data = markerData;
+  eoqChartInstance.update('none');
+}
+
+// ── GRÁFICO DIENTE DE SIERRA q(t) ──────────────────────────────────────────
+
+function updateSawtoothChart(qVal) {
+  const ctx = document.getElementById('sawtoothChart').getContext('2d');
+  const { D, T, L } = activeParams;
+  const d_daily = D / T;
+  const ropBruto = d_daily * L;
+
+  const t0 = qVal / d_daily; // Días exactos por ciclo de reposición
+  const totalCycles = D / qVal;
+
+  // Calcular ROP Efectivo en galpón (si L > t0)
+  let ropTarget = ropBruto;
+  let isMultiCycle = false;
+  if (L > t0 && t0 > 0) {
+    isMultiCycle = true;
+    const m = Math.floor(ropBruto / qVal);
+    ropTarget = ropBruto - (m * qVal);
+  }
+
+  // Limitar visualmente a un máximo de 10 ciclos representativos para evitar saturación gráfica
+  const cyclesToDisplay = Math.min(10, Math.max(1, Math.ceil(totalCycles)));
+  const displayHorizon = cyclesToDisplay * t0;
+
+  const labels = [];
+  const stockData = [];
+  const ropData = [];
+
+  for (let c = 0; c < cyclesToDisplay; c++) {
+    const tStart = c * t0;
+    const tEnd = (c + 1) * t0;
+
+    // Vértice 1: Inicio del ciclo (Stock Lleno = Q)
+    labels.push(tStart.toFixed(1) + 'd');
+    stockData.push(qVal);
+    ropData.push(ropTarget);
+
+    // Vértice 2: Fin del ciclo (Stock Agotado = 0) justo antes de la llegada del pedido
+    labels.push((tEnd - 0.001).toFixed(1) + 'd');
+    stockData.push(0);
+    ropData.push(ropTarget);
+  }
+
+  // Vértice final
+  labels.push(displayHorizon.toFixed(1) + 'd');
+  stockData.push(qVal);
+  ropData.push(ropTarget);
+
+  if (sawtoothChartInstance) sawtoothChartInstance.destroy();
+
+  sawtoothChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        { 
+          label: `Nivel de Stock q(t) — [Mostrando ${cyclesToDisplay} ciclos representativos]`, 
+          data: stockData, 
+          borderColor: '#ec4899', 
+          borderWidth: 2.5, 
+          tension: 0, 
+          pointRadius: 0,
+          fill: true,
+          backgroundColor: 'rgba(236, 72, 153, 0.08)'
+        },
+        { 
+          label: isMultiCycle ? `ROP Efectivo en Galpón (${Math.round(ropTarget).toLocaleString('es-AR')} u)` : `Punto de Reorden (ROP = ${Math.round(ropTarget).toLocaleString('es-AR')} u)`, 
+          data: ropData, 
+          borderColor: '#60a5fa', 
+          borderWidth: 2, 
+          borderDash: [5, 5], 
+          pointRadius: 0 
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'top', labels: { color: '#f8fafc', font: { family: 'Inter', weight: 'bold' } } } },
+      scales: {
+        x: { title: { display: true, text: `Tiempo (días) — ${cyclesToDisplay} pedidos (${t0.toFixed(1)} días por lote Q)`, color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } },
+        y: { title: { display: true, text: 'Stock Físico (unidades)', color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } }
+      }
+    }
+  });
+}
+
+// ── TABLA DE ANÁLISIS DE SENSIBILIDAD Y LABORATORIO WHAT-IF ─────────────────
+
+function onWhatIfScenarioChange(scenKey) {
+  const { D, T, k, c1, b } = activeParams;
+  const baseQ0 = Math.sqrt((2 * k * D) / (T * c1));
+  const baseCTE = (b * D) + ((D / baseQ0) * k) + (0.5 * baseQ0 * c1 * T);
+
+  let newD = D, newT = T, newK = k, newC1 = c1;
+  let title = '', explanation = '', mathTeX = '', examTip = '';
+
+  switch (scenKey) {
+    case 'd_up':
+      newD = D * 1.25;
+      title = '📈 Incremento de Demanda del +25%';
+      explanation = `Al aumentar la demanda a <strong>${newD.toLocaleString('es-AR')} u</strong>, se requiere reponer inventario más rápido. Sin embargo, el lote óptimo no aumenta un 25%, sino solo un <strong>+11.8%</strong>.`;
+      mathTeX = `q_{nuevo} = \\sqrt{\\frac{2 k (1.25 D)}{T c_1}} = \\sqrt{1.25} \\cdot q_{base} \\approx 1.118 \\cdot q_{base}`;
+      examTip = '💡 <strong>Regla de Examen:</strong> Debido a la raíz cuadrada en la fórmula del Lote Óptimo (EOQ), el crecimiento del lote es sublineal (\\sqrt{1.25} \\approx 1.118). Esto demuestra las economías de escala: la demanda creció un 25%, pero el inventario promedio solo crece un 11.8%.';
+      break;
+
+    case 'd_down':
+      newD = D * 0.5;
+      title = '📉 Caída de Demanda a la Mitad (-50%)';
+      explanation = `La demanda cayó a <strong>${newD.toLocaleString('es-AR')} u</strong>. El lote óptimo se reduce a un <strong>70.7%</strong> del tamaño original (una caída del -29.3%).`;
+      mathTeX = `q_{nuevo} = \\sqrt{\\frac{2 k (0.5 D)}{T c_1}} = \\sqrt{0.5} \\cdot q_{base} \\approx 0.707 \\cdot q_{base}`;
+      examTip = '💡 <strong>Regla de Examen:</strong> Reducir la demanda a la mitad NO reduce el lote a la mitad, sino al 70.7%, porque se emiten menos pedidos al año pero se mantiene el equilibrio de costos unitarios.';
+      break;
+
+    case 'c1_up':
+      newC1 = c1 * 2;
+      title = '📦 Costo de Almacenamiento Duplicado (2 × c₁)';
+      explanation = `Al encarecerse el costo de almacenar a <strong>$${newC1.toFixed(2)}/u</strong>, tener stock parado en el galpón castiga más fuerte. El sistema reacciona reduciendo el lote un <strong>-29.3%</strong>.`;
+      mathTeX = `q_{nuevo} = \\sqrt{\\frac{2 k D}{T (2 c_1)}} = \\frac{1}{\\sqrt{2}} \\cdot q_{base} \\approx 0.707 \\cdot q_{base}`;
+      examTip = '💡 <strong>Regla de Examen:</strong> Si almacenar es más caro, el lote óptimo disminuye obligatoriamente para minimizar el costo financiero del capital inmovilizado.';
+      break;
+
+    case 'k_up':
+      newK = k * 4;
+      title = '🚚 Costo de Pedido Cuadruplicado (4 × k)';
+      explanation = `Emitir una orden de compra ahora cuesta <strong>$${newK.toFixed(0)}</strong> en lugar de $${k.toFixed(0)}. Para evitar pagar fletes tan seguidos, el lote óptimo exactamente <strong>SE DUPLICA (+100%)</strong>.`;
+      mathTeX = `q_{nuevo} = \\sqrt{\\frac{2 (4 k) D}{T c_1}} = \\sqrt{4} \\cdot q_{base} = 2.000 \\cdot q_{base}`;
+      examTip = '💡 <strong>Regla de Examen:</strong> Cuadruplicar el costo de orden k duplica exactamente el lote óptimo q_0 (\\sqrt{4} = 2), ya que conviene hacer la mitad de fletes al año.';
+      break;
+
+    case 't_up':
+      newT = T * 2;
+      title = '⏱️ Horizonte de Tiempo Duplicado (2 × T)';
+      explanation = `Al duplicarse el horizonte a <strong>${newT} días</strong>, el costo de almacenamiento por período de tiempo se acumula por más días. El lote óptimo se reduce a un <strong>70.7%</strong> de la escala original.`;
+      mathTeX = `q_{nuevo} = \\sqrt{\\frac{2 k D}{(2 T) c_1}} = \\frac{1}{\\sqrt{2}} \\cdot q_{base} \\approx 0.707 \\cdot q_{base}`;
+      examTip = '💡 <strong>Regla de Examen:</strong> Siempre verificá que la tasa c₁ y el horizonte T estén expresados en la misma unidad temporal (días con días, años con años).';
+      break;
+  }
+
+  const newQ0 = Math.sqrt((2 * newK * newD) / (newT * newC1));
+  const newCTE = (b * newD) + ((newD / newQ0) * newK) + (0.5 * newQ0 * newC1 * newT);
+  const diffQ = ((newQ0 - baseQ0) / baseQ0) * 100;
+  const diffCTE = ((newCTE - baseCTE) / baseCTE) * 100;
+
+  const card = document.getElementById('whatifExplanationCard');
+  card.innerHTML = `
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(236, 72, 153, 0.2); padding-bottom: .8rem;">
+      <h4 style="font-size: 1.15rem; font-weight: 800; color: #ec4899; margin: 0;">${title}</h4>
+      <div style="display: flex; gap: .75rem; flex-wrap: wrap;">
+        <span style="background: rgba(236, 72, 153, 0.15); color: #f472b6; border: 1px solid #ec4899; padding: .3rem .7rem; border-radius: 8px; font-family: 'Fira Code', monospace; font-size: .85rem; font-weight: bold;">
+          Lote Base: ${Math.round(baseQ0).toLocaleString('es-AR')} u ➔ Nuevo: ${Math.round(newQ0).toLocaleString('es-AR')} u
+        </span>
+        <span style="background: ${diffQ >= 0 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(244, 63, 94, 0.15)'}; color: ${diffQ >= 0 ? '#6ee7b7' : '#fca5a5'}; border: 1px solid ${diffQ >= 0 ? '#10b981' : '#f43f5e'}; padding: .3rem .7rem; border-radius: 8px; font-family: 'Fira Code', monospace; font-size: .85rem; font-weight: bold;">
+          Variación Lote: ${diffQ >= 0 ? '+' : ''}${diffQ.toFixed(1)}%
+        </span>
+      </div>
+    </div>
+
+    <p style="font-size: .95rem; color: var(--text); margin-bottom: 1rem; line-height: 1.5;">${explanation}</p>
+
+    <div class="math-block" style="background: rgba(15, 23, 42, 0.95); margin-bottom: 1rem;">
+      <div style="font-size: .8rem; font-weight: 700; color: var(--text2); text-transform: uppercase; margin-bottom: .4rem;">Demostración Matemática de la Raíz Cuadrada:</div>
+      <div id="whatifMathTeX">$$ ${mathTeX} $$</div>
+    </div>
+
+    <div style="background: rgba(236, 72, 153, 0.08); border: 1px solid rgba(236, 72, 153, 0.25); border-radius: 10px; padding: 1rem; font-size: .88rem; color: var(--text2);">
+      ${examTip}
+    </div>
+  `;
+
+  if (typeof katex !== 'undefined') {
+    katex.render(mathTeX, document.getElementById('whatifMathTeX'), { displayMode: true, throwOnError: false });
+  }
+
+  renderSensitivityTable(scenKey);
+}
+
+function renderSensitivityTable(activeScenKey = 'd_up') {
+  const { D, T, k, c1, b } = activeParams;
+  const baseQ0 = Math.sqrt((2 * k * D) / (T * c1));
+  const baseCTE = (b * D) + ((D / baseQ0) * k) + (0.5 * baseQ0 * c1 * T);
+
+  const scenarios = [
+    { key: 'base', name: 'Base Actual', dFactor: 1.0, kFactor: 1.0, c1Factor: 1.0, tFactor: 1.0 },
+    { key: 'd_up', name: 'Demanda +25%', dFactor: 1.25, kFactor: 1.0, c1Factor: 1.0, tFactor: 1.0 },
+    { key: 'd_down', name: 'Demanda -50%', dFactor: 0.50, kFactor: 1.0, c1Factor: 1.0, tFactor: 1.0 },
+    { key: 'c1_up', name: 'Costo Almacén x2', dFactor: 1.0, kFactor: 1.0, c1Factor: 2.0, tFactor: 1.0 },
+    { key: 'k_up', name: 'Costo Pedido x4', dFactor: 1.0, kFactor: 4.0, c1Factor: 1.0, tFactor: 1.0 },
+    { key: 't_up', name: 'Horizonte x2', dFactor: 1.0, kFactor: 1.0, c1Factor: 1.0, tFactor: 2.0 },
+  ];
+
+  const tbody = document.querySelector('#sensitivityTable tbody');
+  tbody.innerHTML = '';
+
+  scenarios.forEach((sc, i) => {
+    let sD = D * sc.dFactor;
+    let sk = k * sc.kFactor;
+    let sc1 = c1 * sc.c1Factor;
+    let sT = T * sc.tFactor;
+
+    let q0 = Math.sqrt((2 * sk * sD) / (sT * sc1));
+    let cte = (b * sD) + ((sD / q0) * sk) + (0.5 * q0 * sc1 * sT);
+    let diffQ = ((q0 - baseQ0) / baseQ0) * 100;
+
+    let tr = document.createElement('tr');
+    let isSelected = sc.key === activeScenKey;
+    if (i === 0) {
+      tr.style.background = 'rgba(255, 255, 255, 0.04)';
+    } else if (isSelected) {
+      tr.style.background = 'rgba(236, 72, 153, 0.18)';
+      tr.style.border = '1px solid #ec4899';
+    }
+
+    tr.innerHTML = `
+      <td><strong>${sc.name}</strong> ${isSelected ? '👉' : ''}</td>
+      <td>${sD.toLocaleString('es-AR')}</td>
+      <td>$${sk.toFixed(0)}</td>
+      <td>$${sc1.toFixed(2)}</td>
+      <td style="color: #f472b6; font-weight: bold;">${Math.round(q0).toLocaleString('es-AR')} u</td>
+      <td>$${cte.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+      <td style="font-weight: bold; color: ${diffQ > 0 ? '#6ee7b7' : (diffQ < 0 ? '#fca5a5' : 'var(--text2)')};">${diffQ === 0 ? 'Base' : (diffQ > 0 ? '+' : '') + diffQ.toFixed(1) + '%'}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// ── MÓDULO 4: TRIVIA & QUIZ DE AUTOEVALUACIÓN ───────────────────────────────
+
+function checkQuiz(qId, optIdx, isCorrect) {
+  const card = document.getElementById('qCard' + qId);
+  const btns = card.querySelectorAll('.quiz-opt-btn');
+  const explain = document.getElementById('qExp' + qId);
+
+  btns.forEach((btn, idx) => {
+    btn.classList.remove('correct', 'wrong');
+    if (idx === optIdx) {
+      btn.classList.add(isCorrect ? 'correct' : 'wrong');
+    }
+  });
+
+  quizScores[qId] = isCorrect;
+  explain.style.display = 'block';
+
+  let correctCount = Object.values(quizScores).filter(Boolean).length;
+  document.getElementById('quizScoreBadge').innerText = `Puntaje: ${correctCount} / 4`;
+}
+
+// ── MÓDULO 2.1 & 2.2: LAGRANGE & DESCUENTOS ─────────────────────────────────
+
+function addLagrangeRow(name = '', d = 1000, k = 100, c1 = 2, s = 1.5) {
+  const tbody = document.querySelector('#lagrangeTable tbody');
+  const idx = tbody.children.length + 1;
+  name = name || 'Artículo ' + idx;
+
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input type="text" class="lag-name" value="${name}"></td>
+    <td><input type="number" class="lag-d" value="${d}"></td>
+    <td><input type="number" class="lag-k" value="${k}"></td>
+    <td><input type="number" class="lag-c1" value="${c1}"></td>
+    <td><input type="number" class="lag-s" value="${s}"></td>
+    <td><button class="btn-secondary" onclick="this.closest('tr').remove()" style="color: #f43f5e; padding: .2rem .5rem; font-size: .75rem;">Eliminar</button></td>
+  `;
+  tbody.appendChild(tr);
+}
+
+function loadLagrangePreset() {
+  const tbody = document.querySelector('#lagrangeTable tbody');
+  tbody.innerHTML = '';
+  addLagrangeRow('Artículo A (Motor)', 4000, 150, 4.0, 2.0);
+  addLagrangeRow('Artículo B (Chasis)', 2500, 200, 5.0, 3.5);
+  addLagrangeRow('Artículo C (Panel)', 6000, 90, 3.0, 1.2);
+  document.getElementById('lagrangeSmax').value = 450;
+}
+
+function solveLagrange() {
+  const S_max = parseFloat(document.getElementById('lagrangeSmax').value) || 0;
+  const rows = document.querySelectorAll('#lagrangeTable tbody tr');
+
+  if (rows.length === 0) {
+    alert("Agregá al menos un artículo a la tabla.");
+    return;
+  }
+
+  const items = [];
+  let totalSpaceUnconstrained = 0;
+
+  rows.forEach(tr => {
+    const name = tr.querySelector('.lag-name').value;
+    const D = parseFloat(tr.querySelector('.lag-d').value) || 0;
+    const k = parseFloat(tr.querySelector('.lag-k').value) || 0;
+    const c1 = parseFloat(tr.querySelector('.lag-c1').value) || 0;
+    const s = parseFloat(tr.querySelector('.lag-s').value) || 0;
+
+    const q0 = Math.sqrt((2 * k * D) / c1);
+    const space0 = q0 * s;
+    const cost0 = (D / q0) * k + (q0 / 2) * c1;
+
+    totalSpaceUnconstrained += space0;
+
+    items.push({ name, D, k, c1, s, q0, space0, cost0 });
+  });
+
+  let lambda = 0;
+  let isActive = false;
+
+  if (totalSpaceUnconstrained > S_max) {
+    isActive = true;
+    let low = 0, high = 50;
+    for (let iter = 0; iter < 100; iter++) {
+      let mid = (low + high) / 2;
+      let reqSpace = 0;
+      items.forEach(it => {
+        let q_adj = Math.sqrt((2 * it.k * it.D) / (it.c1 + 2 * mid * it.s));
+        reqSpace += q_adj * it.s;
+      });
+
+      if (reqSpace > S_max) low = mid; else high = mid;
+    }
+    lambda = (low + high) / 2;
+  }
+
+  let resTbody = document.querySelector('#lagrangeResTable tbody');
+  resTbody.innerHTML = '';
+
+  let totalCost0 = 0;
+  let totalCostAdj = 0;
+  let totalSpaceAdj = 0;
+
+  items.forEach(it => {
+    let q_adj = isActive ? Math.sqrt((2 * it.k * it.D) / (it.c1 + 2 * lambda * it.s)) : it.q0;
+    let spaceAdj = q_adj * it.s;
+    let costAdj = (it.D / q_adj) * it.k + (q_adj / 2) * it.c1;
+
+    totalCost0 += it.cost0;
+    totalCostAdj += costAdj;
+    totalSpaceAdj += spaceAdj;
+
+    let tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><strong>${it.name}</strong></td>
+      <td>${it.q0.toFixed(1)} u</td>
+      <td style="color: #ec4899; font-weight: bold;">${q_adj.toFixed(1)} u</td>
+      <td>${spaceAdj.toFixed(1)} m²</td>
+      <td>$${it.cost0.toFixed(2)}</td>
+      <td>$${costAdj.toFixed(2)}</td>
+    `;
+    resTbody.appendChild(tr);
+  });
+
+  const summary = document.getElementById('lagrangeSummary');
+  if (isActive) {
+    summary.innerHTML = `
+      <div style="background: rgba(236, 72, 153, 0.1); border: 1px solid rgba(236, 72, 153, 0.3); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: .9rem;">
+        ⚠️ <strong>Restricción Activa:</strong> La superficie requerida sin restricción (<strong>${totalSpaceUnconstrained.toFixed(1)} m²</strong>) supera el límite disponible de <strong>${S_max} m²</strong>.<br>
+        Multiplicador de Lagrange óptimo encontrado: <strong style="color: #ec4899;">λ = ${lambda.toFixed(4)}</strong>.<br>
+        Superficie final ajustada: <strong>${totalSpaceAdj.toFixed(1)} m²</strong> | Incremento de Costo Total: <strong>+$${(totalCostAdj - totalCost0).toFixed(2)}/año</strong>.
+      </div>
+    `;
+  } else {
+    summary.innerHTML = `
+      <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: .9rem; color: #6ee7b7;">
+        ✅ <strong>Restricción No Activa (λ = 0):</strong> La superficie total requerida por los lotes óptimos (<strong>${totalSpaceUnconstrained.toFixed(1)} m²</strong>) no supera la capacidad máxima de <strong>${S_max} m²</strong>. No hace falta ajustar los lotes.
+      </div>
+    `;
+  }
+
+  document.getElementById('lagrangeResults').classList.add('show');
+}
+
+function addDiscountRow(min = 0, max = 999, price = 15.0, c1 = 3.0) {
+  const tbody = document.querySelector('#discountTable tbody');
+  const idx = tbody.children.length + 1;
+
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td>Tramo ${idx}</td>
+    <td><input type="number" class="disc-min" value="${min}"></td>
+    <td><input type="number" class="disc-max" value="${max}"></td>
+    <td><input type="number" class="disc-price" value="${price}" step="0.1"></td>
+    <td><input type="number" class="disc-c1" value="${c1}" step="0.1"></td>
+    <td><button class="btn-secondary" onclick="this.closest('tr').remove()" style="color: #f43f5e; padding: .2rem .5rem; font-size: .75rem;">Eliminar</button></td>
+  `;
+  tbody.appendChild(tr);
+}
+
+function loadDiscountPreset() {
+  const tbody = document.querySelector('#discountTable tbody');
+  tbody.innerHTML = '';
+  addDiscountRow(0, 999, 20.0, 4.0);
+  addDiscountRow(1000, 2499, 17.5, 3.5);
+  addDiscountRow(2500, 99999, 15.0, 3.0);
+  document.getElementById('discD').value = 5000;
+  document.getElementById('disck').value = 250;
+}
+
+function solveDiscounts() {
+  const D = parseFloat(document.getElementById('discD').value) || 0;
+  const k = parseFloat(document.getElementById('disck').value) || 0;
+  const rows = document.querySelectorAll('#discountTable tbody tr');
+
+  if (rows.length === 0) {
+    alert("Agregá al menos un tramo de descuento.");
+    return;
+  }
+
+  const tiers = [];
+  rows.forEach((tr, i) => {
+    const qmin = parseFloat(tr.querySelector('.disc-min').value) || 0;
+    const qmax = parseFloat(tr.querySelector('.disc-max').value) || Infinity;
+    const price = parseFloat(tr.querySelector('.disc-price').value) || 0;
+    const c1 = parseFloat(tr.querySelector('.disc-c1').value) || 0;
+
+    const q0 = Math.sqrt((2 * k * D) / c1);
+    let status = '';
+    let qc = q0;
+
+    if (q0 < qmin) {
+      status = 'Ajustado a Cota Mínima (' + qmin + ')';
+      qc = qmin;
+    } else if (q0 > qmax) {
+      status = 'Infactible (> ' + qmax + ')';
+      qc = null;
+    } else {
+      status = 'Válido en Rango';
+      qc = q0;
+    }
+
+    let costPurch = price * D;
+    let costOrdHold = qc ? ((D / qc) * k + (qc / 2) * c1) : null;
+    let cte = qc ? (costPurch + costOrdHold) : Infinity;
+
+    tiers.push({ index: i + 1, qmin, qmax, price, c1, q0, status, qc, costPurch, costOrdHold, cte });
+  });
+
+  let bestTier = tiers.reduce((prev, curr) => (curr.cte < prev.cte ? curr : prev), tiers[0]);
+
+  let resTbody = document.querySelector('#discountResTable tbody');
+  resTbody.innerHTML = '';
+
+  tiers.forEach(t => {
+    let isWinner = t.index === bestTier.index;
+    let tr = document.createElement('tr');
+    if (isWinner) tr.style.background = 'rgba(16, 185, 129, 0.15)';
+
+    tr.innerHTML = `
+      <td><strong>Tramo ${t.index}</strong> ${isWinner ? '🏆' : ''}</td>
+      <td>${t.q0.toFixed(1)} u</td>
+      <td><span style="font-size: .8rem; font-weight: 600; color: ${t.qc ? '#94a3b8' : '#f43f5e'};">${t.status}</span></td>
+      <td style="font-weight: bold; color: ${isWinner ? '#6ee7b7' : 'var(--text)'};">${t.qc ? t.qc.toFixed(1) + ' u' : '—'}</td>
+      <td>$${t.costPurch.toLocaleString('es-AR', {minimumFractionDigits:2})}</td>
+      <td>${t.costOrdHold ? '$' + t.costOrdHold.toFixed(2) : '—'}</td>
+      <td style="font-weight: 800; color: ${isWinner ? '#6ee7b7' : 'var(--text)'};">${t.cte !== Infinity ? '$' + t.cte.toLocaleString('es-AR', {minimumFractionDigits:2}) : 'Infactible'}</td>
+    `;
+    resTbody.appendChild(tr);
+  });
+
+  const summary = document.getElementById('discountSummary');
+  summary.innerHTML = `
+    <div style="background: rgba(16, 185, 129, 0.12); border: 2px solid #10b981; padding: 1.25rem; border-radius: 10px; margin-bottom: 1rem;">
+      <h4 style="font-size: 1.1rem; color: #6ee7b7; margin-bottom: .4rem;">🏆 Opción Recomendada: Tramo ${bestTier.index} ($${bestTier.price}/unidad)</h4>
+      Lote Óptimo a Pedir: <strong style="font-size: 1.1rem; color: #f472b6;">${bestTier.qc.toFixed(1)} unidades</strong> | 
+      Costo Total Esperado Mínimo: <strong style="font-size: 1.1rem; color: #6ee7b7;">$${bestTier.cte.toLocaleString('es-AR', {minimumFractionDigits: 2})}/año</strong>
+    </div>
+  `;
+
+  document.getElementById('discountResults').classList.add('show');
+}
+
+// INICIALIZACIÓN
+document.addEventListener('DOMContentLoaded', () => {
+  loadScenario('golo');
+  loadLagrangePreset();
+  loadDiscountPreset();
+
+  if (typeof renderMathInElement !== 'undefined') {
+    renderMathInElement(document.body, {
+      delimiters: [
+        {left: "$$", right: "$$", display: true},
+        {left: "$", right: "$", display: false}
+      ],
+      throwOnError : false
+    });
+  }
+});
+</script>
+</body>
+</html>
