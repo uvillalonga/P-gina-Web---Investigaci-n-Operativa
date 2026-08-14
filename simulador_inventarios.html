@@ -53,16 +53,6 @@
   box-shadow: 0 4px 20px rgba(236, 72, 153, 0.2);
 }
 
-.print-btn {
-  background: rgba(16, 185, 129, 0.12);
-  border: 1px solid #10b981;
-  color: #6ee7b7;
-}
-.print-btn:hover {
-  background: rgba(16, 185, 129, 0.25);
-  color: white;
-}
-
 .mod-content {
   display: none;
   animation: fadeIn .4s ease;
@@ -70,6 +60,182 @@
 
 .mod-content.active {
   display: block;
+}
+
+/* ── MÓDULO 0: FUNDAMENTOS TEÓRICOS ANIMADOS STYLES ── */
+.theory-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.theory-card {
+  background: var(--surface);
+  border: 1px solid rgba(236, 72, 153, 0.2);
+  border-radius: 16px;
+  padding: 1.5rem 1.75rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  transition: border-color .3s ease;
+}
+.theory-card:hover {
+  border-color: rgba(236, 72, 153, 0.4);
+}
+
+.theory-title {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #f472b6;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: .4rem;
+}
+
+.theory-toggle-btn {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid var(--border-med);
+  color: var(--text2);
+  padding: .5rem .9rem;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: .84rem;
+  cursor: pointer;
+  transition: all .25s ease;
+}
+.theory-toggle-btn:hover {
+  border-color: #ec4899;
+  color: var(--text);
+  transform: translateY(-2px);
+}
+.theory-toggle-btn.active {
+  background: rgba(236, 72, 153, 0.2);
+  border-color: #ec4899;
+  color: #f472b6;
+  box-shadow: 0 0 15px rgba(236, 72, 153, 0.3);
+}
+
+.balance-visual-box {
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(236, 72, 153, 0.2);
+  border-radius: 16px;
+  padding: 1.5rem 1.75rem;
+  margin: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.scale-svg-box {
+  width: 100%;
+  max-width: 580px;
+  background: radial-gradient(circle at center, rgba(30, 41, 59, 0.4) 0%, rgba(15, 23, 42, 0.9) 100%);
+  border: 1px solid rgba(236, 72, 153, 0.2);
+  border-radius: 14px;
+  padding: 1rem;
+  box-shadow: inset 0 0 25px rgba(0, 0, 0, 0.5), 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+.scale-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.scale-slider-row {
+  width: 100%;
+  max-width: 540px;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid var(--border-med);
+  border-radius: 12px;
+  padding: .85rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+}
+
+.tradeoff-feedback {
+  width: 100%;
+  max-width: 540px;
+  padding: .85rem 1.25rem;
+  border-radius: 10px;
+  font-size: .9rem;
+  font-weight: 600;
+  text-align: center;
+  transition: all .3s ease;
+  line-height: 1.5;
+}
+
+.var-glossary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: .75rem;
+  margin: 1rem 0;
+}
+
+.var-card {
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(236, 72, 153, 0.15);
+  border-radius: 12px;
+  padding: .85rem 1rem;
+  transition: all .2s ease;
+}
+.var-card:hover {
+  transform: translateY(-3px);
+  border-color: #ec4899;
+  box-shadow: 0 4px 15px rgba(236, 72, 153, 0.2);
+}
+
+.var-badge {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(236, 72, 153, 0.15);
+  color: #f472b6;
+  border: 1px solid rgba(236, 72, 153, 0.4);
+  border-radius: 6px;
+  padding: .15rem .45rem;
+  font-family: 'Fira Code', monospace;
+  font-weight: 700;
+  font-size: .88rem;
+  margin-bottom: .3rem;
+}
+
+.formula-flow-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.formula-step-card {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid var(--border-med);
+  border-left: 4px solid #ec4899;
+  border-radius: 12px;
+  padding: 1.1rem 1.25rem;
+  transition: all .2s ease;
+}
+.formula-step-card:hover {
+  border-color: rgba(236, 72, 153, 0.5);
+  transform: translateY(-2px);
+}
+
+.quick-rules-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-top: .75rem;
+}
+
+.quick-rule-card {
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  font-size: .88rem;
+  line-height: 1.5;
+  transition: transform .2s ease;
+}
+.quick-rule-card:hover {
+  transform: translateY(-2px);
 }
 
 /* ── MÓDULO 1: GAME & PARAMETERS STYLES ── */
@@ -762,7 +928,10 @@
 
   <!-- PESTAÑAS PRINCIPALES -->
   <div class="mod-tab-bar">
-    <button class="mod-tab-btn active" onclick="switchModule('mod1', this)">
+    <button class="mod-tab-btn active" onclick="switchModule('mod0', this)">
+      <span>📖</span> Fundamentos Teóricos
+    </button>
+    <button class="mod-tab-btn" onclick="switchModule('mod1', this)">
       <span>🎮</span> Módulo 1: El Juego de la Bancarrota (EOQ)
     </button>
     <button class="mod-tab-btn" onclick="switchModule('mod2', this)">
@@ -774,15 +943,204 @@
     <button class="mod-tab-btn" onclick="switchModule('mod4', this)">
       <span>🧩</span> Módulo 4: Trivia de Parcial
     </button>
-    <button class="mod-tab-btn print-btn" onclick="window.print()">
-      <span>📥</span> Imprimir / Exportar Reporte
-    </button>
+  </div>
+
+  <!-- ═════════════════════════════════════════════════════════════════════════
+       MÓDULO 0: FUNDAMENTOS TEÓRICOS DINÁMICOS & ANIMADOS
+       ═════════════════════════════════════════════════════════════════════════ -->
+  <div id="mod0" class="mod-content active">
+
+    <div class="theory-container">
+
+      <!-- 1. BALANZA DINÁMICA DEL TRADE-OFF (MINIMALISTA Y LIMPIA) -->
+      <div class="theory-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+          <div>
+            <h2 class="theory-title" style="margin-bottom: .2rem;"><span>⚖️</span> 1. El Dilema del Inventario (The Trade-Off)</h2>
+            <p style="font-size: .88rem; color: var(--text2);">El equilibrio físico entre pedir lotes chicos (fletes) vs. lotes grandes (almacén):</p>
+          </div>
+          <div style="display: flex; gap: .5rem; flex-wrap: wrap;">
+            <button class="theory-toggle-btn" id="btnThSmall" onclick="setTheoryTradeoff('small')">🚚 Lote Chico</button>
+            <button class="theory-toggle-btn active" id="btnThOpt" onclick="setTheoryTradeoff('optimum')">🎯 Lote Óptimo EOQ</button>
+            <button class="theory-toggle-btn" id="btnThLarge" onclick="setTheoryTradeoff('large')">🏢 Lote Grande</button>
+          </div>
+        </div>
+
+        <div class="balance-visual-box">
+          <!-- BALANZA VECTORIAL SVG (CENTRADA Y LIMPIA) -->
+          <div class="scale-svg-box">
+            <svg class="scale-svg" viewBox="0 0 540 180" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <filter id="glowFuchsia" x="-20%" y="-20%" width="140%" height="140%">
+                  <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#ec4899" flood-opacity="0.6"/>
+                </filter>
+                <linearGradient id="beamGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#f59e0b" />
+                  <stop offset="50%" stop-color="#cbd5e1" />
+                  <stop offset="100%" stop-color="#3b82f6" />
+                </linearGradient>
+              </defs>
+
+              <!-- BASE Y POSTE CENTRAL ESTÁTICOS -->
+              <rect x="200" y="145" width="140" height="8" rx="4" fill="#1e293b" stroke="#64748b" stroke-width="1.5"/>
+              <line x1="270" y1="45" x2="270" y2="145" stroke="#475569" stroke-width="6" stroke-linecap="round"/>
+              <polygon points="260,56 280,56 270,40" fill="#ec4899" filter="url(#glowFuchsia)"/>
+
+              <!-- BRAZO OSCILANTE DE LA BALANZA (Gira sobre (270, 45)) -->
+              <g id="scaleBeam" style="transform-origin: 270px 45px; transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); transform: rotate(0deg);">
+                <!-- Barra horizontal -->
+                <rect x="50" y="42" width="440" height="6" rx="3" fill="url(#beamGrad)" stroke="#64748b" stroke-width="1"/>
+                
+                <!-- Aguja indicadora central -->
+                <polygon points="267,45 273,45 270,12" fill="#ec4899" filter="url(#glowFuchsia)"/>
+                <circle cx="270" cy="45" r="7" fill="#ec4899" stroke="#ffffff" stroke-width="1.5"/>
+
+                <!-- PLATILLO IZQUIERDO: COSTO DE PEDIDO (Pivote en (80, 45)) -->
+                <g id="panLeftGroup" style="transform-origin: 80px 45px; transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); transform: rotate(0deg);">
+                  <line x1="80" y1="45" x2="40" y2="108" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="3,3"/>
+                  <line x1="80" y1="45" x2="120" y2="108" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="3,3"/>
+                  <ellipse cx="80" cy="108" rx="45" ry="8" fill="rgba(245, 158, 11, 0.25)" stroke="#f59e0b" stroke-width="2"/>
+                  <text id="panLeftIcons" x="80" y="100" text-anchor="middle" font-size="20">🚚🚚</text>
+                  <text id="svgCpVal" x="80" y="130" text-anchor="middle" fill="#fbbf24" font-weight="bold" font-family="'Fira Code', monospace" font-size="13">Cp = $500</text>
+                  <text x="80" y="144" text-anchor="middle" fill="#94a3b8" font-size="10">Costo de Pedir</text>
+                </g>
+
+                <!-- PLATILLO DERECHO: COSTO DE ALMACÉN (Pivote en (460, 45)) -->
+                <g id="panRightGroup" style="transform-origin: 460px 45px; transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); transform: rotate(0deg);">
+                  <line x1="460" y1="45" x2="420" y2="108" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="3,3"/>
+                  <line x1="460" y1="45" x2="500" y2="108" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="3,3"/>
+                  <ellipse cx="460" cy="108" rx="45" ry="8" fill="rgba(59, 130, 246, 0.25)" stroke="#3b82f6" stroke-width="2"/>
+                  <text id="panRightIcons" x="460" y="100" text-anchor="middle" font-size="20">🏢📦</text>
+                  <text id="svgCaVal" x="460" y="130" text-anchor="middle" fill="#60a5fa" font-weight="bold" font-family="'Fira Code', monospace" font-size="13">Ca = $500</text>
+                  <text x="460" y="144" text-anchor="middle" fill="#94a3b8" font-size="10">Costo de Almacén</text>
+                </g>
+              </g>
+            </svg>
+          </div>
+
+          <!-- SLIDER DE TAMAÑO DE LOTE -->
+          <div class="scale-slider-row">
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: .84rem; font-weight: 700;">
+              <span style="color: var(--text2);">Tamaño de Lote ($q$):</span>
+              <span id="theoryBatchValBadge" style="color: #6ee7b7; font-family: 'Fira Code', monospace; background: rgba(16, 185, 129, 0.15); padding: .2rem .6rem; border-radius: 6px; border: 1px solid #10b981;">q = 100 u (Óptimo)</span>
+            </div>
+            <input type="range" id="theoryBatchSlider" min="20" max="180" value="100" style="width: 100%; accent-color: #ec4899; cursor: pointer;" oninput="onTheorySliderInput(this.value)">
+            <div style="display: flex; justify-content: space-between; font-size: .72rem; color: var(--text3); font-weight: 600;">
+              <span>⬅️ Lote Chico (q=20)</span>
+              <span>🎯 Lote Óptimo EOQ (q=100)</span>
+              <span>Lote Grande (q=180) ➡️</span>
+            </div>
+          </div>
+
+          <!-- FEEDBACK DINÁMICO DIRECTO (1 LÍNEA) -->
+          <div class="tradeoff-feedback" id="tradeoffFeedback" style="background: rgba(16, 185, 129, 0.12); border: 1px solid #10b981; color: #6ee7b7;">
+            🎯 <strong>Equilibrio Perfecto:</strong> En $q_0 = 100$ u, pedir y almacenar cuestan lo mismo ($C_{prep} = C_{alm} = \$500$), logrando el Costo Total Mínimo.
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. GLOSARIO DE VARIABLES EN CHIPS COMPACTOS -->
+      <div class="theory-card">
+        <h2 class="theory-title"><span>🏷️</span> 2. Glosario de Variables Clave (Fichas Rápidas)</h2>
+        <p style="font-size: .88rem; color: var(--text2); margin-bottom: .75rem;">Definiciones sintéticas de 1 línea y unidades de examen:</p>
+
+        <div class="var-glossary-grid">
+          <div class="var-card">
+            <div class="var-badge">D (Demanda)</div>
+            <div style="font-size: .85rem; color: var(--text);">Total de artículos consumidos en el período $T$.</div>
+            <div style="font-size: .75rem; color: #ec4899; font-weight: 700; margin-top: .25rem;">[unidades/año]</div>
+          </div>
+
+          <div class="var-card">
+            <div class="var-badge">T (Horizonte)</div>
+            <div style="font-size: .85rem; color: var(--text);">Período de planificación temporal.</div>
+            <div style="font-size: .75rem; color: #ec4899; font-weight: 700; margin-top: .25rem;">[1 año = 365 días]</div>
+          </div>
+
+          <div class="var-card">
+            <div class="var-badge">k o Cp (Pedido)</div>
+            <div style="font-size: .85rem; color: var(--text);">Costo fijo administrativo y de flete por orden.</div>
+            <div style="font-size: .75rem; color: #ec4899; font-weight: 700; margin-top: .25rem;">[$/pedido]</div>
+          </div>
+
+          <div class="var-card">
+            <div class="var-badge">c₁ o Ch (Almacén)</div>
+            <div style="font-size: .85rem; color: var(--text);">Costo de retener 1 unidad durante $T$ ($i \cdot b$).</div>
+            <div style="font-size: .75rem; color: #ec4899; font-weight: 700; margin-top: .25rem;">[$/u/año]</div>
+          </div>
+
+          <div class="var-card">
+            <div class="var-badge">q₀ (Lote Óptimo)</div>
+            <div style="font-size: .85rem; color: var(--text);">Cantidad por reposición que minimiza el costo total.</div>
+            <div style="font-size: .75rem; color: #ec4899; font-weight: 700; margin-top: .25rem;">[unidades/pedido]</div>
+          </div>
+
+          <div class="var-card">
+            <div class="var-badge">n (N° Pedidos)</div>
+            <div style="font-size: .85rem; color: var(--text);">Frecuencia de órdenes: $n = D / q_0$.</div>
+            <div style="font-size: .75rem; color: #ec4899; font-weight: 700; margin-top: .25rem;">[pedidos/año]</div>
+          </div>
+
+          <div class="var-card">
+            <div class="var-badge">t₀ (Tiempo Ciclo)</div>
+            <div style="font-size: .85rem; color: var(--text);">Días entre pedidos: $t_0 = (q_0 / D) \cdot T$.</div>
+            <div style="font-size: .75rem; color: #ec4899; font-weight: 700; margin-top: .25rem;">[días o meses]</div>
+          </div>
+
+          <div class="var-card">
+            <div class="var-badge">L (Lead Time)</div>
+            <div style="font-size: .85rem; color: var(--text);">Demora de entrega del proveedor desde la orden.</div>
+            <div style="font-size: .75rem; color: #ec4899; font-weight: 700; margin-top: .25rem;">[días]</div>
+          </div>
+
+          <div class="var-card">
+            <div class="var-badge">ROP (Punto Reorden)</div>
+            <div style="font-size: .85rem; color: var(--text);">Stock de alarma para pedir: $ROP = (D/T) \cdot L$.</div>
+            <div style="font-size: .75rem; color: #ec4899; font-weight: 700; margin-top: .25rem;">[unidades en galpón]</div>
+          </div>
+
+          <div class="var-card">
+            <div class="var-badge">Sp (Protección)</div>
+            <div style="font-size: .85rem; color: var(--text);">Colchón fijo de reserva para cubrir imprevistos.</div>
+            <div style="font-size: .75rem; color: #ec4899; font-weight: 700; margin-top: .25rem;">[unidades base]</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. DEMOSTRACIÓN MATEMÁTICA EN 3 PASOS -->
+      <div class="theory-card">
+        <h2 class="theory-title"><span>🧮</span> 3. Deducción Matemática en 3 Pasos Visuales</h2>
+        <p style="font-size: .88rem; color: var(--text2); margin-bottom: .75rem;">De la función de costo a la raíz cuadrada:</p>
+
+        <div class="formula-flow-grid">
+          <div class="formula-step-card">
+            <div style="font-weight: 800; font-size: .95rem; color: #ec4899; margin-bottom: .4rem;">1️⃣ Función de Costo Total (CTE)</div>
+            <div style="font-size: .82rem; color: var(--text2); margin-bottom: .4rem;">Suma de compra, emisión y posesión ($\bar{S} = q/2$):</div>
+            <div class="math-block" style="padding: .6rem; margin: 0; font-size: .88rem;">$$CTE = b D + \frac{D}{q}k + \frac{q}{2}c_1 T$$</div>
+          </div>
+
+          <div class="formula-step-card">
+            <div style="font-weight: 800; font-size: .95rem; color: #f59e0b; margin-bottom: .4rem;">2️⃣ Condición de Mínimo (dCTE/dq = 0)</div>
+            <div style="font-size: .82rem; color: var(--text2); margin-bottom: .4rem;">Derivamos respecto al lote e igualamos a cero:</div>
+            <div class="math-block" style="padding: .6rem; margin: 0; font-size: .88rem;">$$-\frac{D \cdot k}{q^2} + \frac{c_1 \cdot T}{2} = 0$$</div>
+          </div>
+
+          <div class="formula-step-card" style="border-left-color: #10b981;">
+            <div style="font-weight: 800; font-size: .95rem; color: #6ee7b7; margin-bottom: .4rem;">3️⃣ Despeje del Lote Óptimo (q₀)</div>
+            <div style="font-size: .82rem; color: var(--text2); margin-bottom: .4rem;">Fórmula fundamental del modelo determinístico:</div>
+            <div class="math-block" style="padding: .6rem; margin: 0; font-size: .88rem;">$$q_0 = \sqrt{\frac{2 \cdot k \cdot D}{T \cdot c_1}}$$</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
   </div>
 
   <!-- ═════════════════════════════════════════════════════════════════════════
        MÓDULO 1: JUEGO DE LA BANCARROTA, DIENTE DE SIERRA Y SENSIBILIDAD
        ═════════════════════════════════════════════════════════════════════════ -->
-  <div id="mod1" class="mod-content active">
+  <div id="mod1" class="mod-content">
 
     <div class="game-container" id="gameCard">
       
@@ -1275,16 +1633,6 @@
             <button class="copy-btn" onclick="copyExcel('codeDeficit')">📋 Copiar Fórmula</button>
           </div>
         </div>
-          </div>
-
-          <div class="excel-box">
-            <div>
-              <div style="font-size: .78rem; color: var(--text2); text-transform: uppercase; font-weight: 700;">Fórmula lista para copiar a Excel:</div>
-              <div class="excel-code" id="codeEpq">=RAIZ((2*K*D)/(T*C1*(1-(d/p))))</div>
-            </div>
-            <button class="copy-btn" onclick="copyExcel('codeEpq')">📋 Copiar Fórmula</button>
-          </div>
-        </div>
 
       </div>
     </div>
@@ -1405,8 +1753,14 @@ function switchModule(modId, btn) {
   btn.classList.add('active');
 
   if (modId === 'mod1') {
-    if (eoqChartInstance) eoqChartInstance.update();
-    if (sawtoothChartInstance) sawtoothChartInstance.update();
+    if (eoqChartInstance) {
+      eoqChartInstance.resize();
+      eoqChartInstance.update();
+    }
+    if (sawtoothChartInstance) {
+      sawtoothChartInstance.resize();
+      sawtoothChartInstance.update();
+    }
   }
 }
 
@@ -2237,11 +2591,158 @@ function solveDiscounts() {
   document.getElementById('discountResults').classList.add('show');
 }
 
+// ── CONTROLADOR DE BALANZA MECÁNICA SVG DE TEORÍA ────────────────────────────
+function updateScaleVisuals(angle, qVal, cpVal, caVal, scenarioName, feedbackHtml, feedbackType) {
+  const beam = document.getElementById('scaleBeam');
+  const panLeft = document.getElementById('panLeftGroup');
+  const panRight = document.getElementById('panRightGroup');
+  const leftIcons = document.getElementById('panLeftIcons');
+  const rightIcons = document.getElementById('panRightIcons');
+  const svgCpVal = document.getElementById('svgCpVal');
+  const svgCaVal = document.getElementById('svgCaVal');
+  const badgeVal = document.getElementById('theoryBatchValBadge');
+  const feedback = document.getElementById('tradeoffFeedback');
+  const slider = document.getElementById('theoryBatchSlider');
+
+  if (!beam || !panLeft || !panRight) return;
+
+  // Inclinación suave del brazo y contra-rotación de los platillos para mantenerlos horizontales
+  beam.style.transform = `rotate(${angle}deg)`;
+  panLeft.style.transform = `rotate(${-angle}deg)`;
+  panRight.style.transform = `rotate(${-angle}deg)`;
+
+  // Actualizar valores de costos en los platos de la balanza
+  if (svgCpVal) svgCpVal.textContent = `Cp = $${Math.round(cpVal).toLocaleString('es-AR')}`;
+  if (svgCaVal) svgCaVal.textContent = `Ca = $${Math.round(caVal).toLocaleString('es-AR')}`;
+
+  // Actualizar íconos según peso
+  if (angle < -5) {
+    if (leftIcons) leftIcons.textContent = '🚚🚚🚚';
+    if (rightIcons) rightIcons.textContent = '📦';
+  } else if (angle > 5) {
+    if (leftIcons) leftIcons.textContent = '🚚';
+    if (rightIcons) rightIcons.textContent = '🏢📦📦';
+  } else {
+    if (leftIcons) leftIcons.textContent = '🚚🚚';
+    if (rightIcons) rightIcons.textContent = '🏢📦';
+  }
+
+  // Actualizar Badge del slider
+  if (badgeVal) {
+    badgeVal.textContent = `q = ${qVal} u (${scenarioName})`;
+    if (feedbackType === 'optimum') {
+      badgeVal.style.color = '#6ee7b7';
+      badgeVal.style.borderColor = '#10b981';
+      badgeVal.style.background = 'rgba(16, 185, 129, 0.15)';
+    } else {
+      badgeVal.style.color = '#ec4899';
+      badgeVal.style.borderColor = '#ec4899';
+      badgeVal.style.background = 'rgba(236, 72, 153, 0.15)';
+    }
+  }
+
+  // Sincronizar slider si la llamada vino de botones
+  if (slider && Number(slider.value) !== qVal) {
+    slider.value = qVal;
+  }
+
+  // Actualizar banner de explicación (conclusión limpia y directa)
+  if (feedback) {
+    feedback.innerHTML = feedbackHtml;
+    if (feedbackType === 'optimum') {
+      feedback.style.background = 'rgba(16, 185, 129, 0.12)';
+      feedback.style.border = '1px solid #10b981';
+      feedback.style.color = '#6ee7b7';
+    } else if (feedbackType === 'small') {
+      feedback.style.background = 'rgba(245, 158, 11, 0.12)';
+      feedback.style.border = '1px solid #f59e0b';
+      feedback.style.color = '#fbbf24';
+    } else {
+      feedback.style.background = 'rgba(244, 63, 94, 0.12)';
+      feedback.style.border = '1px solid #f43f5e';
+      feedback.style.color = '#fca5a5';
+    }
+  }
+
+  if (typeof renderMathInElement !== 'undefined' && feedback) {
+    renderMathInElement(feedback, {
+      delimiters: [{left: "$", right: "$", display: false}],
+      throwOnError: false
+    });
+  }
+}
+
+function setTheoryTradeoff(type) {
+  const btnSmall = document.getElementById('btnThSmall');
+  const btnOpt = document.getElementById('btnThOpt');
+  const btnLarge = document.getElementById('btnThLarge');
+
+  if (btnSmall) btnSmall.classList.remove('active');
+  if (btnOpt) btnOpt.classList.remove('active');
+  if (btnLarge) btnLarge.classList.remove('active');
+
+  if (type === 'small') {
+    if (btnSmall) btnSmall.classList.add('active');
+    updateScaleVisuals(-14, 25, 2000, 125, 'Lote Chico', 
+      '🚚 <strong>Muchos Pedidos ($n=40$):</strong> Pedir pocas unidades dispara los gastos de flete y emisión ($C_{prep} = \\$2.000$).', 
+      'small');
+  } else if (type === 'large') {
+    if (btnLarge) btnLarge.classList.add('active');
+    updateScaleVisuals(14, 175, 285.7, 875, 'Lote Grande', 
+      '🏢 <strong>Almacén Saturado:</strong> Comprar lotes enormes inmoviliza demasiado stock y capital ($C_{alm} = \\$875$).', 
+      'large');
+  } else {
+    if (btnOpt) btnOpt.classList.add('active');
+    updateScaleVisuals(0, 100, 500, 500, 'Lote Óptimo EOQ', 
+      '🎯 <strong>Equilibrio Perfecto:</strong> En $q_0 = 100$ u, pedir y almacenar cuestan lo mismo ($C_{prep} = C_{alm} = \\$500$), logrando el Costo Total Mínimo.', 
+      'optimum');
+  }
+}
+
+function onTheorySliderInput(val) {
+  const q = Number(val);
+  const D = 1000, k = 50, c1 = 10, T = 1;
+  const cp = (D / q) * k;
+  const ca = (q / 2) * c1 * T;
+  const diff = ca - cp;
+  
+  // Mapear diferencia de costos al ángulo de giro [-15°, +15°]
+  const angle = Math.max(-15, Math.min(15, diff / 40));
+
+  const btnSmall = document.getElementById('btnThSmall');
+  const btnOpt = document.getElementById('btnThOpt');
+  const btnLarge = document.getElementById('btnThLarge');
+  if (btnSmall) btnSmall.classList.remove('active');
+  if (btnOpt) btnOpt.classList.remove('active');
+  if (btnLarge) btnLarge.classList.remove('active');
+
+  let type = 'custom', label = `q = ${q} u`, msg = '';
+  if (Math.abs(q - 100) <= 4) {
+    type = 'optimum';
+    label = 'Lote Óptimo EOQ';
+    if (btnOpt) btnOpt.classList.add('active');
+    msg = `🎯 <strong>Equilibrio Perfecto:</strong> En $q_0 \\approx 100$ u, los costos se igualan ($C_{prep} = C_{alm} \\approx \\$${Math.round(cp)}$) y el costo total es mínimo.`;
+  } else if (q < 100) {
+    type = 'small';
+    label = 'Lote Chico';
+    if (q <= 30 && btnSmall) btnSmall.classList.add('active');
+    msg = `🚚 <strong>Inclinada a Pedidos:</strong> Muchos pedidos al año ($C_{prep} = \\$${Math.round(cp)}$) superan al costo de almacén ($C_{alm} = \\$${Math.round(ca)}$).`;
+  } else {
+    type = 'large';
+    label = 'Lote Grande';
+    if (q >= 160 && btnLarge) btnLarge.classList.add('active');
+    msg = `🏢 <strong>Inclinada a Almacén:</strong> Stock inmovilizado ($C_{alm} = \\$${Math.round(ca)}$) supera al costo de emisión ($C_{prep} = \\$${Math.round(cp)}$).`;
+  }
+
+  updateScaleVisuals(angle, q, cp, ca, label, msg, type);
+}
+
 // INICIALIZACIÓN
 document.addEventListener('DOMContentLoaded', () => {
   loadScenario('golo');
   loadLagrangePreset();
   loadDiscountPreset();
+  setTheoryTradeoff('optimum');
 
   if (typeof renderMathInElement !== 'undefined') {
     renderMathInElement(document.body, {
