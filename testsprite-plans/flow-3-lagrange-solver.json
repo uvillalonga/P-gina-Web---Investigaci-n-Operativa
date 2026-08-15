@@ -1,0 +1,23 @@
+{
+  "projectId": "mock-io-inventory-project",
+  "type": "frontend",
+  "name": "3. Optimizador de Lagrange Multi-Artículo (Restricción de Espacio)",
+  "planSteps": [
+    {
+      "type": "action",
+      "description": "Click on 'Módulo 2: Restricciones de Espacio y Descuentos' in the top tab navigation"
+    },
+    {
+      "type": "action",
+      "description": "Click on the button '🧮 Cargar Ejemplo de Parcial (3 Artículos)' under the Lagrange section"
+    },
+    {
+      "type": "action",
+      "description": "Click on '⚡ Resolver con Multiplicadores de Lagrange'"
+    },
+    {
+      "type": "assertion",
+      "description": "The Lagrange summary banner appears showing optimal lambda value and the results table displays restricted batch sizes"
+    }
+  ]
+}

@@ -106,7 +106,7 @@
     { href: 'simulador_montecarlo.html',       label: 'Filas de Espera',    unit: 'u4' },
     { href: 'tutorial_excel_montecarlo.html',  label: 'Guía Excel',         unit: 'u4' },
     // U5
-    { href: 'simulador_inventarios.html',      label: 'Simulador EOQ',      unit: 'u5' },
+    { href: 'simulador_inventarios.html',      label: 'Simulador de Inventarios', unit: 'u5' },
   ];
 
   // Identificar unidad activa

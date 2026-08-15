@@ -1,0 +1,19 @@
+{
+  "projectId": "mock-io-inventory-project",
+  "type": "frontend",
+  "name": "5. Trivia de Parcial y Quiz Autoevaluativo",
+  "planSteps": [
+    {
+      "type": "action",
+      "description": "Click on 'Módulo 4: Trivia de Parcial' in the top tab navigation"
+    },
+    {
+      "type": "action",
+      "description": "In Question 1, click on option 'B) Se duplicará (se multiplica por 2).'"
+    },
+    {
+      "type": "assertion",
+      "description": "The button turns green, explanation box displays the mathematical formula, and quizScoreBadge displays 'Puntaje: 1 / 4'"
+    }
+  ]
+}

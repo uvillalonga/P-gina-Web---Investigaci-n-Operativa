@@ -1,0 +1,23 @@
+{
+  "projectId": "mock-io-inventory-project",
+  "type": "frontend",
+  "name": "4. Validador de Descuentos por Cantidad (Escalas de Precio)",
+  "planSteps": [
+    {
+      "type": "action",
+      "description": "Navigate to Module 2 and locate the Quantity Discount Validator table"
+    },
+    {
+      "type": "action",
+      "description": "Click on '📦 Cargar Ejemplo Típico (3 Tramos)'"
+    },
+    {
+      "type": "action",
+      "description": "Click on '🏆 Optimizar Descuentos por Cantidad'"
+    },
+    {
+      "type": "assertion",
+      "description": "The recommendation banner highlights Tramo 3 as the winner with optimal batch size and minimum expected total cost"
+    }
+  ]
+}

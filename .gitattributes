@@ -1,0 +1,10 @@
+# Normalización automática de saltos de línea para Git
+* text=auto
+
+# Archivos de código web siempre en LF
+*.html text eol=lf
+*.css text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.svg text eol=lf

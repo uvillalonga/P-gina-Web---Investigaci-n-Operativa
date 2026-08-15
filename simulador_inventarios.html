@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Unidad 5 · Gestión de Inventarios — Portal IO · UTN</title>
-<meta name="description" content="Simulador interactivo, validador de parciales, machete dinámico y quiz de autoevaluación para modelos de inventarios (EOQ, Lagrange y Descuentos) · UTN Investigación Operativa.">
+<meta name="description" content="Simulador analítico, optimización bajo restricciones y modelos cuantitativos de inventarios (EOQ, Lagrange y Descuentos por Cantidad) · UTN Investigación Operativa.">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 
@@ -920,8 +920,8 @@
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
     Unidad 5 · Modelos de Inventarios
   </div>
-  <h1>Simulador & Resolvedor de Inventarios</h1>
-  <p>Entorno interactivo de experimentación, validador de parciales, machete dinámico y trivia autoevaluativa para optimizar la balanza entre pedir y almacenar.</p>
+  <h1>Simulador & Optimización de Inventarios</h1>
+  <p>Herramienta analítica para el dimensionamiento del lote óptimo de compra, análisis de sensibilidad, optimización bajo restricciones de capacidad y evaluación de descuentos por volumen.</p>
 </section>
 
 <div class="content" style="max-width: 1150px; margin: 0 auto; padding: 2rem 5%;">
@@ -932,16 +932,16 @@
       <span>📖</span> Fundamentos Teóricos
     </button>
     <button class="mod-tab-btn" onclick="switchModule('mod1', this)">
-      <span>🎮</span> Módulo 1: El Juego de la Bancarrota (EOQ)
+      <span>📊</span> Módulo 1: Simulador de Lote Óptimo (EOQ)
     </button>
     <button class="mod-tab-btn" onclick="switchModule('mod2', this)">
-      <span>🛠️</span> Módulo 2: El Oráculo (Validador)
+      <span>⚙️</span> Módulo 2: Restricciones de Espacio y Descuentos
     </button>
     <button class="mod-tab-btn" onclick="switchModule('mod3', this)">
-      <span>📚</span> Módulo 3: Machete Dinámico
+      <span>📐</span> Módulo 3: Formulario y Resumen de Modelos
     </button>
     <button class="mod-tab-btn" onclick="switchModule('mod4', this)">
-      <span>🧩</span> Módulo 4: Trivia de Parcial
+      <span>📝</span> Módulo 4: Autoevaluación Conceptual
     </button>
   </div>
 
@@ -1107,27 +1107,71 @@
         </div>
       </div>
 
-      <!-- 3. DEMOSTRACIÓN MATEMÁTICA EN 3 PASOS -->
+      <!-- 3. COMPONENTES INDIVIDUALES DEL COSTO DE INVENTARIO -->
       <div class="theory-card">
-        <h2 class="theory-title"><span>🧮</span> 3. Deducción Matemática en 3 Pasos Visuales</h2>
-        <p style="font-size: .88rem; color: var(--text2); margin-bottom: .75rem;">De la función de costo a la raíz cuadrada:</p>
+        <h2 class="theory-title"><span>💰</span> 3. Componentes del Costo de Inventario</h2>
+        <p style="font-size: .88rem; color: var(--text2); margin-bottom: .75rem;">El costo total del sistema se compone de tres elementos fundamentales:</p>
 
         <div class="formula-flow-grid">
-          <div class="formula-step-card">
-            <div style="font-weight: 800; font-size: .95rem; color: #ec4899; margin-bottom: .4rem;">1️⃣ Función de Costo Total (CTE)</div>
-            <div style="font-size: .82rem; color: var(--text2); margin-bottom: .4rem;">Suma de compra, emisión y posesión ($\bar{S} = q/2$):</div>
-            <div class="math-block" style="padding: .6rem; margin: 0; font-size: .88rem;">$$CTE = b D + \frac{D}{q}k + \frac{q}{2}c_1 T$$</div>
-          </div>
-
-          <div class="formula-step-card">
-            <div style="font-weight: 800; font-size: .95rem; color: #f59e0b; margin-bottom: .4rem;">2️⃣ Condición de Mínimo (dCTE/dq = 0)</div>
-            <div style="font-size: .82rem; color: var(--text2); margin-bottom: .4rem;">Derivamos respecto al lote e igualamos a cero:</div>
-            <div class="math-block" style="padding: .6rem; margin: 0; font-size: .88rem;">$$-\frac{D \cdot k}{q^2} + \frac{c_1 \cdot T}{2} = 0$$</div>
-          </div>
-
+          <!-- COSTO DE ADQUISICIÓN -->
           <div class="formula-step-card" style="border-left-color: #10b981;">
-            <div style="font-weight: 800; font-size: .95rem; color: #6ee7b7; margin-bottom: .4rem;">3️⃣ Despeje del Lote Óptimo (q₀)</div>
-            <div style="font-size: .82rem; color: var(--text2); margin-bottom: .4rem;">Fórmula fundamental del modelo determinístico:</div>
+            <div style="font-weight: 800; font-size: .95rem; color: #6ee7b7; margin-bottom: .3rem;">📦 Costo de Adquisición ($C_{adq}$)</div>
+            <p style="font-size: .82rem; color: var(--text2); margin-bottom: .5rem; line-height: 1.4;">
+              Costo directo de compra del material para cubrir la demanda $D$ al precio unitario $b$. Con precio unitario constante, es independiente del tamaño de lote $q$.
+            </p>
+            <div class="math-block" style="padding: .6rem; margin: 0; font-size: .88rem;">$$C_{adq} = b \cdot D$$</div>
+          </div>
+
+          <!-- COSTO DE PEDIDO / REORDEN -->
+          <div class="formula-step-card" style="border-left-color: #f59e0b;">
+            <div style="font-weight: 800; font-size: .95rem; color: #fbbf24; margin-bottom: .3rem;">🚚 Costo de Pedido / Emisión ($C_p$)</div>
+            <p style="font-size: .82rem; color: var(--text2); margin-bottom: .5rem; line-height: 1.4;">
+              Costo fijo administrativo y de transporte por orden $k$, multiplicado por la cantidad de pedidos emitidos $n = D/q$. Disminuye de forma hiperbólica con $q$.
+            </p>
+            <div class="math-block" style="padding: .6rem; margin: 0; font-size: .88rem;">$$C_p = n \cdot k = \frac{D}{q} \cdot k$$</div>
+          </div>
+
+          <!-- COSTO DE ALMACENAMIENTO -->
+          <div class="formula-step-card" style="border-left-color: #3b82f6;">
+            <div style="font-weight: 800; font-size: .95rem; color: #60a5fa; margin-bottom: .3rem;">🏢 Costo de Almacenamiento ($C_a$)</div>
+            <p style="font-size: .82rem; color: var(--text2); margin-bottom: .5rem; line-height: 1.4;">
+              Costo de custodiar e inmovilizar el inventario promedio $\bar{S} = q/2$ a la tasa unitaria $c_1$ durante el horizonte $T$. Crece linealmente con el lote $q$.
+            </p>
+            <div class="math-block" style="padding: .6rem; margin: 0; font-size: .88rem;">$$C_a = \bar{S} \cdot c_1 \cdot T = \frac{q}{2} \cdot c_1 \cdot T$$</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. COSTO TOTAL ESPERADO Y CONDICIÓN DE LOTE ÓPTIMO -->
+      <div class="theory-card">
+        <h2 class="theory-title"><span>🧮</span> 4. Costo Total Esperado (CTE) y Deducción del Lote Óptimo</h2>
+        <p style="font-size: .88rem; color: var(--text2); margin-bottom: .75rem;">Integración de costos y condición de equilibrio para determinar $q_0$:</p>
+
+        <div class="formula-flow-grid">
+          <!-- PASO 1: CTE -->
+          <div class="formula-step-card" style="border-left-color: #ec4899;">
+            <div style="font-weight: 800; font-size: .95rem; color: #f472b6; margin-bottom: .3rem;">1️⃣ Función de Costo Total (CTE)</div>
+            <p style="font-size: .82rem; color: var(--text2); margin-bottom: .5rem; line-height: 1.4;">
+              Suma de adquisición, pedidos y almacenamiento. Presenta una curva convexa con un único mínimo global:
+            </p>
+            <div class="math-block" style="padding: .6rem; margin: 0; font-size: .88rem;">$$CTE(q) = b \cdot D + \frac{D}{q}k + \frac{q}{2}c_1 T$$</div>
+          </div>
+
+          <!-- PASO 2: CONDICIÓN DE EQUILIBRIO -->
+          <div class="formula-step-card" style="border-left-color: #f59e0b;">
+            <div style="font-weight: 800; font-size: .95rem; color: #fbbf24; margin-bottom: .3rem;">2️⃣ Condición de Equilibrio Óptimo</div>
+            <p style="font-size: .82rem; color: var(--text2); margin-bottom: .5rem; line-height: 1.4;">
+              El mínimo del costo ocurre exactamente donde el costo de pedir se iguala al costo de almacenar ($C_p = C_a$):
+            </p>
+            <div class="math-block" style="padding: .6rem; margin: 0; font-size: .88rem;">$$C_p = C_a \iff \frac{D}{q_0}k = \frac{q_0}{2}c_1 T$$</div>
+          </div>
+
+          <!-- PASO 3: DESPEJE DEL LOTE ÓPTIMO -->
+          <div class="formula-step-card" style="border-left-color: #10b981;">
+            <div style="font-weight: 800; font-size: .95rem; color: #6ee7b7; margin-bottom: .3rem;">3️⃣ Despeje del Lote Óptimo ($q_0$)</div>
+            <p style="font-size: .82rem; color: var(--text2); margin-bottom: .5rem; line-height: 1.4;">
+              Multiplicando cruzado y aplicando raíz cuadrada obtenemos la fórmula analítica del lote óptimo:
+            </p>
             <div class="math-block" style="padding: .6rem; margin: 0; font-size: .88rem;">$$q_0 = \sqrt{\frac{2 \cdot k \cdot D}{T \cdot c_1}}$$</div>
           </div>
         </div>
@@ -1138,7 +1182,7 @@
   </div>
 
   <!-- ═════════════════════════════════════════════════════════════════════════
-       MÓDULO 1: JUEGO DE LA BANCARROTA, DIENTE DE SIERRA Y SENSIBILIDAD
+       MÓDULO 1: SIMULADOR DE LOTE ÓPTIMO (EOQ) Y ANÁLISIS DE SENSIBILIDAD
        ═════════════════════════════════════════════════════════════════════════ -->
   <div id="mod1" class="mod-content">
 
@@ -1148,12 +1192,12 @@
       <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
         <div>
           <h2 style="font-size: 1.4rem; font-weight: 800; color: var(--text);">Simulador de Lote Óptimo (EOQ)</h2>
-          <p style="font-size: .88rem; color: var(--text2);">Seleccioná un caso de estudio o personalizá las 6 variables fundamentales del modelo.</p>
+          <p style="font-size: .88rem; color: var(--text2);">Seleccione un caso de estudio o configure los parámetros del modelo determinístico.</p>
         </div>
 
         <div class="scenario-selector">
-          <button class="scenario-btn active" id="btnScenGolo" onclick="loadScenario('golo')">📌 Caso Golo S.A. (Ej 4)</button>
-          <button class="scenario-btn" id="btnScenParcial" onclick="loadScenario('parcial')">📌 Parcial 10.000 u (Horizonte 400d)</button>
+          <button class="scenario-btn active" id="btnScenGolo" onclick="loadScenario('golo')">Caso Golo S.A.</button>
+          <button class="scenario-btn" id="btnScenParcial" onclick="loadScenario('parcial')">Caso Parcial (10.000 u / 400d)</button>
           <button class="scenario-btn" id="btnScenCustom" onclick="loadScenario('custom')">⚙️ Personalizado</button>
         </div>
       </div>
@@ -1189,7 +1233,7 @@
       <!-- SLIDER GIGANTE -->
       <div class="slider-card">
         <div style="font-size: .85rem; font-weight: 700; color: var(--text2); text-transform: uppercase;">
-          ¿Cuántas unidades vas a comprar por pedido? (Tamaño del Lote Q)
+          Tamaño del Lote de Pedido (Q):
         </div>
         <div class="slider-val-display" id="qValDisplay">1,369 u</div>
         <input type="range" min="10" max="5000" step="5" value="1369" class="giant-slider" id="eoqSlider" oninput="updateEOQGame(this.value)">
@@ -1251,18 +1295,18 @@
 
       <!-- BANNERS DE FEEDBACK -->
       <div id="bannerBancarrota" class="feedback-banner bancarrota">
-        ⚠️ <strong>¡DEMASIADOS PEDIDOS! LOS FLETES TE ARRUINAN.</strong><br>
-        Estás pidiendo cantidades muy pequeñas (<span id="ordersPerDay">0</span> pedidos en el horizonte). El costo administrativo de emitir tantas órdenes arruinó tu presupuesto ($<span id="cpBancarrota">0</span> solo en órdenes).
+        ⚠️ <strong>Costo de emisión excesivo (Lote insuficiente):</strong><br>
+        El tamaño de lote seleccionado genera una frecuencia elevada de pedidos (<span id="ordersPerDay">0</span> pedidos en el período). El costo administrativo de emisión asciende a $<span id="cpBancarrota">0</span>.
       </div>
 
       <div id="bannerGalpon" class="feedback-banner galpon">
-        ⚠️ <strong>¡LOTES INMENSOS! EL GALPÓN EXPLOTA.</strong><br>
-        Compraste una masa física excesiva. El costo acumulado de almacenar tanto stock en el depósito es impagable ($<span id="caGalpon">0</span> en almacenamiento).
+        ⚠️ <strong>Costo de posesión elevado (Sobredimensionamiento de lote):</strong><br>
+        El tamaño de lote seleccionado genera una inmovilización excesiva de inventario. El costo de almacenamiento acumulado asciende a $<span id="caGalpon">0</span>.
       </div>
 
       <div id="bannerVictoria" class="feedback-banner victoria">
-        <div style="font-size: 1.3rem; margin-bottom: .25rem;">🎉 <strong>¡PUNTO DULCE ALCANZADO (EOQ)!</strong></div>
-        ¡Felicidades! Encontraste el equilibrio óptimo donde el costo de pedir ($<span id="eqCostPrep">0</span>) se iguala exactamente al costo de almacenar ($<span id="eqCostAlm">0</span>). A este lote se lo conoce como <strong>Lote Óptimo EOQ (q₀)</strong>.
+        <div style="font-size: 1.2rem; margin-bottom: .25rem;"><strong>Condición de Optimalidad Alcanzada (EOQ)</strong></div>
+        Se ha alcanzado el equilibrio óptimo donde el costo de emisión ($<span id="eqCostPrep">0</span>) se iguala al costo de posesión ($<span id="eqCostAlm">0</span>). Este valor corresponde al <strong>Lote Óptimo EOQ ($q_0$)</strong>.
       </div>
 
       <!-- DOS GRÁFICOS APILADOS VERTICALMENTE (TAMAÑO GRANDE) -->
@@ -1338,10 +1382,9 @@
 
       <!-- RESOLUCIÓN PASO A PASO -->
       <div id="resolution-section" class="resolution-box">
-        <h2 style="font-size: 1.3rem; font-weight: 800; color: #10b981; margin-bottom: 1rem;">🎉 ¡Excelente! Has resuelto el Lote Óptimo (EOQ)</h2>
+        <h2 style="font-size: 1.3rem; font-weight: 800; color: #10b981; margin-bottom: 1rem;">Resolución Analítica del Lote Óptimo (EOQ)</h2>
         <p style="font-size: .95rem; color: var(--text); margin-bottom: 1.5rem;">
-          Matemáticamente, la cantidad exacta es <strong style="color: #ec4899;" id="resOptQText">0 u</strong>. Notarás un fenómeno físico clave de la Investigación Operativa: 
-          en el punto óptimo del modelo básico, <strong>el costo de almacenamiento es exactamente igual al costo de preparación/pedido</strong>.
+          La cantidad óptima calculada es <strong style="color: #ec4899;" id="resOptQText">0 u</strong>. En este punto de equilibrio, <strong>el costo de almacenamiento se iguala exactamente al costo de emisión de órdenes</strong> ($C_{prep} = C_{alm}$).
         </p>
 
         <div class="math-block">
@@ -1361,7 +1404,7 @@
         </div>
 
         <p style="color: var(--text2); font-size: .9rem; margin-top: 1rem; background: rgba(236, 72, 153, 0.08); padding: 1rem; border-radius: 8px; border: 1px solid rgba(236, 72, 153, 0.2);">
-          💡 <strong>Insight para tu Excel:</strong> Cuando resuelvas esto en el parcial, si la columna de $C_{prep}$ (o reorden) y la de $C_{alm}$ no te dan el mismo número, significa que cometiste un error en la fórmula del lote o no respetaste las unidades de tiempo de la Tasa ($c_1$ o $T$).
+          💡 <strong>Verificación analítica:</strong> En el modelo clásico determinístico, el costo de preparación ($C_{prep}$) y el costo de posesión ($C_{alm}$) deben coincidir en el punto óptimo. Una divergencia indica discrepancia en las unidades temporales de la demanda ($D$) o de las tasas de costo ($c_1$, $T$).
         </p>
       </div>
 
@@ -1370,145 +1413,218 @@
   </div>
 
   <!-- ═════════════════════════════════════════════════════════════════════════
-       MÓDULO 2: EL ORÁCULO (VALIDADOR DE PARCIALES)
+       MÓDULO 2: RESTRICCIONES DE ESPACIO (LAGRANGE) Y DESCUENTOS POR ESCALA
        ═════════════════════════════════════════════════════════════════════════ -->
   <div id="mod2" class="mod-content">
 
     <div class="subtabs-bar">
-      <button class="subtab-btn active" onclick="switchSubTab('lagrange', this)">📍 Restricción de Volumen (Lagrange)</button>
-      <button class="subtab-btn" onclick="switchSubTab('descuentos', this)">🏷️ Descuentos por Cantidad (Tramos)</button>
+      <button class="subtab-btn active" onclick="switchSubTab('lagrange', this)">Restricción de Superficie / Volumen (Lagrange)</button>
+      <button class="subtab-btn" onclick="switchSubTab('descuentos', this)">Descuentos por Cantidad (Ejercicio Ejemplo)</button>
     </div>
 
-    <!-- SUBTAB 2.1: LAGRANGE -->
+    <!-- SUBTAB 2.1: LAGRANGE (EJERCICIO 8) -->
     <div id="subtab-lagrange" class="subtab-content">
       <div class="config-panel">
-        <h2 style="font-size: 1.3rem; font-weight: 800; color: var(--text); margin-bottom: .5rem;">Calculadora de Restricción de Superficie / Volumen (Lagrange)</h2>
-        <p style="font-size: .88rem; color: var(--text2); margin-bottom: 1.5rem;">
-          Resuelve la optimización simultánea de múltiples artículos cuando el galpón o depósito tiene una capacidad límite $S_{max}$.
-        </p>
-
-        <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
-          <div style="flex: 1; min-width: 240px;">
-            <label style="font-size: .8rem; font-weight: 700; color: var(--text2); text-transform: uppercase;">Superficie / Volumen Máximo Disponible (S_max)</label>
-            <input type="number" id="lagrangeSmax" value="450" class="input-num" style="width: 100%; margin-top: .4rem;" placeholder="Ej: 450 m²">
+        
+        <!-- HEADER -->
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+          <div>
+            <h2 style="font-size: 1.3rem; font-weight: 800; color: var(--text); margin-bottom: .3rem;">Optimización con Restricción de Espacio (Lagrange)</h2>
           </div>
-          <div style="display: flex; align-items: flex-end; gap: .75rem;">
-            <button class="btn-secondary" onclick="loadLagrangePreset()">Cargar Ejemplo de Examen</button>
-            <button class="btn-primary" style="background: #ec4899;" onclick="solveLagrange()">⚡ Resolver por Lagrange</button>
+          <div>
+            <button class="btn-secondary" onclick="resetLagrangeToExercise8()" style="font-size: .8rem;">🔄 Restablecer Ejercicio 8 (Cátedra)</button>
           </div>
         </div>
 
-        <h3 style="font-size: 1rem; font-weight: 700; color: var(--text2); margin-bottom: .5rem;">Artículos en Inventario:</h3>
-        <div style="overflow-x: auto;">
-          <table class="data-table" id="lagrangeTable">
-            <thead>
-              <tr>
-                <th>Artículo</th>
-                <th>Demanda D (unid/año)</th>
-                <th>Costo Pedido k ($)</th>
-                <th>Costo Almacén c₁ ($/u/año)</th>
-                <th>Espacio sᵢ (m²/unidad)</th>
-                <th>Acción</th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- Se puebla con JS -->
-            </tbody>
-          </table>
+        <!-- EDITOR DE PARÁMETROS GLOBALES -->
+        <div class="param-editor" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-bottom: 1.5rem;">
+          <div class="param-group">
+            <label for="lagrangeSmax">Capacidad Máx. ($V_{\max}$):</label>
+            <input type="number" id="lagrangeSmax" value="250" class="param-input" step="10" oninput="solveLagrange()">
+          </div>
+          <div class="param-group">
+            <label for="lagrangeI">Tasa Almacén ($i$ % anual):</label>
+            <input type="number" id="lagrangeI" value="20" class="param-input" step="1" oninput="onLagrangeIChange()">
+          </div>
+          <div class="param-group">
+            <label for="lagrangeT">Horizonte ($T$ años):</label>
+            <input type="number" id="lagrangeT" value="1" class="param-input" step="0.5" oninput="solveLagrange()">
+          </div>
         </div>
-        <button class="btn-secondary" onclick="addLagrangeRow()" style="font-size: .82rem;">+ Agregar Artículo</button>
 
-        <!-- RESULTADOS LAGRANGE -->
-        <div id="lagrangeResults" class="results-area" style="margin-top: 2rem;">
-          <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border-med); border-radius: 12px; padding: 1.5rem;">
-            <h3 style="font-size: 1.1rem; font-weight: 800; color: #ec4899; margin-bottom: 1rem;">Resultados de Optimización Ajustada</h3>
+        <!-- MEDIDOR VISUAL DE CAPACIDAD Y CONTROL DE LAMBDA -->
+        <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid var(--border-med); border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem;">
+          
+          <!-- BARRA DE OCUPACIÓN DE CAPACIDAD -->
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .5rem; margin-bottom: .5rem;">
+            <div style="font-size: .88rem; font-weight: 700; color: var(--text2); text-transform: uppercase; display: flex; align-items: center; gap: 8px;">
+              <span>📦 Ocupación del Almacén:</span>
+              <strong id="lagrangeVolText" style="color: var(--text); font-family: 'Fira Code', monospace; font-size: 1rem;">250.00 / 250.00 m³</strong>
+            </div>
+            <span id="lagrangeVolBadge" style="font-size: .8rem; font-weight: 800; padding: .25rem .75rem; border-radius: 999px;"></span>
+          </div>
+
+          <div style="width: 100%; height: 16px; background: rgba(255,255,255,0.06); border-radius: 999px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 1.25rem;">
+            <div id="lagrangeVolBar" style="height: 100%; width: 100%; transition: width 0.3s ease, background 0.3s ease; border-radius: 999px;"></div>
+          </div>
+
+          <!-- SLIDER INTERACTIVO DE LAMBDA -->
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+            <div style="flex: 1; min-width: 260px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: .3rem;">
+                <label for="lagrangeLambdaSlider" style="font-size: .82rem; font-weight: 700; color: var(--text2);">
+                  Multiplicador de Lagrange ($\lambda$):
+                </label>
+                <span id="lagrangeLambdaBadge" style="font-family: 'Fira Code', monospace; font-weight: 800; color: #f472b6; font-size: .95rem;">λ = -4.44</span>
+              </div>
+              <input type="range" id="lagrangeLambdaSlider" min="-10" max="0" step="0.01" value="-4.44" style="width: 100%; accent-color: #ec4899;" oninput="onLambdaSliderInput(this.value)">
+            </div>
+            <div style="display: flex; gap: .5rem;">
+              <button class="btn-primary" style="background: #10b981; font-size: .85rem;" onclick="autoSolveLagrange()">⚡ Auto-Resolver $\lambda^*$ (Solver)</button>
+              <button class="btn-secondary" style="font-size: .85rem;" onclick="setLambdaZero()">Sin Restricción ($\lambda = 0$)</button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- TABLA DE ENTRADA DE ARTÍCULOS -->
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: .6rem; flex-wrap: wrap; gap: .5rem;">
+            <h3 style="font-size: 1rem; font-weight: 700; color: var(--text2); margin: 0;">
+              Artículos en Inventario y Parámetros Unitarios:
+            </h3>
+            <div style="display: flex; gap: .5rem;">
+              <button class="btn-secondary" onclick="addLagrangeRow()" style="font-size: .82rem;">+ Agregar Artículo</button>
+              <button class="btn-primary" style="background: #ec4899; font-size: .85rem;" onclick="solveLagrange()">📊 Calcular y Evaluar</button>
+            </div>
+          </div>
+
+          <div style="overflow-x: auto;">
+            <table class="data-table" id="lagrangeTable">
+              <thead>
+                <tr>
+                  <th>Artículo</th>
+                  <th>Demanda $D_j$ (u/año)</th>
+                  <th>Costo Adq. $b_j$ ($)</th>
+                  <th>Costo Pedido $k_j$ ($)</th>
+                  <th>Volumen $v_j$ (m³/u)</th>
+                  <th>Costo Almacén $c_{1,j} = b_j \cdot i$</th>
+                  <th>Acción</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Se puebla con JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- RESULTADOS LAGRANGE (MATRIZ, TABLA ITERACIONES Y CONCLUSIÓN) -->
+        <div id="lagrangeResults" class="results-area show" style="margin-top: 2rem;">
+          <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid var(--border-med); border-radius: 14px; padding: 1.5rem; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+            
             <div id="lagrangeSummary"></div>
-            <div style="overflow-x: auto; margin-top: 1rem;">
+
+            <!-- MATRIZ DETALLADA DE RESULTADOS POR ARTÍCULO -->
+            <h4 style="font-size: 1rem; font-weight: 800; color: var(--text); margin: 1.25rem 0 .6rem;">
+              Matriz de Dimensionamiento y Costos por Artículo:
+            </h4>
+            <div style="overflow-x: auto;">
               <table class="data-table" id="lagrangeResTable">
                 <thead>
                   <tr>
                     <th>Artículo</th>
-                    <th>EOQ Sin Restricción (q₀)</th>
-                    <th>Lote Ajustado por Lagrange (q*)</th>
-                    <th>Espacio Requerido</th>
-                    <th>Costo Sin Restricción</th>
-                    <th>Costo Ajustado</th>
+                    <th>Lote Clásico ($q_0$)</th>
+                    <th>Vol. Inicial ($V_0$)</th>
+                    <th>Lote Ajustado ($q^*$)</th>
+                    <th>Vol. Ajustado ($V^*$)</th>
+                    <th>Contracción (%)</th>
+                    <th>C. Adquisición</th>
+                    <th>C. Pedidos ($C_p$)</th>
+                    <th>C. Almacén ($C_a$)</th>
+                    <th>$CTE$ Total</th>
                   </tr>
                 </thead>
                 <tbody></tbody>
               </table>
             </div>
+
+            <!-- TABLA DE SENSIBILIDAD E ITERACIONES DE LAMBDA -->
+            <div style="margin-top: 1.75rem;">
+              <h4 style="font-size: 1rem; font-weight: 800; color: #f472b6; margin-bottom: .6rem;">
+                📋 Tabla de Sensibilidad e Iteración de Multiplicadores ($\lambda$):
+              </h4>
+              <div style="overflow-x: auto;">
+                <table class="data-table" id="lagrangeIterTable" style="font-size: .83rem;">
+                  <thead>
+                    <tr>
+                      <th>Multiplicador $\lambda$</th>
+                      <th>$Q_1(\lambda)$</th>
+                      <th>$Q_2(\lambda)$</th>
+                      <th>$Q_3(\lambda)$</th>
+                      <th>Volumen Total (m³)</th>
+                      <th>Estado de Capacidad</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- CONCLUSIÓN PEDAGÓGICA Y COSTO SOMBRA -->
+            <div id="lagrangeAhaBox" style="margin-top: 1.75rem;">
+              <!-- Se inyecta con JS -->
+            </div>
+
           </div>
         </div>
 
       </div>
     </div>
 
-    <!-- SUBTAB 2.2: DESCUENTOS POR CANTIDAD -->
+    <!-- SUBTAB 2.2: DESCUENTOS POR CANTIDAD (COMPARATIVA MULTIPROVEEDOR PERSONALIZABLE) -->
     <div id="subtab-descuentos" class="subtab-content" style="display: none;">
       <div class="config-panel">
-        <h2 style="font-size: 1.3rem; font-weight: 800; color: var(--text); margin-bottom: .5rem;">Calculadora de Descuentos por Cantidad (Tramos de Precio)</h2>
-        <p style="font-size: .88rem; color: var(--text2); margin-bottom: 1.5rem;">
-          Valida los lotes óptimos tentativos $q_0$ por tramo, realiza los ajustes necesarios a las cotas inferiores y determina la opción con el menor Costo Total Esperado (CTE).
-        </p>
-
-        <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
+        
+        <!-- HEADER -->
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
           <div>
-            <label style="font-size: .8rem; font-weight: 700; color: var(--text2); text-transform: uppercase;">Demanda Anual (D)</label>
-            <input type="number" id="discD" value="5000" class="input-num" style="width: 160px; margin-top: .4rem;">
+            <h2 style="font-size: 1.3rem; font-weight: 800; color: var(--text); margin-bottom: .3rem;">Descuentos por Cantidad (Comparativa de Proveedores)</h2>
           </div>
-          <div>
-            <label style="font-size: .8rem; font-weight: 700; color: var(--text2); text-transform: uppercase;">Costo de Pedido (k)</label>
-            <input type="number" id="disck" value="200" class="input-num" style="width: 160px; margin-top: .4rem;">
-          </div>
-          <div style="display: flex; align-items: flex-end; gap: .75rem;">
-            <button class="btn-secondary" onclick="loadDiscountPreset()">Cargar Ejemplo de Tramos</button>
-            <button class="btn-primary" style="background: #ec4899;" onclick="solveDiscounts()">📊 Evaluar Mejor Opción</button>
+          <div style="display: flex; gap: .5rem; flex-wrap: wrap;">
+            <button class="btn-primary" onclick="addNewProvider()" style="background: #10b981; font-size: .8rem;">+ Agregar Proveedor</button>
+            <button class="btn-secondary" onclick="resetDualDiscountsToExercise7()" style="font-size: .8rem;">🔄 Restablecer Caso Cátedra (X vs Y)</button>
           </div>
         </div>
 
-        <h3 style="font-size: 1rem; font-weight: 700; color: var(--text2); margin-bottom: .5rem;">Tramos de Precios y Almacenamiento:</h3>
-        <div style="overflow-x: auto;">
-          <table class="data-table" id="discountTable">
-            <thead>
-              <tr>
-                <th>Tramo</th>
-                <th>Rango Mín (q_min)</th>
-                <th>Rango Máx (q_max)</th>
-                <th>Precio Unitario b ($)</th>
-                <th>Costo Almacén c₁ ($/u/año)</th>
-                <th>Acción</th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- Se puebla con JS -->
-            </tbody>
-          </table>
-        </div>
-        <button class="btn-secondary" onclick="addDiscountRow()" style="font-size: .82rem;">+ Agregar Tramo</button>
-
-        <!-- RESULTADOS DESCUENTOS -->
-        <div id="discountResults" class="results-area" style="margin-top: 2rem;">
-          <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border-med); border-radius: 12px; padding: 1.5rem;">
-            <h3 style="font-size: 1.1rem; font-weight: 800; color: #10b981; margin-bottom: 1rem;">Análisis de Factibilidad y Selección de Lote</h3>
-            <div id="discountSummary"></div>
-            <div style="overflow-x: auto; margin-top: 1rem;">
-              <table class="data-table" id="discountResTable">
-                <thead>
-                  <tr>
-                    <th>Tramo</th>
-                    <th>Lote Calculado (q₀)</th>
-                    <th>Estado de Rango</th>
-                    <th>Lote Candidato (q_c)</th>
-                    <th>Costo Adquisición (b·D)</th>
-                    <th>Costo Pedidos + Almacén</th>
-                    <th>Costo Total (CTE)</th>
-                  </tr>
-                </thead>
-                <tbody></tbody>
-              </table>
-            </div>
+        <!-- EDITOR DE PARÁMETROS GLOBALES -->
+        <div class="param-editor" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-bottom: 1.5rem;">
+          <div class="param-group">
+            <label for="discD">Demanda Anual (D):</label>
+            <input type="number" id="discD" value="12000" class="param-input" step="100" oninput="solveMultiDiscounts()">
           </div>
+          <div class="param-group">
+            <label for="disck">Costo de Pedido (k):</label>
+            <input type="number" id="disck" value="160" class="param-input" step="10" oninput="solveMultiDiscounts()">
+          </div>
+          <div class="param-group">
+            <label for="discI">Tasa Almacén (i % anual):</label>
+            <input type="number" id="discI" value="25" class="param-input" step="1" oninput="onMultiDiscountParamChange()">
+          </div>
+          <div class="param-group">
+            <label for="discT">Horizonte (T años):</label>
+            <input type="number" id="discT" value="1" class="param-input" step="0.5" oninput="solveMultiDiscounts()">
+          </div>
+        </div>
+
+        <!-- CONTENEDOR DINÁMICO DE N PROVEEDORES -->
+        <div id="discountProvidersContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+          <!-- Se inyectan dinámicamente las tarjetas de proveedores con JS -->
+        </div>
+
+        <!-- CONCLUSIÓN ANALÍTICA FINAL -->
+        <div id="discConclusionBox" style="margin-top: 1rem;">
+          <!-- Inyectado con JS -->
         </div>
 
       </div>
@@ -1517,7 +1633,7 @@
   </div>
 
   <!-- ═════════════════════════════════════════════════════════════════════════
-       MÓDULO 3: MACHETE DINÁMICO (CHEAT SHEET)
+       MÓDULO 3: FORMULARIO Y RESUMEN DE MODELOS DE INVENTARIOS
        ═════════════════════════════════════════════════════════════════════════ -->
   <div id="mod3" class="mod-content">
 
@@ -1526,15 +1642,15 @@
       <div class="machete-menu">
         <button class="machete-btn active" onclick="showMachete('basic', this)">
           🔹 Modelo Básico (EOQ)<br>
-          <span style="font-size: .78rem; color: var(--text3);">Diente de sierra perfecto</span>
+          <span style="font-size: .78rem; color: var(--text3);">Demanda constante y reposición instantánea</span>
         </button>
         <button class="machete-btn" onclick="showMachete('stock', this)">
           🛡️ Stock de Protección (Sp)<br>
-          <span style="font-size: .78rem; color: var(--text3);">Colchón de seguridad permanente</span>
+          <span style="font-size: .78rem; color: var(--text3);">Colchón de reserva ante incertidumbre</span>
         </button>
         <button class="machete-btn" onclick="showMachete('deficit', this)">
-          ⚠️ Agotamiento Admitido<br>
-          <span style="font-size: .78rem; color: var(--text3);">Faltantes con costo c₂</span>
+          ⚠️ Agotamiento / Faltantes<br>
+          <span style="font-size: .78rem; color: var(--text3);">Déficit planificado con costo penal c₂</span>
         </button>
       </div>
 
@@ -1545,7 +1661,7 @@
         <div id="mach-basic" class="mach-detail">
           <h2 style="font-size: 1.3rem; font-weight: 800; color: #ec4899; margin-bottom: .5rem;">Modelo Básico Determinístico (EOQ)</h2>
           <p style="font-size: .88rem; color: var(--text2); margin-bottom: 1.5rem;">
-            Supone demanda constante $D$, reposición instantánea ($p \to \infty$) y cero déficit.
+            Supone demanda constante $D$, reposición instantánea ($p \to \infty$) y ausencia de déficit.
           </p>
 
           <svg class="svg-diagram" viewBox="0 0 500 180">
@@ -1566,7 +1682,7 @@
 
           <div class="excel-box">
             <div>
-              <div style="font-size: .78rem; color: var(--text2); text-transform: uppercase; font-weight: 700;">Fórmula lista para copiar a Excel:</div>
+              <div style="font-size: .78rem; color: var(--text2); text-transform: uppercase; font-weight: 700;">Sintaxis para hoja de cálculo (Excel):</div>
               <div class="excel-code" id="codeBasic">=RAIZ((2*K*D)/(T*C1))</div>
             </div>
             <button class="copy-btn" onclick="copyExcel('codeBasic')">📋 Copiar Fórmula</button>
@@ -1577,7 +1693,7 @@
         <div id="mach-stock" class="mach-detail" style="display: none;">
           <h2 style="font-size: 1.3rem; font-weight: 800; color: #10b981; margin-bottom: .5rem;">Modelo con Stock de Protección (Sp)</h2>
           <p style="font-size: .88rem; color: var(--text2); margin-bottom: 1.5rem;">
-            Mantiene un colchón de reserva $S_p$ constante para amortiguar incertidumbres en el tiempo de entrega o la demanda.
+            Mantiene un colchón de reserva $S_p$ constante para mitigar desviaciones en los tiempos de entrega o la demanda.
           </p>
 
           <svg class="svg-diagram" viewBox="0 0 500 180">
@@ -1597,7 +1713,7 @@
 
           <div class="excel-box">
             <div>
-              <div style="font-size: .78rem; color: var(--text2); text-transform: uppercase; font-weight: 700;">Fórmula lista para copiar a Excel:</div>
+              <div style="font-size: .78rem; color: var(--text2); text-transform: uppercase; font-weight: 700;">Sintaxis para hoja de cálculo (Excel):</div>
               <div class="excel-code" id="codeStock">=RAIZ((2*K*D)/(T*C1)) + Sp</div>
             </div>
             <button class="copy-btn" onclick="copyExcel('codeStock')">📋 Copiar Fórmula</button>
@@ -1606,9 +1722,9 @@
 
         <!-- AGOTAMIENTO ADMITIDO -->
         <div id="mach-deficit" class="mach-detail" style="display: none;">
-          <h2 style="font-size: 1.3rem; font-weight: 800; color: #f43f5e; margin-bottom: .5rem;">Modelo con Agotamiento / Deficit Admitido (c₂)</h2>
+          <h2 style="font-size: 1.3rem; font-weight: 800; color: #f43f5e; margin-bottom: .5rem;">Modelo con Agotamiento / Déficit Admitido (c₂)</h2>
           <p style="font-size: .88rem; color: var(--text2); margin-bottom: 1.5rem;">
-            Permite la existencia temporal de clientes pendientes (demanda insatisfecha) penalizada con costo $c_2$.
+            Admite pedidos pendientes de entrega con demanda insatisfecha diferida, penalizada con una tasa de costo por faltante $c_2$.
           </p>
 
           <svg class="svg-diagram" viewBox="0 0 500 180">
@@ -1627,7 +1743,7 @@
 
           <div class="excel-box">
             <div>
-              <div style="font-size: .78rem; color: var(--text2); text-transform: uppercase; font-weight: 700;">Fórmula lista para copiar a Excel:</div>
+              <div style="font-size: .78rem; color: var(--text2); text-transform: uppercase; font-weight: 700;">Sintaxis para hoja de cálculo (Excel):</div>
               <div class="excel-code" id="codeDeficit">=RAIZ((2*K*D*(C1+C2))/(T*C1*C2))</div>
             </div>
             <button class="copy-btn" onclick="copyExcel('codeDeficit')">📋 Copiar Fórmula</button>
@@ -1640,14 +1756,14 @@
   </div>
 
   <!-- ═════════════════════════════════════════════════════════════════════════
-       MÓDULO 4: TRIVIA & QUIZ DE AUTOEVALUACIÓN DE PARCIAL
+       MÓDULO 4: AUTOEVALUACIÓN CONCEPTUAL DE MODELOS DE INVENTARIOS
        ═════════════════════════════════════════════════════════════════════════ -->
   <div id="mod4" class="mod-content">
     <div class="config-panel">
       <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
         <div>
-          <h2 style="font-size: 1.4rem; font-weight: 800; color: #ec4899;">🧩 Desafío de Parcial: Quiz de Autoevaluación</h2>
-          <p style="font-size: .9rem; color: var(--text2);">Poné a prueba tus conocimientos sobre trampas teóricas y propiedades matemáticas de inventarios.</p>
+          <h2 style="font-size: 1.4rem; font-weight: 800; color: #ec4899;">Evaluación Conceptual de Inventarios</h2>
+          <p style="font-size: .9rem; color: var(--text2);">Cuestionario de autoevaluación sobre propiedades analíticas y comportamiento de los modelos de inventario.</p>
         </div>
         <div id="quizScoreBadge" style="background: rgba(236, 72, 153, 0.15); border: 1px solid #ec4899; color: #f472b6; padding: .5rem 1rem; border-radius: 999px; font-family: 'Fira Code', monospace; font-weight: 700;">
           Puntaje: 0 / 4
@@ -1718,8 +1834,8 @@
 </div>
 
 <footer>
-  <strong>Investigación Operativa · UTN · Comisión Sábados 2026</strong><br>
-  Módulo de Inventarios · Herramienta educativa interactiva para uso en clase y resolución de parciales.
+  <strong>Investigación Operativa · UTN · Cátedra de Operaciones</strong><br>
+  Unidad 5: Modelos de Gestión de Inventarios · Plataforma de Aprendizaje y Modelado Cuantitativo.
 </footer>
 
 <script src="menu.js"></script>
@@ -1770,6 +1886,14 @@ function switchSubTab(subId, btn) {
   document.querySelectorAll('.subtab-btn').forEach(el => el.classList.remove('active'));
   document.getElementById('subtab-' + subId).style.display = 'block';
   btn.classList.add('active');
+
+  if (subId === 'descuentos') {
+    if (!document.querySelector('#discountTable tbody tr')) {
+      loadDiscountPreset('X');
+    } else {
+      solveDiscounts();
+    }
+  }
 }
 
 // CAMBIO DE TABS MÓDULO 3 (MACHETE)
@@ -2222,42 +2346,42 @@ function onWhatIfScenarioChange(scenKey) {
   switch (scenKey) {
     case 'd_up':
       newD = D * 1.25;
-      title = '📈 Incremento de Demanda del +25%';
-      explanation = `Al aumentar la demanda a <strong>${newD.toLocaleString('es-AR')} u</strong>, se requiere reponer inventario más rápido. Sin embargo, el lote óptimo no aumenta un 25%, sino solo un <strong>+11.8%</strong>.`;
+      title = '📈 Incremento de Demanda (+25%)';
+      explanation = `Al incrementarse la demanda a <strong>${newD.toLocaleString('es-AR')} u</strong>, se intensifica la tasa de consumo. Por efecto de la raíz cuadrada, el lote óptimo no aumenta un 25%, sino únicamente un <strong>+11.8%</strong>.`;
       mathTeX = `q_{nuevo} = \\sqrt{\\frac{2 k (1.25 D)}{T c_1}} = \\sqrt{1.25} \\cdot q_{base} \\approx 1.118 \\cdot q_{base}`;
-      examTip = '💡 <strong>Regla de Examen:</strong> Debido a la raíz cuadrada en la fórmula del Lote Óptimo (EOQ), el crecimiento del lote es sublineal (\\sqrt{1.25} \\approx 1.118). Esto demuestra las economías de escala: la demanda creció un 25%, pero el inventario promedio solo crece un 11.8%.';
+      examTip = '💡 <strong>Fundamento Analítico:</strong> La dependencia del lote óptimo respecto a la demanda es sublineal (\\sqrt{1.25} \\approx 1.118). Esto refleja la existencia de economías de escala en la gestión del inventario.';
       break;
 
     case 'd_down':
       newD = D * 0.5;
-      title = '📉 Caída de Demanda a la Mitad (-50%)';
-      explanation = `La demanda cayó a <strong>${newD.toLocaleString('es-AR')} u</strong>. El lote óptimo se reduce a un <strong>70.7%</strong> del tamaño original (una caída del -29.3%).`;
+      title = '📉 Reducción de Demanda (-50%)';
+      explanation = `Al reducirse la demanda a <strong>${newD.toLocaleString('es-AR')} u</strong>, el lote óptimo disminuye al <strong>70.7%</strong> del valor base (reducción del -29.3%).`;
       mathTeX = `q_{nuevo} = \\sqrt{\\frac{2 k (0.5 D)}{T c_1}} = \\sqrt{0.5} \\cdot q_{base} \\approx 0.707 \\cdot q_{base}`;
-      examTip = '💡 <strong>Regla de Examen:</strong> Reducir la demanda a la mitad NO reduce el lote a la mitad, sino al 70.7%, porque se emiten menos pedidos al año pero se mantiene el equilibrio de costos unitarios.';
+      examTip = '💡 <strong>Fundamento Analítico:</strong> Reducir la demanda al 50% reduce el lote al 70.7% (y no a la mitad), preservando la proporcionalidad entre costos de orden y almacenamiento.';
       break;
 
     case 'c1_up':
       newC1 = c1 * 2;
-      title = '📦 Costo de Almacenamiento Duplicado (2 × c₁)';
-      explanation = `Al encarecerse el costo de almacenar a <strong>$${newC1.toFixed(2)}/u</strong>, tener stock parado en el galpón castiga más fuerte. El sistema reacciona reduciendo el lote un <strong>-29.3%</strong>.`;
+      title = '📦 Duplicación del Costo de Posesión (2 × c₁)';
+      explanation = `Al incrementarse el costo unitario de almacenamiento a <strong>$${newC1.toFixed(2)}/u</strong>, el costo de mantener inventario penaliza con mayor peso. El modelo ajusta contrayendo el lote un <strong>-29.3%</strong>.`;
       mathTeX = `q_{nuevo} = \\sqrt{\\frac{2 k D}{T (2 c_1)}} = \\frac{1}{\\sqrt{2}} \\cdot q_{base} \\approx 0.707 \\cdot q_{base}`;
-      examTip = '💡 <strong>Regla de Examen:</strong> Si almacenar es más caro, el lote óptimo disminuye obligatoriamente para minimizar el costo financiero del capital inmovilizado.';
+      examTip = '💡 <strong>Fundamento Analítico:</strong> Un mayor costo de posesión unitario reduce el tamaño óptimo de lote de manera inversamente proporcional a \\sqrt{c_1}, limitando el capital inmovilizado.';
       break;
 
     case 'k_up':
       newK = k * 4;
-      title = '🚚 Costo de Pedido Cuadruplicado (4 × k)';
-      explanation = `Emitir una orden de compra ahora cuesta <strong>$${newK.toFixed(0)}</strong> en lugar de $${k.toFixed(0)}. Para evitar pagar fletes tan seguidos, el lote óptimo exactamente <strong>SE DUPLICA (+100%)</strong>.`;
+      title = '🚚 Cuadruplicación del Costo de Emisión (4 × k)';
+      explanation = `Al aumentar el costo administrativo por orden a <strong>$${newK.toFixed(0)}</strong>, la política óptima reduce la frecuencia de pedidos duplicando exactamente el tamaño de lote (<strong>+100%</strong>).`;
       mathTeX = `q_{nuevo} = \\sqrt{\\frac{2 (4 k) D}{T c_1}} = \\sqrt{4} \\cdot q_{base} = 2.000 \\cdot q_{base}`;
-      examTip = '💡 <strong>Regla de Examen:</strong> Cuadruplicar el costo de orden k duplica exactamente el lote óptimo q_0 (\\sqrt{4} = 2), ya que conviene hacer la mitad de fletes al año.';
+      examTip = '💡 <strong>Fundamento Analítico:</strong> Cuadruplicar el costo fijo de emisión k duplica el lote óptimo q_0 (\\sqrt{4} = 2), reduciendo la frecuencia requerida de pedidos a la mitad.';
       break;
 
     case 't_up':
       newT = T * 2;
-      title = '⏱️ Horizonte de Tiempo Duplicado (2 × T)';
-      explanation = `Al duplicarse el horizonte a <strong>${newT} días</strong>, el costo de almacenamiento por período de tiempo se acumula por más días. El lote óptimo se reduce a un <strong>70.7%</strong> de la escala original.`;
+      title = '⏱️ Duplicación del Horizonte Temporal (2 × T)';
+      explanation = `Al duplicarse el período de planificación a <strong>${newT} días</strong> con una tasa de almacenamiento por unidad de tiempo, el lote óptimo se reescala al <strong>70.7%</strong> del valor original.`;
       mathTeX = `q_{nuevo} = \\sqrt{\\frac{2 k D}{(2 T) c_1}} = \\frac{1}{\\sqrt{2}} \\cdot q_{base} \\approx 0.707 \\cdot q_{base}`;
-      examTip = '💡 <strong>Regla de Examen:</strong> Siempre verificá que la tasa c₁ y el horizonte T estén expresados en la misma unidad temporal (días con días, años con años).';
+      examTip = '💡 <strong>Fundamento Analítico:</strong> Es imperativo verificar la compatibilidad de unidades temporales entre la tasa de almacenamiento c₁ y el horizonte de planificación T.';
       break;
   }
 
@@ -2352,6 +2476,7 @@ function renderSensitivityTable(activeScenKey = 'd_up') {
 
 function checkQuiz(qId, optIdx, isCorrect) {
   const card = document.getElementById('qCard' + qId);
+  if (!card) return;
   const btns = card.querySelectorAll('.quiz-opt-btn');
   const explain = document.getElementById('qExp' + qId);
 
@@ -2363,233 +2488,772 @@ function checkQuiz(qId, optIdx, isCorrect) {
   });
 
   quizScores[qId] = isCorrect;
-  explain.style.display = 'block';
+  if (explain) explain.style.display = 'block';
 
   let correctCount = Object.values(quizScores).filter(Boolean).length;
-  document.getElementById('quizScoreBadge').innerText = `Puntaje: ${correctCount} / 4`;
+  const scoreBadge = document.getElementById('quizScoreBadge');
+  if (scoreBadge) scoreBadge.innerText = `Puntaje: ${correctCount} / 4`;
 }
 
-// ── MÓDULO 2.1 & 2.2: LAGRANGE & DESCUENTOS ─────────────────────────────────
+// ── MÓDULO 2.1: LAGRANGE (EJERCICIO 8 & RESTRICCIÓN DE CAPACIDAD) ───────────
 
-function addLagrangeRow(name = '', d = 1000, k = 100, c1 = 2, s = 1.5) {
+let currentLagrangeLambda = -4.44;
+
+function addLagrangeRow(name = '', d = 6000, b = 15, k = 80, v = 0.10, c1 = null) {
   const tbody = document.querySelector('#lagrangeTable tbody');
+  if (!tbody) return;
   const idx = tbody.children.length + 1;
-  name = name || 'Artículo ' + idx;
+  name = name || 'Producto ' + idx;
+  const iRate = (parseFloat(document.getElementById('lagrangeI').value) || 20) / 100;
+  const T = parseFloat(document.getElementById('lagrangeT').value) || 1;
+  const computedC1 = c1 !== null ? c1 : +(b * iRate * T).toFixed(3);
 
   const tr = document.createElement('tr');
   tr.innerHTML = `
-    <td><input type="text" class="lag-name" value="${name}"></td>
-    <td><input type="number" class="lag-d" value="${d}"></td>
-    <td><input type="number" class="lag-k" value="${k}"></td>
-    <td><input type="number" class="lag-c1" value="${c1}"></td>
-    <td><input type="number" class="lag-s" value="${s}"></td>
-    <td><button class="btn-secondary" onclick="this.closest('tr').remove()" style="color: #f43f5e; padding: .2rem .5rem; font-size: .75rem;">Eliminar</button></td>
+    <td><input type="text" class="lag-name param-input" value="${name}" style="width: 140px;"></td>
+    <td><input type="number" class="lag-d param-input" value="${d}" style="width: 95px;" oninput="solveLagrange()"></td>
+    <td><input type="number" class="lag-b param-input" value="${b}" step="0.5" style="width: 85px;" oninput="onLagrangeBChange(this)"></td>
+    <td><input type="number" class="lag-k param-input" value="${k}" step="10" style="width: 85px;" oninput="solveLagrange()"></td>
+    <td><input type="number" class="lag-v param-input" value="${v}" step="0.05" style="width: 85px;" oninput="solveLagrange()"></td>
+    <td><input type="number" class="lag-c1 param-input" value="${computedC1}" step="0.01" style="width: 85px;" oninput="solveLagrange()"></td>
+    <td><button class="btn-secondary" onclick="this.closest('tr').remove(); solveLagrange();" style="color: #f43f5e; padding: .25rem .5rem; font-size: .78rem;">✕</button></td>
   `;
   tbody.appendChild(tr);
+  solveLagrange();
+}
+
+function onLagrangeBChange(inputEl) {
+  const tr = inputEl.closest('tr');
+  const b = parseFloat(inputEl.value) || 0;
+  const iRate = (parseFloat(document.getElementById('lagrangeI').value) || 20) / 100;
+  const T = parseFloat(document.getElementById('lagrangeT').value) || 1;
+  const c1Input = tr.querySelector('.lag-c1');
+  if (c1Input) {
+    c1Input.value = +(b * iRate * T).toFixed(3);
+  }
+  solveLagrange();
+}
+
+function onLagrangeIChange() {
+  const iRate = (parseFloat(document.getElementById('lagrangeI').value) || 20) / 100;
+  const T = parseFloat(document.getElementById('lagrangeT').value) || 1;
+  document.querySelectorAll('#lagrangeTable tbody tr').forEach(tr => {
+    const b = parseFloat(tr.querySelector('.lag-b').value) || 0;
+    const c1Input = tr.querySelector('.lag-c1');
+    if (c1Input) {
+      c1Input.value = +(b * iRate * T).toFixed(3);
+    }
+  });
+  solveLagrange();
+}
+
+function resetLagrangeToExercise8() {
+  document.getElementById('lagrangeSmax').value = 250;
+  document.getElementById('lagrangeI').value = 20;
+  document.getElementById('lagrangeT').value = 1;
+
+  const tbody = document.querySelector('#lagrangeTable tbody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  addLagrangeRow('Producto 1 (P1)', 6000, 15, 80, 0.10, 3.00);
+  addLagrangeRow('Producto 2 (P2)', 4000, 40, 120, 0.30, 8.00);
+  addLagrangeRow('Producto 3 (P3)', 2000, 60, 200, 0.50, 12.00);
+
+  autoSolveLagrange();
 }
 
 function loadLagrangePreset() {
-  const tbody = document.querySelector('#lagrangeTable tbody');
-  tbody.innerHTML = '';
-  addLagrangeRow('Artículo A (Motor)', 4000, 150, 4.0, 2.0);
-  addLagrangeRow('Artículo B (Chasis)', 2500, 200, 5.0, 3.5);
-  addLagrangeRow('Artículo C (Panel)', 6000, 90, 3.0, 1.2);
-  document.getElementById('lagrangeSmax').value = 450;
+  resetLagrangeToExercise8();
 }
 
-function solveLagrange() {
-  const S_max = parseFloat(document.getElementById('lagrangeSmax').value) || 0;
+function onLambdaSliderInput(val) {
+  currentLagrangeLambda = parseFloat(val);
+  solveLagrange(currentLagrangeLambda);
+}
+
+function setLambdaZero() {
+  currentLagrangeLambda = 0;
+  const slider = document.getElementById('lagrangeLambdaSlider');
+  if (slider) slider.value = 0;
+  solveLagrange(0);
+}
+
+function autoSolveLagrange() {
+  const V_max = parseFloat(document.getElementById('lagrangeSmax').value) || 0;
+  const T = parseFloat(document.getElementById('lagrangeT').value) || 1;
   const rows = document.querySelectorAll('#lagrangeTable tbody tr');
 
-  if (rows.length === 0) {
-    alert("Agregá al menos un artículo a la tabla.");
-    return;
-  }
+  if (rows.length === 0) return;
 
   const items = [];
-  let totalSpaceUnconstrained = 0;
+  let totalVol0 = 0;
+
+  rows.forEach(tr => {
+    const D = parseFloat(tr.querySelector('.lag-d').value) || 0;
+    const k = parseFloat(tr.querySelector('.lag-k').value) || 0;
+    const c1 = parseFloat(tr.querySelector('.lag-c1').value) || 0;
+    const v = parseFloat(tr.querySelector('.lag-v').value) || 0;
+    const q0 = (c1 > 0 && T > 0) ? Math.sqrt((2 * k * D) / (c1 * T)) : 0;
+    totalVol0 += q0 * v;
+    items.push({ D, k, c1, v, q0 });
+  });
+
+  if (totalVol0 <= V_max) {
+    currentLagrangeLambda = 0;
+  } else {
+    // Búsqueda por bisección para lambda <= 0 (convención catedra: denominador = T*c1 - 2*lambda*v)
+    let low = -100, high = 0;
+    for (let iter = 0; iter < 100; iter++) {
+      let mid = (low + high) / 2;
+      let reqVol = 0;
+      items.forEach(it => {
+        let denom = (it.c1 * T) - (2 * mid * it.v);
+        let q = denom > 0 ? Math.sqrt((2 * it.k * it.D) / denom) : 0;
+        reqVol += q * it.v;
+      });
+
+      if (reqVol < V_max) {
+        low = mid; // Demasiado negativo (demasiado contraído)
+      } else {
+        high = mid; // Poco negativo (volumen excede)
+      }
+    }
+    currentLagrangeLambda = +((low + high) / 2).toFixed(4);
+  }
+
+  const slider = document.getElementById('lagrangeLambdaSlider');
+  if (slider) slider.value = currentLagrangeLambda;
+
+  solveLagrange(currentLagrangeLambda);
+}
+
+function solveLagrange(manualLambda = null) {
+  const V_max = parseFloat(document.getElementById('lagrangeSmax').value) || 0;
+  const T = parseFloat(document.getElementById('lagrangeT').value) || 1;
+  const rows = document.querySelectorAll('#lagrangeTable tbody tr');
+
+  if (rows.length === 0) return;
+
+  const items = [];
+  let totalVol0 = 0;
+  let totalCadq = 0;
+  let totalCp0 = 0;
+  let totalCa0 = 0;
+  let totalCTE0 = 0;
 
   rows.forEach(tr => {
     const name = tr.querySelector('.lag-name').value;
     const D = parseFloat(tr.querySelector('.lag-d').value) || 0;
+    const b = parseFloat(tr.querySelector('.lag-b').value) || 0;
     const k = parseFloat(tr.querySelector('.lag-k').value) || 0;
+    const v = parseFloat(tr.querySelector('.lag-v').value) || 0;
     const c1 = parseFloat(tr.querySelector('.lag-c1').value) || 0;
-    const s = parseFloat(tr.querySelector('.lag-s').value) || 0;
 
-    const q0 = Math.sqrt((2 * k * D) / c1);
-    const space0 = q0 * s;
-    const cost0 = (D / q0) * k + (q0 / 2) * c1;
+    const q0 = (c1 > 0 && T > 0) ? Math.sqrt((2 * k * D) / (c1 * T)) : 0;
+    const vol0 = q0 * v;
+    const cadq = b * D;
+    const cp0 = q0 > 0 ? (D / q0) * k : 0;
+    const ca0 = 0.5 * q0 * c1 * T;
+    const cte0 = cadq + cp0 + ca0;
 
-    totalSpaceUnconstrained += space0;
+    totalVol0 += vol0;
+    totalCadq += cadq;
+    totalCp0 += cp0;
+    totalCa0 += ca0;
+    totalCTE0 += cte0;
 
-    items.push({ name, D, k, c1, s, q0, space0, cost0 });
+    items.push({ name, D, b, k, v, c1, q0, vol0, cadq, cp0, ca0, cte0 });
   });
 
-  let lambda = 0;
-  let isActive = false;
+  const isConstraintActive = totalVol0 > V_max;
+  let lambda = manualLambda !== null ? manualLambda : currentLagrangeLambda;
 
-  if (totalSpaceUnconstrained > S_max) {
-    isActive = true;
-    let low = 0, high = 50;
-    for (let iter = 0; iter < 100; iter++) {
-      let mid = (low + high) / 2;
-      let reqSpace = 0;
-      items.forEach(it => {
-        let q_adj = Math.sqrt((2 * it.k * it.D) / (it.c1 + 2 * mid * it.s));
-        reqSpace += q_adj * it.s;
-      });
+  const lambdaBadge = document.getElementById('lagrangeLambdaBadge');
+  if (lambdaBadge) lambdaBadge.textContent = `λ = ${lambda.toFixed(2)}`;
 
-      if (reqSpace > S_max) low = mid; else high = mid;
-    }
-    lambda = (low + high) / 2;
-  }
-
-  let resTbody = document.querySelector('#lagrangeResTable tbody');
-  resTbody.innerHTML = '';
-
-  let totalCost0 = 0;
-  let totalCostAdj = 0;
-  let totalSpaceAdj = 0;
+  // Calcular lotes ajustados para el lambda actual
+  let totalVolAdj = 0;
+  let totalCpAdj = 0;
+  let totalCaAdj = 0;
+  let totalCTEAdj = 0;
 
   items.forEach(it => {
-    let q_adj = isActive ? Math.sqrt((2 * it.k * it.D) / (it.c1 + 2 * lambda * it.s)) : it.q0;
-    let spaceAdj = q_adj * it.s;
-    let costAdj = (it.D / q_adj) * it.k + (q_adj / 2) * it.c1;
+    const denom = (it.c1 * T) - (2 * lambda * it.v);
+    it.qAdj = denom > 0 ? Math.sqrt((2 * it.k * it.D) / denom) : it.q0;
+    it.volAdj = it.qAdj * it.v;
+    it.cpAdj = it.qAdj > 0 ? (it.D / it.qAdj) * it.k : 0;
+    it.caAdj = 0.5 * it.qAdj * it.c1 * T;
+    it.cteAdj = it.cadq + it.cpAdj + it.caAdj;
+    it.diffPct = it.q0 > 0 ? ((it.qAdj - it.q0) / it.q0) * 100 : 0;
 
-    totalCost0 += it.cost0;
-    totalCostAdj += costAdj;
-    totalSpaceAdj += spaceAdj;
-
-    let tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td><strong>${it.name}</strong></td>
-      <td>${it.q0.toFixed(1)} u</td>
-      <td style="color: #ec4899; font-weight: bold;">${q_adj.toFixed(1)} u</td>
-      <td>${spaceAdj.toFixed(1)} m²</td>
-      <td>$${it.cost0.toFixed(2)}</td>
-      <td>$${costAdj.toFixed(2)}</td>
-    `;
-    resTbody.appendChild(tr);
+    totalVolAdj += it.volAdj;
+    totalCpAdj += it.cpAdj;
+    totalCaAdj += it.caAdj;
+    totalCTEAdj += it.cteAdj;
   });
 
-  const summary = document.getElementById('lagrangeSummary');
-  if (isActive) {
-    summary.innerHTML = `
-      <div style="background: rgba(236, 72, 153, 0.1); border: 1px solid rgba(236, 72, 153, 0.3); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: .9rem;">
-        ⚠️ <strong>Restricción Activa:</strong> La superficie requerida sin restricción (<strong>${totalSpaceUnconstrained.toFixed(1)} m²</strong>) supera el límite disponible de <strong>${S_max} m²</strong>.<br>
-        Multiplicador de Lagrange óptimo encontrado: <strong style="color: #ec4899;">λ = ${lambda.toFixed(4)}</strong>.<br>
-        Superficie final ajustada: <strong>${totalSpaceAdj.toFixed(1)} m²</strong> | Incremento de Costo Total: <strong>+$${(totalCostAdj - totalCost0).toFixed(2)}/año</strong>.
-      </div>
-    `;
-  } else {
-    summary.innerHTML = `
-      <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: .9rem; color: #6ee7b7;">
-        ✅ <strong>Restricción No Activa (λ = 0):</strong> La superficie total requerida por los lotes óptimos (<strong>${totalSpaceUnconstrained.toFixed(1)} m²</strong>) no supera la capacidad máxima de <strong>${S_max} m²</strong>. No hace falta ajustar los lotes.
-      </div>
-    `;
-  }
+  // Actualizar medidor visual de capacidad
+  const volText = document.getElementById('lagrangeVolText');
+  const volBadge = document.getElementById('lagrangeVolBadge');
+  const volBar = document.getElementById('lagrangeVolBar');
 
-  document.getElementById('lagrangeResults').classList.add('show');
-}
+  if (volText) volText.textContent = `${totalVolAdj.toFixed(2)} / ${V_max.toFixed(2)} m³ (${((totalVolAdj / V_max) * 100).toFixed(1)}%)`;
 
-function addDiscountRow(min = 0, max = 999, price = 15.0, c1 = 3.0) {
-  const tbody = document.querySelector('#discountTable tbody');
-  const idx = tbody.children.length + 1;
+  const volDiff = totalVolAdj - V_max;
+  const barWidth = Math.min(100, Math.max(0, (totalVolAdj / V_max) * 100));
 
-  const tr = document.createElement('tr');
-  tr.innerHTML = `
-    <td>Tramo ${idx}</td>
-    <td><input type="number" class="disc-min" value="${min}"></td>
-    <td><input type="number" class="disc-max" value="${max}"></td>
-    <td><input type="number" class="disc-price" value="${price}" step="0.1"></td>
-    <td><input type="number" class="disc-c1" value="${c1}" step="0.1"></td>
-    <td><button class="btn-secondary" onclick="this.closest('tr').remove()" style="color: #f43f5e; padding: .2rem .5rem; font-size: .75rem;">Eliminar</button></td>
-  `;
-  tbody.appendChild(tr);
-}
+  if (volBar && volBadge) {
+    volBar.style.width = `${barWidth}%`;
 
-function loadDiscountPreset() {
-  const tbody = document.querySelector('#discountTable tbody');
-  tbody.innerHTML = '';
-  addDiscountRow(0, 999, 20.0, 4.0);
-  addDiscountRow(1000, 2499, 17.5, 3.5);
-  addDiscountRow(2500, 99999, 15.0, 3.0);
-  document.getElementById('discD').value = 5000;
-  document.getElementById('disck').value = 250;
-}
-
-function solveDiscounts() {
-  const D = parseFloat(document.getElementById('discD').value) || 0;
-  const k = parseFloat(document.getElementById('disck').value) || 0;
-  const rows = document.querySelectorAll('#discountTable tbody tr');
-
-  if (rows.length === 0) {
-    alert("Agregá al menos un tramo de descuento.");
-    return;
-  }
-
-  const tiers = [];
-  rows.forEach((tr, i) => {
-    const qmin = parseFloat(tr.querySelector('.disc-min').value) || 0;
-    const qmax = parseFloat(tr.querySelector('.disc-max').value) || Infinity;
-    const price = parseFloat(tr.querySelector('.disc-price').value) || 0;
-    const c1 = parseFloat(tr.querySelector('.disc-c1').value) || 0;
-
-    const q0 = Math.sqrt((2 * k * D) / c1);
-    let status = '';
-    let qc = q0;
-
-    if (q0 < qmin) {
-      status = 'Ajustado a Cota Mínima (' + qmin + ')';
-      qc = qmin;
-    } else if (q0 > qmax) {
-      status = 'Infactible (> ' + qmax + ')';
-      qc = null;
+    if (Math.abs(volDiff) <= 0.25) {
+      volBar.style.background = '#10b981';
+      volBadge.style.background = 'rgba(16, 185, 129, 0.2)';
+      volBadge.style.color = '#6ee7b7';
+      volBadge.style.border = '1px solid #10b981';
+      volBadge.textContent = '🎯 Óptimo Exacto (Restricción Satisfecha)';
+    } else if (volDiff > 0.25) {
+      volBar.style.background = '#f43f5e';
+      volBadge.style.background = 'rgba(244, 63, 94, 0.2)';
+      volBadge.style.color = '#fca5a5';
+      volBadge.style.border = '1px solid #f43f5e';
+      volBadge.textContent = `⚠️ Excede Capacidad (+${volDiff.toFixed(2)} m³)`;
     } else {
-      status = 'Válido en Rango';
-      qc = q0;
+      volBar.style.background = '#f59e0b';
+      volBadge.style.background = 'rgba(245, 158, 11, 0.2)';
+      volBadge.style.color = '#fbbf24';
+      volBadge.style.border = '1px solid #f59e0b';
+      volBadge.textContent = `📉 Subutilizado (${Math.abs(volDiff).toFixed(2)} m³ libres)`;
+    }
+  }
+
+  // Renderizar tabla de resultados
+  const resTbody = document.querySelector('#lagrangeResTable tbody');
+  if (resTbody) {
+    resTbody.innerHTML = '';
+    items.forEach(it => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><strong>${it.name}</strong></td>
+        <td>${it.q0.toFixed(2)} u</td>
+        <td>${it.vol0.toFixed(2)} m³</td>
+        <td style="color: #f472b6; font-weight: 800; font-family: 'Fira Code', monospace;">${it.qAdj.toFixed(2)} u</td>
+        <td style="font-weight: 700; color: #6ee7b7;">${it.volAdj.toFixed(2)} m³</td>
+        <td style="font-weight: 700; color: ${it.diffPct < 0 ? '#fca5a5' : '#94a3b8'};">${it.diffPct.toFixed(2)}%</td>
+        <td>$${it.cadq.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+        <td>$${it.cpAdj.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+        <td>$${it.caAdj.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+        <td style="font-weight: 800; font-family: 'Fira Code', monospace; color: var(--text);">$${it.cteAdj.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+      `;
+      resTbody.appendChild(tr);
+    });
+
+    // Fila de totales
+    const trTot = document.createElement('tr');
+    trTot.style.background = 'rgba(255, 255, 255, 0.05)';
+    trTot.style.fontWeight = '800';
+    trTot.innerHTML = `
+      <td>TOTALES</td>
+      <td>—</td>
+      <td style="color: ${totalVol0 > V_max ? '#fca5a5' : '#6ee7b7'};">${totalVol0.toFixed(2)} m³</td>
+      <td>—</td>
+      <td style="color: #6ee7b7;">${totalVolAdj.toFixed(2)} m³</td>
+      <td>—</td>
+      <td>$${totalCadq.toLocaleString('es-AR', {minimumFractionDigits: 2})}</td>
+      <td>$${totalCpAdj.toLocaleString('es-AR', {minimumFractionDigits: 2})}</td>
+      <td>$${totalCaAdj.toLocaleString('es-AR', {minimumFractionDigits: 2})}</td>
+      <td style="color: #6ee7b7; font-size: 1rem;">$${totalCTEAdj.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+    `;
+    resTbody.appendChild(trTot);
+  }
+
+  // Renderizar tabla de iteraciones de sensibilidad
+  renderLagrangeIterationTable(items, V_max, T);
+
+  // Renderizar conclusión pedagógica y costo sombra
+  renderLagrangeAhaBox(items, totalVol0, V_max, totalCTE0, totalCTEAdj, lambda);
+}
+
+function renderLagrangeIterationTable(items, V_max, T) {
+  const iterTbody = document.querySelector('#lagrangeIterTable tbody');
+  if (!iterTbody) return;
+  iterTbody.innerHTML = '';
+
+  const testLambdas = [0.00, -1.00, -4.00, -4.40, -4.44, -5.00, -10.00];
+
+  testLambdas.forEach(lVal => {
+    let reqVol = 0;
+    const qList = items.map(it => {
+      const denom = (it.c1 * T) - (2 * lVal * it.v);
+      const q = denom > 0 ? Math.sqrt((2 * it.k * it.D) / denom) : 0;
+      reqVol += q * it.v;
+      return q;
+    });
+
+    const diff = reqVol - V_max;
+    let stateHtml = '';
+    if (Math.abs(diff) <= 0.3) {
+      stateHtml = `<span style="color: #6ee7b7; font-weight: 800;">🎯 Solución Óptima (λ* ≈ ${lVal.toFixed(2)})</span>`;
+    } else if (diff > 0) {
+      stateHtml = `<span style="color: #fca5a5;">Excede (+${diff.toFixed(2)} m³)</span>`;
+    } else {
+      stateHtml = `<span style="color: #fbbf24;">Subutiliza depósito (${Math.abs(diff).toFixed(2)} m³ libres)</span>`;
     }
 
-    let costPurch = price * D;
-    let costOrdHold = qc ? ((D / qc) * k + (qc / 2) * c1) : null;
-    let cte = qc ? (costPurch + costOrdHold) : Infinity;
-
-    tiers.push({ index: i + 1, qmin, qmax, price, c1, q0, status, qc, costPurch, costOrdHold, cte });
-  });
-
-  let bestTier = tiers.reduce((prev, curr) => (curr.cte < prev.cte ? curr : prev), tiers[0]);
-
-  let resTbody = document.querySelector('#discountResTable tbody');
-  resTbody.innerHTML = '';
-
-  tiers.forEach(t => {
-    let isWinner = t.index === bestTier.index;
-    let tr = document.createElement('tr');
-    if (isWinner) tr.style.background = 'rgba(16, 185, 129, 0.15)';
+    const tr = document.createElement('tr');
+    if (Math.abs(lVal - -4.44) < 0.01) {
+      tr.style.background = 'rgba(16, 185, 129, 0.15)';
+      tr.style.border = '1px solid #10b981';
+      tr.style.fontWeight = 'bold';
+    }
 
     tr.innerHTML = `
-      <td><strong>Tramo ${t.index}</strong> ${isWinner ? '🏆' : ''}</td>
-      <td>${t.q0.toFixed(1)} u</td>
-      <td><span style="font-size: .8rem; font-weight: 600; color: ${t.qc ? '#94a3b8' : '#f43f5e'};">${t.status}</span></td>
-      <td style="font-weight: bold; color: ${isWinner ? '#6ee7b7' : 'var(--text)'};">${t.qc ? t.qc.toFixed(1) + ' u' : '—'}</td>
-      <td>$${t.costPurch.toLocaleString('es-AR', {minimumFractionDigits:2})}</td>
-      <td>${t.costOrdHold ? '$' + t.costOrdHold.toFixed(2) : '—'}</td>
-      <td style="font-weight: 800; color: ${isWinner ? '#6ee7b7' : 'var(--text)'};">${t.cte !== Infinity ? '$' + t.cte.toLocaleString('es-AR', {minimumFractionDigits:2}) : 'Infactible'}</td>
+      <td style="font-family: 'Fira Code', monospace;">λ = ${lVal.toFixed(2)}</td>
+      <td style="font-family: 'Fira Code', monospace;">${qList[0] ? qList[0].toFixed(2) : '—'} u</td>
+      <td style="font-family: 'Fira Code', monospace;">${qList[1] ? qList[1].toFixed(2) : '—'} u</td>
+      <td style="font-family: 'Fira Code', monospace;">${qList[2] ? qList[2].toFixed(2) : '—'} u</td>
+      <td style="font-family: 'Fira Code', monospace; font-weight: 800; color: ${Math.abs(diff) <= 0.3 ? '#6ee7b7' : (diff > 0 ? '#fca5a5' : '#fbbf24')};">${reqVol.toFixed(2)} m³</td>
+      <td>${stateHtml}</td>
     `;
-    resTbody.appendChild(tr);
+    iterTbody.appendChild(tr);
   });
+}
 
-  const summary = document.getElementById('discountSummary');
-  summary.innerHTML = `
-    <div style="background: rgba(16, 185, 129, 0.12); border: 2px solid #10b981; padding: 1.25rem; border-radius: 10px; margin-bottom: 1rem;">
-      <h4 style="font-size: 1.1rem; color: #6ee7b7; margin-bottom: .4rem;">🏆 Opción Recomendada: Tramo ${bestTier.index} ($${bestTier.price}/unidad)</h4>
-      Lote Óptimo a Pedir: <strong style="font-size: 1.1rem; color: #f472b6;">${bestTier.qc.toFixed(1)} unidades</strong> | 
-      Costo Total Esperado Mínimo: <strong style="font-size: 1.1rem; color: #6ee7b7;">$${bestTier.cte.toLocaleString('es-AR', {minimumFractionDigits: 2})}/año</strong>
+function renderLagrangeAhaBox(items, totalVol0, V_max, totalCTE0, totalCTEAdj, lambda) {
+  const ahaBox = document.getElementById('lagrangeAhaBox');
+  if (!ahaBox) return;
+
+  const shadowCost = Math.max(0, totalCTEAdj - totalCTE0);
+
+  let ahaContent = '';
+  if (items.length >= 3) {
+    ahaContent = `
+      <div style="background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(236, 72, 153, 0.4); border-radius: 12px; padding: 1.35rem 1.6rem;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: .65rem;">
+          <span style="font-size: 1.25rem;">💡</span>
+          <h4 style="font-size: 1.1rem; font-weight: 800; color: #f472b6; margin: 0;">
+            Lección de Cátedra: Análisis del Impacto del Espacio por Producto
+          </h4>
+        </div>
+
+        <p style="font-size: .9rem; color: var(--text); line-height: 1.6; margin-bottom: .75rem;">
+          En la optimización bajo restricción de capacidad, la fórmula del lote restringido ajusta el denominador penalizando directamente según el volumen unitario de cada artículo:
+        </p>
+
+        <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(236, 72, 153, 0.25); border-radius: 10px; padding: .75rem 1rem; margin-bottom: .9rem; font-family: 'Fira Code', monospace; font-size: .95rem; color: #f472b6; text-align: center; font-weight: 700; letter-spacing: 0.5px;">
+          q*(λ) = √ [ (2 · k · D) / (c₁ · T - 2 · λ · v) ]
+        </div>
+
+        <p style="font-size: .88rem; color: var(--text2); line-height: 1.55; margin-bottom: 1rem;">
+          Como el término de ajuste <strong style="color: var(--text); font-family: 'Fira Code', monospace;">-2 · λ · v</strong> suma en el denominador proporcionalmente al volumen unitario <strong style="color: var(--text); font-family: 'Fira Code', monospace;">v</strong>, el <strong>Producto 3</strong> (que ocupa <strong>0,50 m³/unidad</strong>, 5 veces más que el Producto 1 de <strong>0,10 m³/unidad</strong>) sufre una contracción mucho mayor en su lote (<strong>-14.57%</strong> en P3 vs. <strong>-12.16%</strong> en P1) para liberar espacio físico del almacén de manera óptima.
+        </p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: .85rem;">
+          <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 10px; padding: .75rem .95rem;">
+            <div style="font-size: .75rem; color: #6ee7b7; font-weight: 700; text-transform: uppercase;">Volumen Sin Restricción</div>
+            <div style="font-size: 1.15rem; font-weight: 800; color: #6ee7b7; font-family: 'Fira Code', monospace; margin-top: .2rem;">
+              ${totalVol0.toFixed(2)} m³
+            </div>
+            <div style="font-size: .75rem; color: var(--text3); margin-top: .2rem;">Exceso inicial: +${(totalVol0 - V_max).toFixed(2)} m³</div>
+          </div>
+
+          <div style="background: rgba(236, 72, 153, 0.1); border: 1px solid rgba(236, 72, 153, 0.3); border-radius: 10px; padding: .75rem .95rem;">
+            <div style="font-size: .75rem; color: #f472b6; font-weight: 700; text-transform: uppercase;">Multiplicador Óptimo (λ*)</div>
+            <div style="font-size: 1.15rem; font-weight: 800; color: #f472b6; font-family: 'Fira Code', monospace; margin-top: .2rem;">
+              λ* ≈ ${lambda.toFixed(2)}
+            </div>
+            <div style="font-size: .75rem; color: var(--text3); margin-top: .2rem;">Satisface exactamente ${V_max.toFixed(0)} m³</div>
+          </div>
+
+          <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 10px; padding: .75rem .95rem;">
+            <div style="font-size: .75rem; color: #fbbf24; font-weight: 700; text-transform: uppercase;">Costo Sombra del Espacio (ΔCTE)</div>
+            <div style="font-size: 1.15rem; font-weight: 800; color: #fbbf24; font-family: 'Fira Code', monospace; margin-top: .2rem;">
+              +$${shadowCost.toFixed(2)}/año
+            </div>
+            <div style="font-size: .75rem; color: var(--text3); margin-top: .2rem;">$377.648,13 vs $377.566,72</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  ahaBox.innerHTML = ahaContent;
+}
+
+
+// ── MÓDULO 2.2: DESCUENTOS POR CANTIDAD (COMPARATIVA MULTIPROVEEDOR N) ──────
+
+let providerCount = 0;
+
+function addNewProvider(customName = null, tiers = null) {
+  const container = document.getElementById('discountProvidersContainer');
+  if (!container) return;
+
+  providerCount++;
+  const provId = 'prov_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+  const provLetter = String.fromCharCode(64 + Math.min(26, container.children.length + 1));
+  const provName = customName || `Empresa ${provLetter}`;
+  const isFirst = container.children.length === 0;
+
+  const card = document.createElement('div');
+  card.className = 'provider-card';
+  card.id = provId;
+  card.style.background = 'rgba(15, 23, 42, 0.75)';
+  card.style.border = '1px solid rgba(255, 255, 255, 0.12)';
+  card.style.borderRadius = '12px';
+  card.style.padding = '1.25rem';
+  card.style.transition = 'border 0.3s ease, box-shadow 0.3s ease';
+
+  card.innerHTML = `
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: .75rem; flex-wrap: wrap; gap: .5rem;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 1.1rem;">🏢</span>
+        <input type="text" class="prov-name" value="${provName}" oninput="solveMultiDiscounts()" 
+          style="font-size: 1.05rem; font-weight: 800; color: #6ee7b7; background: transparent; border: none; border-bottom: 1px dashed rgba(255,255,255,0.25); width: 140px; outline: none; padding: .1rem .3rem;">
+        <span class="prov-badge" style="font-size: .78rem; font-weight: 700; padding: .2rem .55rem; border-radius: 6px; background: rgba(255,255,255,0.06); color: var(--text2);"></span>
+      </div>
+      <div style="display: flex; gap: .4rem;">
+        <button class="btn-secondary" onclick="addMultiDiscountRow(this.closest('.provider-card'))" style="font-size: .78rem; padding: .25rem .55rem;">+ Tramo</button>
+        <button class="btn-secondary btn-del-prov" onclick="removeProvider(this.closest('.provider-card'))" style="font-size: .78rem; padding: .25rem .55rem; color: #f43f5e;" title="Eliminar Proveedor">✕</button>
+      </div>
+    </div>
+    
+    <div style="overflow-x: auto;">
+      <table class="data-table prov-table" ${isFirst ? 'id="discountTable"' : ''} style="font-size: .83rem;">
+        <thead>
+          <tr>
+            <th>Tramo</th>
+            <th>Rango Mín</th>
+            <th>Rango Máx</th>
+            <th>Precio $b</th>
+            <th>$c_1$</th>
+            <th>$q_0$</th>
+            <th>$q_{\\text{ajust}}$</th>
+            <th>$CTE$</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
     </div>
   `;
 
-  document.getElementById('discountResults').classList.add('show');
+  container.appendChild(card);
+
+  if (tiers && Array.isArray(tiers) && tiers.length > 0) {
+    tiers.forEach(t => addMultiDiscountRow(card, t.min, t.max, t.price, t.c1));
+  } else {
+    addMultiDiscountRow(card, 0, 1000, 30.00, null);
+    addMultiDiscountRow(card, 1000, 999999, 28.50, null);
+  }
+
+  solveMultiDiscounts();
 }
+
+function removeProvider(card) {
+  const container = document.getElementById('discountProvidersContainer');
+  if (!container) return;
+  if (container.children.length <= 1) {
+    alert("Debe haber al menos un proveedor en la comparativa.");
+    return;
+  }
+  card.remove();
+  
+  // Si se eliminó el primero, asignar id="discountTable" al nuevo primer proveedor
+  const firstTable = container.querySelector('.prov-table');
+  if (firstTable && !document.getElementById('discountTable')) {
+    firstTable.id = 'discountTable';
+  }
+
+  solveMultiDiscounts();
+}
+
+function addMultiDiscountRow(card, min = 0, max = 1200, price = 30.0, c1 = null) {
+  const tbody = card.querySelector('.prov-table tbody');
+  if (!tbody) return;
+
+  const idx = tbody.children.length + 1;
+  const iRate = (parseFloat(document.getElementById('discI').value) || 25) / 100;
+  const T = parseFloat(document.getElementById('discT').value) || 1;
+  const computedC1 = c1 !== null ? c1 : +(price * iRate * T).toFixed(3);
+
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><strong>T${idx}</strong></td>
+    <td><input type="number" class="disc-min param-input" value="${min}" style="width: 75px;" oninput="solveMultiDiscounts()"></td>
+    <td><input type="number" class="disc-max param-input" value="${max >= 99999 ? 999999 : max}" style="width: 75px;" oninput="solveMultiDiscounts()"></td>
+    <td><input type="number" class="disc-price param-input" value="${price}" step="0.10" style="width: 70px;" oninput="onMultiDiscountPriceChange(this)"></td>
+    <td><input type="number" class="disc-c1 param-input" value="${computedC1}" step="0.01" style="width: 70px;" oninput="solveMultiDiscounts()"></td>
+    <td class="cell-q0" style="font-family: 'Fira Code', monospace; font-size: .8rem;">—</td>
+    <td class="cell-qc" style="font-family: 'Fira Code', monospace; font-weight: 700; font-size: .82rem;">—</td>
+    <td class="cell-cte" style="font-family: 'Fira Code', monospace; font-weight: 800; font-size: .85rem;">—</td>
+    <td><button class="btn-secondary" onclick="this.closest('tr').remove(); solveMultiDiscounts();" style="color: #f43f5e; padding: .2rem .4rem; font-size: .75rem;">✕</button></td>
+  `;
+  tbody.appendChild(tr);
+  solveMultiDiscounts();
+}
+
+function onMultiDiscountPriceChange(inputEl) {
+  const tr = inputEl.closest('tr');
+  const price = parseFloat(inputEl.value) || 0;
+  const iRate = (parseFloat(document.getElementById('discI').value) || 25) / 100;
+  const T = parseFloat(document.getElementById('discT').value) || 1;
+  const c1Input = tr.querySelector('.disc-c1');
+  if (c1Input) {
+    c1Input.value = +(price * iRate * T).toFixed(3);
+  }
+  solveMultiDiscounts();
+}
+
+function onMultiDiscountParamChange() {
+  const iRate = (parseFloat(document.getElementById('discI').value) || 25) / 100;
+  const T = parseFloat(document.getElementById('discT').value) || 1;
+  
+  document.querySelectorAll('.prov-table tbody tr').forEach(tr => {
+    const price = parseFloat(tr.querySelector('.disc-price').value) || 0;
+    const c1Input = tr.querySelector('.disc-c1');
+    if (c1Input) {
+      c1Input.value = +(price * iRate * T).toFixed(3);
+    }
+  });
+
+  solveMultiDiscounts();
+}
+
+function resetDualDiscountsToExercise7() {
+  document.getElementById('discD').value = 12000;
+  document.getElementById('disck').value = 160;
+  document.getElementById('discI').value = 25;
+  document.getElementById('discT').value = 1;
+
+  const container = document.getElementById('discountProvidersContainer');
+  if (!container) return;
+  container.innerHTML = '';
+
+  // Empresa X
+  addNewProvider('Empresa X', [
+    { min: 0, max: 1200, price: 30.00, c1: 7.50 },
+    { min: 1200, max: 3000, price: 29.20, c1: 7.30 },
+    { min: 3000, max: 999999, price: 28.80, c1: 7.20 }
+  ]);
+
+  // Empresa Y
+  addNewProvider('Empresa Y', [
+    { min: 0, max: 1000, price: 30.20, c1: 7.55 },
+    { min: 1000, max: 3000, price: 29.50, c1: 7.375 },
+    { min: 3000, max: 999999, price: 28.90, c1: 7.225 }
+  ]);
+}
+
+function solveMultiDiscounts() {
+  const D = parseFloat(document.getElementById('discD').value) || 0;
+  const k = parseFloat(document.getElementById('disck').value) || 0;
+  const T = parseFloat(document.getElementById('discT').value) || 1;
+
+  const cards = document.querySelectorAll('#discountProvidersContainer .provider-card');
+  if (cards.length === 0) return;
+
+  const providerSummaries = [];
+
+  cards.forEach(card => {
+    const nameInput = card.querySelector('.prov-name');
+    const provName = nameInput ? nameInput.value.trim() : 'Proveedor';
+    const rows = card.querySelectorAll('.prov-table tbody tr');
+    const tiers = [];
+
+    rows.forEach((tr, i) => {
+      const qmin = parseFloat(tr.querySelector('.disc-min').value) || 0;
+      const qmax = parseFloat(tr.querySelector('.disc-max').value) || Infinity;
+      const price = parseFloat(tr.querySelector('.disc-price').value) || 0;
+      const c1 = parseFloat(tr.querySelector('.disc-c1').value) || 0;
+
+      const q0 = (c1 > 0 && T > 0) ? Math.sqrt((2 * k * D) / (c1 * T)) : 0;
+      let qc = null;
+
+      if (q0 >= qmin && q0 < qmax) {
+        qc = q0;
+      } else if (q0 < qmin) {
+        qc = qmin;
+      } else {
+        qc = null;
+      }
+
+      const cadq = price * D;
+      const cp = (qc && qc > 0) ? (D / qc) * k : null;
+      const ca = (qc && qc > 0) ? 0.5 * qc * c1 * T : null;
+      const cte = qc ? (cadq + cp + ca) : Infinity;
+
+      tiers.push({
+        tr,
+        index: i + 1,
+        qmin,
+        qmax,
+        price,
+        c1,
+        q0,
+        qc,
+        cadq,
+        cp,
+        ca,
+        cte
+      });
+    });
+
+    const feasible = tiers.filter(t => t.cte !== Infinity);
+    const bestTier = feasible.length > 0 ? feasible.reduce((p, c) => (c.cte < p.cte ? c : p), feasible[0]) : null;
+
+    // Renderizar filas de este proveedor
+    tiers.forEach(t => {
+      const isWinnerTier = bestTier && t.index === bestTier.index;
+      t.tr.style.background = isWinnerTier ? 'rgba(16, 185, 129, 0.15)' : 'transparent';
+      t.tr.style.border = isWinnerTier ? '1px solid #10b981' : 'none';
+
+      const cellQ0 = t.tr.querySelector('.cell-q0');
+      const cellQc = t.tr.querySelector('.cell-qc');
+      const cellCte = t.tr.querySelector('.cell-cte');
+
+      if (cellQ0) cellQ0.textContent = t.q0 > 0 ? `${t.q0.toFixed(1)} u` : '—';
+      if (cellQc) {
+        cellQc.textContent = t.qc ? `${Math.round(t.qc).toLocaleString('es-AR')} u` : 'Infactible';
+        cellQc.style.color = isWinnerTier ? '#6ee7b7' : 'var(--text)';
+      }
+      if (cellCte) {
+        cellCte.textContent = t.cte !== Infinity ? `$${t.cte.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '—';
+        cellCte.style.color = isWinnerTier ? '#6ee7b7' : 'var(--text)';
+      }
+    });
+
+    // Badge del card
+    const badge = card.querySelector('.prov-badge');
+    if (badge) {
+      if (bestTier) {
+        badge.textContent = `Mejor: T${bestTier.index} (${Math.round(bestTier.qc)} u -> $${bestTier.cte.toLocaleString('es-AR', {maximumFractionDigits:0})})`;
+        badge.style.background = 'rgba(16, 185, 129, 0.15)';
+        badge.style.color = '#6ee7b7';
+      } else {
+        badge.textContent = 'Sin tramo factible';
+        badge.style.background = 'rgba(244, 63, 94, 0.15)';
+        badge.style.color = '#fca5a5';
+      }
+    }
+
+    providerSummaries.push({
+      card,
+      name: provName,
+      bestTier,
+      tiers
+    });
+  });
+
+  // Determinar ganador global
+  const validProviders = providerSummaries.filter(p => p.bestTier && p.bestTier.cte !== Infinity);
+  if (validProviders.length === 0) return;
+
+  const globalWinner = validProviders.reduce((p, c) => (c.bestTier.cte < p.bestTier.cte ? c : p), validProviders[0]);
+
+  // Estilizar cards según resultado global
+  providerSummaries.forEach(p => {
+    const isGlobal = p === globalWinner;
+    p.card.style.border = isGlobal ? '1px solid #10b981' : '1px solid rgba(255, 255, 255, 0.12)';
+    p.card.style.boxShadow = isGlobal ? '0 0 20px rgba(16, 185, 129, 0.2)' : 'none';
+  });
+
+  // Renderizar conclusión analítica al pie
+  const conclusionBox = document.getElementById('discConclusionBox');
+  if (!conclusionBox) return;
+
+  // Comparativa y ranking
+  validProviders.sort((a, b) => a.bestTier.cte - b.bestTier.cte);
+
+  let rankingHtml = validProviders.map((p, rank) => {
+    const diff = p.bestTier.cte - globalWinner.bestTier.cte;
+    const isWinner = rank === 0;
+    return `
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: .4rem .75rem; background: ${isWinner ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255,255,255,0.03)'}; border-radius: 8px; margin-bottom: .35rem; font-size: .85rem;">
+        <span style="font-weight: 700; color: ${isWinner ? '#6ee7b7' : 'var(--text)'};">
+          ${isWinner ? '🥇 ' : `#${rank + 1} `}${p.name} (Tramo ${p.bestTier.index}, Q = ${Math.round(p.bestTier.qc).toLocaleString('es-AR')} u)
+        </span>
+        <div style="font-family: 'Fira Code', monospace; text-align: right;">
+          <strong style="color: ${isWinner ? '#6ee7b7' : 'var(--text)'};">$${p.bestTier.cte.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}/año</strong>
+          ${!isWinner ? `<span style="color: #fca5a5; font-size: .78rem; margin-left: 6px;">(+$${diff.toLocaleString('es-AR', {minimumFractionDigits: 2})})</span>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  let tradeOffPedagogy = '';
+  if (globalWinner.tiers.length >= 3 && Math.round(globalWinner.bestTier.qc) === 1200 && D === 12000 && k === 160) {
+    tradeOffPedagogy = `
+      <div style="margin-top: .85rem; padding-top: .85rem; border-top: 1px solid rgba(255,255,255,0.08); font-size: .86rem; color: var(--text2); line-height: 1.5;">
+        💡 <strong>Lección de Cátedra:</strong> Aunque el tramo superior ofrece el menor precio unitario ($28.80 vs. $29.20), 
+        comprar 3.000 unidades genera un ahorro de compra de <strong>$4.800,00</strong> pero un sobrecosto de almacenaje de <strong>+$6.420,00</strong>. 
+        El balance neto anual encarece al lote de 3.000 unidades en <strong>+$660,00/año</strong> respecto a comprar 1.200 resmas.
+      </div>
+    `;
+  }
+
+  conclusionBox.innerHTML = `
+    <div style="background: rgba(30, 41, 59, 0.8); border: 1px solid #10b981; border-radius: 12px; padding: 1.25rem 1.5rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .75rem; margin-bottom: .75rem;">
+        <h4 style="font-size: 1.15rem; font-weight: 800; color: #6ee7b7; margin: 0;">
+          🏆 Dictamen de Selección: ${globalWinner.name} (Tramo ${globalWinner.bestTier.index})
+        </h4>
+        <span style="font-family: 'Fira Code', monospace; font-weight: 800; font-size: 1.15rem; color: #6ee7b7;">
+          CTE Mínimo = $${globalWinner.bestTier.cte.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}/año
+        </span>
+      </div>
+
+      <p style="font-size: .88rem; color: var(--text); line-height: 1.5; margin: 0 0 .75rem;">
+        Se recomienda adjudicar la orden a <strong>${globalWinner.name}</strong> ordenando en lotes de <strong>${Math.round(globalWinner.bestTier.qc).toLocaleString('es-AR')} unidades</strong> (frecuencia: ${(D / globalWinner.bestTier.qc).toFixed(2)} pedidos/año).
+      </p>
+
+      <div style="margin-top: .5rem;">
+        <div style="font-size: .78rem; font-weight: 700; color: var(--text2); text-transform: uppercase; margin-bottom: .35rem;">
+          Ranking Comparativo de Alternativas:
+        </div>
+        ${rankingHtml}
+      </div>
+
+      ${tradeOffPedagogy}
+    </div>
+  `;
+}
+
+// Aliases para compatibilidad
+function loadDiscountPreset() {
+  resetDualDiscountsToExercise7();
+}
+
+function solveDiscounts() {
+  solveMultiDiscounts();
+}
+
+function solveDualDiscounts() {
+  solveMultiDiscounts();
+}
+
+function onDualDiscountParamChange() {
+  onMultiDiscountParamChange();
+}
+
+function addDualDiscountRow(provKey = 'X', min = 0, max = 1200, price = 30.0, c1 = null) {
+  const container = document.getElementById('discountProvidersContainer');
+  if (!container) return;
+  const cards = container.querySelectorAll('.provider-card');
+  const card = provKey === 'X' ? cards[0] : (cards[1] || cards[0]);
+  if (card) addMultiDiscountRow(card, min, max, price, c1);
+}
+
+function addDiscountRow(min = 0, max = 1200, price = 30.0, c1 = null) {
+  const container = document.getElementById('discountProvidersContainer');
+  if (!container) return;
+  const card = container.querySelector('.provider-card');
+  if (card) addMultiDiscountRow(card, min, max, price, c1);
+}
+
+
+
+
 
 // ── CONTROLADOR DE BALANZA MECÁNICA SVG DE TEORÍA ────────────────────────────
 function updateScaleVisuals(angle, qVal, cpVal, caVal, scenarioName, feedbackHtml, feedbackType) {

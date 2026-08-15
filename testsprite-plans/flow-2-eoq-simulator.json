@@ -1,0 +1,23 @@
+{
+  "projectId": "mock-io-inventory-project",
+  "type": "frontend",
+  "name": "2. Simulador de Lote Óptimo (EOQ) y Curvas de Costo",
+  "planSteps": [
+    {
+      "type": "action",
+      "description": "Click on 'Módulo 1: Simulador de Lote Óptimo (EOQ)' in the top tab navigation"
+    },
+    {
+      "type": "assertion",
+      "description": "The EOQ game container is visible and displays the Giant Slider and Sawtooth Chart canvas"
+    },
+    {
+      "type": "action",
+      "description": "Click on the preset button 'Caso Golo S.A.'"
+    },
+    {
+      "type": "assertion",
+      "description": "The optimal batch display shows 1,369 u and the ROP card updates to 16 unidades"
+    }
+  ]
+}

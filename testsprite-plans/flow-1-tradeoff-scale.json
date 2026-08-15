@@ -1,0 +1,27 @@
+{
+  "projectId": "mock-io-inventory-project",
+  "type": "frontend",
+  "name": "1. Balanza Dinámica del Trade-Off (Movimiento y Costos)",
+  "planSteps": [
+    {
+      "type": "action",
+      "description": "Navigate to the Inventory Simulator app and ensure Module 0 (Fundamentos Teóricos) is visible"
+    },
+    {
+      "type": "action",
+      "description": "Click on the button '🚚 Lote Chico'"
+    },
+    {
+      "type": "assertion",
+      "description": "The scale beam tilts to the left, showing Cp = $2.000 and Ca = $125 with the badge 'q = 25 u (Lote Chico)'"
+    },
+    {
+      "type": "action",
+      "description": "Click on the button '🎯 Lote Óptimo EOQ'"
+    },
+    {
+      "type": "assertion",
+      "description": "The scale beam returns to horizontal equilibrium at 0 degrees, showing Cp = $500 and Ca = $500"
+    }
+  ]
+}
