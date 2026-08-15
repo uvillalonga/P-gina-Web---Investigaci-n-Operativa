@@ -1222,7 +1222,7 @@
         </div>
         <div class="param-group">
           <label for="paramB">Costo Adquisición (b):</label>
-          <input type="number" id="paramB" class="param-input" value="0" step="0.5" oninput="onParamChange()">
+          <input type="number" id="paramB" class="param-input" value="10" step="0.5" oninput="onParamChange()">
         </div>
         <div class="param-group">
           <label for="paramL">Lead Time Proveedor (L días):</label>
@@ -1919,7 +1919,7 @@ function loadScenario(type) {
 
   if (type === 'golo') {
     document.getElementById('btnScenGolo').classList.add('active');
-    activeParams = { D: 937.5, T: 1, k: 100, c1: 0.10, b: 0, L: 5 };
+    activeParams = { D: 937.5, T: 1, k: 100, c1: 0.10, b: 10, L: 5 };
   } else if (type === 'parcial') {
     document.getElementById('btnScenParcial').classList.add('active');
     activeParams = { D: 10000, T: 400, k: 1000, c1: 0.10, b: 1.0, L: 10 };
@@ -2115,8 +2115,8 @@ function renderResolutionStepByStep(qOpt) {
 const eoqGridLinesPlugin = {
   id: 'eoqGridLines',
   afterDraw(chart) {
-    const { ctx, chartArea: { left, right, top, bottom }, scales: { y } } = chart;
-    if (!left || !right || !top || !bottom || !y) return;
+    const { ctx, chartArea: { left, right, top, bottom }, scales: { x, y } } = chart;
+    if (!left || !right || !top || !bottom || !x || !y) return;
 
     const { D, T, k, c1, b } = activeParams;
     const cpOpt = (D / optimalQ) * k;
@@ -2124,51 +2124,70 @@ const eoqGridLinesPlugin = {
     const cadqOpt = b * D;
     const minCost = cadqOpt + cpOpt + caOpt;
 
-    const labels = chart.data.labels;
-    if (!labels || labels.length === 0) return;
-    const minQ = labels[0];
-    const maxQ = labels[labels.length - 1];
+    const xPixel = x.getPixelForValue(optimalQ);
+    const yPixelCTE = y.getPixelForValue(minCost);
+    const yPixelEq = y.getPixelForValue(cpOpt);
 
-    const xPixel = left + ((optimalQ - minQ) / (maxQ - minQ)) * (right - left);
-    const yPixel = y.getPixelForValue(minCost);
-
-    if (xPixel >= left && xPixel <= right && yPixel >= top && yPixel <= bottom) {
+    if (xPixel >= left && xPixel <= right) {
       ctx.save();
 
-      ctx.setLineDash([5, 5]);
-      ctx.lineWidth = 2;
+      // Línea vertical que une q0 desde el eje X pasando por el corte Cp=Ca hasta el mínimo de CTE
+      ctx.setLineDash([4, 4]);
+      ctx.lineWidth = 1.5;
       ctx.strokeStyle = '#ec4899';
-
-      // Línea vertical (Qo)
       ctx.beginPath();
-      ctx.moveTo(xPixel, yPixel);
+      ctx.moveTo(xPixel, Math.max(top, yPixelCTE));
       ctx.lineTo(xPixel, bottom);
       ctx.stroke();
 
-      // Línea horizontal (Cmin)
-      ctx.beginPath();
-      ctx.moveTo(xPixel, yPixel);
-      ctx.lineTo(left, yPixel);
-      ctx.stroke();
+      // Línea horizontal punteada hacia el eje Y para CTE mínimo
+      if (yPixelCTE >= top && yPixelCTE <= bottom) {
+        ctx.beginPath();
+        ctx.moveTo(xPixel, yPixelCTE);
+        ctx.lineTo(left, yPixelCTE);
+        ctx.stroke();
 
-      // Intersección
-      ctx.setLineDash([]);
-      ctx.fillStyle = '#ec4899';
-      ctx.beginPath();
-      ctx.arc(xPixel, yPixel, 6, 0, 2 * Math.PI);
-      ctx.fill();
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 2;
-      ctx.stroke();
+        // Punto de mínimo en la curva de CTE
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#ec4899';
+        ctx.beginPath();
+        ctx.arc(xPixel, yPixelCTE, 5, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
 
-      // Etiquetas
+        // Etiqueta CTE min
+        ctx.font = '700 11px Inter, sans-serif';
+        ctx.fillStyle = '#ec4899';
+        ctx.textAlign = 'right';
+        ctx.fillText(`CTE min = $${Math.round(minCost).toLocaleString('es-AR')}`, left - 6, yPixelCTE + 4);
+      }
+
+      // Punto de cruce de costos (Cp = Ca) e intersección de la recta horizontal de Adquisición
+      if (yPixelEq >= top && yPixelEq <= bottom) {
+        // Punto en el cruce exacto Cp = Ca
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#10b981';
+        ctx.beginPath();
+        ctx.arc(xPixel, yPixelEq, 5, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Etiqueta en el cruce de costos
+        ctx.font = '700 11px Inter, sans-serif';
+        ctx.fillStyle = '#6ee7b7';
+        ctx.textAlign = 'right';
+        ctx.fillText(`Cp = Ca = Cadq = $${Math.round(cpOpt).toLocaleString('es-AR')}`, left - 6, yPixelEq + 4);
+      }
+
+      // Etiqueta Q0 en el eje X
       ctx.font = '700 12px Inter, sans-serif';
       ctx.fillStyle = '#ec4899';
       ctx.textAlign = 'center';
-      ctx.fillText(`Q₀ = ${Math.round(optimalQ)}`, xPixel, bottom + 18);
-
-      ctx.textAlign = 'right';
-      ctx.fillText(`Cmin = $${Math.round(minCost).toLocaleString('es-AR')}`, left - 8, yPixel + 4);
+      ctx.fillText(`Q₀ = ${Math.round(optimalQ)} u`, xPixel, bottom + 18);
 
       ctx.restore();
     }
@@ -2183,44 +2202,84 @@ function updateEOQChart() {
 
   const minQ = Math.max(10, Math.floor(optimalQ * 0.1));
   const maxQ = Math.ceil(optimalQ * 3.0);
-  const step = Math.max(1, Math.floor((maxQ - minQ) / 50));
+  const numSteps = 80;
+  const step = (maxQ - minQ) / numSteps;
 
-  const labels = [];
   const cpData = [];
   const caData = [];
   const cteData = [];
+  const cpOpt = (D / optimalQ) * k;
   const cadq = b * D;
 
-  for (let q = minQ; q <= maxQ; q += step) {
-    labels.push(q);
+  const qPoints = [];
+  for (let i = 0; i <= numSteps; i++) {
+    qPoints.push(minQ + i * step);
+  }
+  if (!qPoints.some(q => Math.abs(q - optimalQ) < 0.001)) {
+    qPoints.push(optimalQ);
+    qPoints.sort((a, b) => a - b);
+  }
+
+  qPoints.forEach(q => {
     const cp = (D / q) * k;
     const ca = 0.5 * q * c1 * T;
-    cpData.push(cp);
-    caData.push(ca);
-    cteData.push(cadq + cp + ca);
-  }
+    cpData.push({ x: q, y: cp });
+    caData.push({ x: q, y: ca });
+    cteData.push({ x: q, y: cadq + cp + ca });
+  });
+
+  // La recta horizontal de Costo de Adquisición pasa por la altura del punto de cruce Cp = Ca
+  const cadqData = [
+    { x: minQ, y: cpOpt },
+    { x: maxQ, y: cpOpt }
+  ];
+
+  const sliderEl = document.getElementById('eoqSlider');
+  const currentQ = sliderEl ? parseFloat(sliderEl.value) || optimalQ : optimalQ;
+  const currentCp = (D / currentQ) * k;
+  const currentCa = 0.5 * currentQ * c1 * T;
+  const currentCTE = cadq + currentCp + currentCa;
 
   if (eoqChartInstance) eoqChartInstance.destroy();
 
   eoqChartInstance = new Chart(ctx, {
     type: 'line',
     data: {
-      labels: labels,
       datasets: [
-        { label: 'Costo Total (CTE)', data: cteData, borderColor: '#ec4899', borderWidth: 3, tension: 0.3, pointRadius: 0 },
-        { label: 'Costo Almacén (Ca)', data: caData, borderColor: '#3b82f6', borderWidth: 2, borderDash: [5, 5], tension: 0.1, pointRadius: 0 },
-        { label: 'Costo Pedidos (Cp)', data: cpData, borderColor: '#f59e0b', borderWidth: 2, borderDash: [5, 5], tension: 0.3, pointRadius: 0 },
-        { label: 'Selección Actual (Q)', data: Array(labels.length).fill(null), borderColor: '#ffffff', backgroundColor: '#ffffff', pointRadius: 6, showLine: false }
+        { label: 'Costo Total (CTE)', data: cteData, borderColor: '#ec4899', borderWidth: 3, tension: 0.2, pointRadius: 0 },
+        { label: 'Costo Almacén (Ca)', data: caData, borderColor: '#3b82f6', borderWidth: 2, borderDash: [5, 5], tension: 0, pointRadius: 0 },
+        { label: 'Costo Pedidos (Cp)', data: cpData, borderColor: '#f59e0b', borderWidth: 2, borderDash: [5, 5], tension: 0.2, pointRadius: 0 },
+        { label: 'Costo Adquisición (Cadq)', data: cadqData, borderColor: '#10b981', borderWidth: 2, borderDash: [3, 3], tension: 0, pointRadius: 0 },
+        { label: 'Selección Actual (Q)', data: [{ x: currentQ, y: currentCTE }], borderColor: '#ffffff', backgroundColor: '#ffffff', pointRadius: 6, pointHoverRadius: 8, showLine: false }
       ]
     },
     plugins: [eoqGridLinesPlugin],
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { position: 'top', labels: { color: '#f8fafc', font: { family: 'Inter' } } } },
+      plugins: {
+        legend: { position: 'top', labels: { color: '#f8fafc', font: { family: 'Inter' } } },
+        tooltip: {
+          callbacks: {
+            title: (items) => `Lote Q = ${Math.round(items[0].parsed.x).toLocaleString('es-AR')} u`,
+            label: (item) => `${item.dataset.label}: $${item.parsed.y.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`
+          }
+        }
+      },
       scales: {
-        x: { title: { display: true, text: 'Cantidad de Lote (Q)', color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } },
-        y: { title: { display: true, text: 'Costos ($)', color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } }
+        x: {
+          type: 'linear',
+          min: minQ,
+          max: maxQ,
+          title: { display: true, text: 'Cantidad de Lote (Q)', color: '#94a3b8' },
+          grid: { color: 'rgba(255,255,255,0.05)' },
+          ticks: { color: '#64748b' }
+        },
+        y: {
+          title: { display: true, text: 'Costos ($)', color: '#94a3b8' },
+          grid: { color: 'rgba(255,255,255,0.05)' },
+          ticks: { color: '#64748b' }
+        }
       }
     }
   });
@@ -2228,21 +2287,7 @@ function updateEOQChart() {
 
 function updateChartMarker(qVal, cte) {
   if (!eoqChartInstance) return;
-  const labels = eoqChartInstance.data.labels;
-
-  let closestIdx = 0;
-  let minDiff = Infinity;
-  labels.forEach((l, i) => {
-    let diff = Math.abs(l - qVal);
-    if (diff < minDiff) {
-      minDiff = diff;
-      closestIdx = i;
-    }
-  });
-
-  const markerData = Array(labels.length).fill(null);
-  markerData[closestIdx] = cte;
-  eoqChartInstance.data.datasets[3].data = markerData;
+  eoqChartInstance.data.datasets[4].data = [{ x: qVal, y: cte }];
   eoqChartInstance.update('none');
 }
 
