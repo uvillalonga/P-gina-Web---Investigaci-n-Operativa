@@ -89,6 +89,8 @@
     { id: 'u3', name: 'U3 · Proyectos',    defaultHref: 'simulador_pert_cpm.html' },
     { id: 'u4', name: 'U4 · Simulación',   defaultHref: 'simulador_montecarlo.html' },
     { id: 'u5', name: 'U5 · Inventarios',  defaultHref: 'simulador_inventarios.html' },
+    { id: 'u6', name: 'U6 · Prog. Lineal', defaultHref: 'simulador_plc.html' },
+    { id: 'u7', name: 'U7 · Juegos',       defaultHref: 'resolvedor_juegos.html' },
   ];
 
   // ── Definición de Subunidades / Herramientas por Unidad ───────────────────
@@ -107,6 +109,10 @@
     { href: 'tutorial_excel_montecarlo.html',  label: 'Guía Excel',         unit: 'u4' },
     // U5
     { href: 'simulador_inventarios.html',      label: 'Simulador de Inventarios', unit: 'u5' },
+    // U6
+    { href: 'simulador_plc.html',              label: 'Simplex & Método Gráfico', unit: 'u6' },
+    // U7
+    { href: 'resolvedor_juegos.html',          label: 'Juegos & Decisiones', unit: 'u7' },
   ];
 
   // Identificar unidad activa

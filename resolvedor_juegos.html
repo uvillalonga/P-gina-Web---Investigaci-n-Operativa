@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unidad 7 · Teoría de Juegos y Decisiones — Portal IO · UTN</title>
+<meta name="description" content="Teoría de Juegos (Nash, Dilema del Prisionero) y Teoría de Decisiones: calculadora de criterios de decisión (Wald, Optimista, Hurwicz, Savage) y árbol de decisión con roll-back · UTN Investigación Operativa.">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+/* ── EXCLUSIVE STYLES FOR UNIDAD 7 · JUEGOS Y DECISIONES ── */
+
+.mod-tab-bar { display:flex; gap:.75rem; justify-content:center; margin:1.5rem 0 2rem; flex-wrap:wrap; }
+.mod-tab-btn {
+  background: var(--surface); border: 1px solid var(--border-med); color: var(--text2);
+  padding: .75rem 1.25rem; border-radius: 12px; font-weight: 700; font-size: .9rem;
+  cursor: pointer; transition: all .25s ease; display:flex; align-items:center; gap:8px;
+  font-family: 'Inter', sans-serif;
+}
+.mod-tab-btn:hover { color: var(--text); border-color: rgba(244,63,94,.4); transform: translateY(-2px); }
+.mod-tab-btn.active { background: rgba(244,63,94,.15); border-color: #f43f5e; color: #fda4af; box-shadow: 0 4px 20px rgba(244,63,94,.2); }
+.mod-content { display:none; animation: fadeIn .4s ease; }
+.mod-content.active { display:block; }
+
+.card {
+  background: var(--surface); border: 1px solid var(--border-med); border-radius: var(--radius);
+  padding: 1.75rem; margin-bottom: 1.5rem;
+}
+.card h2 { font-size: 1.25rem; font-weight: 800; margin-bottom: .75rem; color: var(--text); display:flex; align-items:center; gap:8px; }
+.card h3 { font-size: 1.02rem; font-weight: 700; margin: 1.1rem 0 .5rem; color: var(--text); }
+.card p { color: var(--text2); line-height: 1.7; font-size: .93rem; margin-bottom: .6rem; }
+.card p:last-child { margin-bottom: 0; }
+
+/* Toggle de contexto (Certidumbre / Riesgo / Incertidumbre) */
+.context-toggle { display:flex; gap:.6rem; flex-wrap:wrap; margin: .5rem 0 1rem; }
+.context-btn {
+  flex:1; min-width:150px; background: rgba(15,23,42,.5); border: 1px solid var(--border-med);
+  color: var(--text2); padding: .9rem 1rem; border-radius: 10px; cursor:pointer; text-align:left;
+  transition: all .2s; font-family:'Inter',sans-serif;
+}
+.context-btn strong { display:block; color: var(--text); font-size: .95rem; margin-bottom:.2rem; }
+.context-btn span { font-size: .78rem; }
+.context-btn.active { border-color:#f43f5e; background: rgba(244,63,94,.1); }
+.context-btn.active strong { color:#fda4af; }
+
+/* Flashcards flip */
+.flip-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap: 1rem; margin-top: 1rem; }
+.flip-card { perspective: 1000px; height: 130px; cursor:pointer; }
+.flip-inner { position:relative; width:100%; height:100%; transition: transform .5s; transform-style:preserve-3d; }
+.flip-card.flipped .flip-inner { transform: rotateY(180deg); }
+.flip-face {
+  position:absolute; inset:0; backface-visibility:hidden; border-radius:10px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  text-align:center; padding: .8rem; border:1px solid var(--border-med);
+}
+.flip-front { background: rgba(15,23,42,.6); color: var(--text); font-weight:700; font-size:.88rem; }
+.flip-back { background: rgba(244,63,94,.12); color:#fda4af; transform: rotateY(180deg); font-size:.82rem; line-height:1.5; }
+
+/* Matriz Dilema del Prisionero */
+.payoff-demo { display:flex; justify-content:center; margin: 1.2rem 0; overflow-x:auto; }
+.payoff-demo table { border-collapse: collapse; font-family:'Fira Code', monospace; }
+.payoff-demo th, .payoff-demo td { border: 1px solid var(--border-med); padding: .9rem 1.3rem; text-align:center; font-size:.85rem; }
+.payoff-demo th { background: rgba(255,255,255,.03); color: var(--text2); font-family:'Inter',sans-serif; font-weight:700; }
+.payoff-demo td { color: var(--text); cursor:pointer; transition: background .2s; }
+.payoff-demo td:hover { background: rgba(244,63,94,.1); }
+.payoff-demo td.nash { background: rgba(16,185,129,.18); color:#6ee7b7; font-weight:800; border-color:#10b981; }
+
+/* Matriz editable de decisiones */
+.matrix-toolbar { display:flex; gap:.6rem; flex-wrap:wrap; margin-bottom:1.2rem; align-items:center; }
+.matrix-scroll { overflow-x:auto; padding-bottom:.5rem; }
+table.dec-table { border-collapse: collapse; width:100%; min-width: 560px; }
+table.dec-table th, table.dec-table td { border: 1px solid var(--border-med); padding: .5rem; text-align:center; }
+table.dec-table th { background: rgba(255,255,255,.03); font-size:.75rem; color: var(--text2); text-transform:uppercase; letter-spacing:.4px; }
+table.dec-table input[type=text], table.dec-table input[type=number] {
+  width: 100%; min-width: 70px; background: rgba(15,23,42,.7); border: 1px solid var(--border);
+  color: var(--text); padding: .4rem; border-radius: 6px; font-family:'Fira Code',monospace; text-align:center; font-size:.85rem;
+}
+table.dec-table input[type=text] { font-family:'Inter',sans-serif; font-weight:600; }
+.row-del-btn, .col-del-btn { background: rgba(244,63,94,.12); border: 1px solid rgba(244,63,94,.35); color:#fda4af; border-radius:6px; width:26px; height:26px; cursor:pointer; font-weight:800; }
+.row-del-btn:hover, .col-del-btn:hover { background: rgba(244,63,94,.3); }
+.prob-row td { background: rgba(6,182,212,.05); }
+.type-toggle { display:inline-flex; border: 1px solid var(--border-med); border-radius: 8px; overflow:hidden; }
+.type-toggle button { background: transparent; border:none; color: var(--text2); padding:.55rem 1rem; cursor:pointer; font-weight:700; font-size:.82rem; font-family:'Inter',sans-serif; }
+.type-toggle button.active { background: rgba(244,63,94,.18); color:#fda4af; }
+
+.alpha-row { display:flex; align-items:center; gap:1rem; margin: 1rem 0; flex-wrap:wrap; }
+.alpha-row input[type=range] { flex:1; min-width:200px; accent-color: #f43f5e; }
+.alpha-val { font-family:'Fira Code',monospace; font-weight:700; color:#fda4af; min-width: 90px; }
+
+/* Tabla resultados */
+table.res-table { border-collapse: collapse; width:100%; }
+table.res-table th, table.res-table td { border: 1px solid var(--border-med); padding: .65rem; text-align:center; font-size:.85rem; }
+table.res-table th { background: rgba(255,255,255,.03); color: var(--text2); font-size:.72rem; text-transform:uppercase; }
+table.res-table td { font-family:'Fira Code', monospace; color: var(--text); }
+table.res-table td.alt-name { font-family:'Inter',sans-serif; font-weight:700; text-align:left; color: var(--text); }
+table.res-table td.best { background: rgba(16,185,129,.16); color:#6ee7b7; font-weight:800; }
+table.res-table td.best::after { content: ' 🏆'; }
+
+.winners-row { display:flex; gap:.6rem; flex-wrap:wrap; margin: 1rem 0; }
+.winner-chip {
+  background: rgba(15,23,42,.6); border:1px solid var(--border-med); border-radius:999px;
+  padding: .5rem 1rem; font-size: .8rem; color: var(--text2); display:flex; gap:6px; align-items:center;
+}
+.winner-chip b { color:#fda4af; }
+
+.chart-box { background: var(--surface); border:1px solid var(--border-med); border-radius: var(--radius); padding: 1.2rem; margin-top:1rem; height: 320px; }
+
+.warn-box { background: rgba(245,158,11,.1); border:1px solid rgba(245,158,11,.3); color:#fbbf24; padding:.7rem 1rem; border-radius:8px; font-size:.82rem; margin: .8rem 0; }
+
+/* ÁRBOL DE DECISIÓN */
+.tree-wrap { overflow-x:auto; padding: 1rem 0; margin: 0 -1.75rem; padding-left: 1.75rem; padding-right: 1.75rem; }
+.tree-level { display:flex; align-items:flex-start; gap: .6rem; width: max-content; }
+.branch { display:flex; flex-direction:column; align-items:center; min-width: 88px; flex-shrink: 0; }
+.branch-label { font-size:.68rem; color: var(--text2); font-weight:700; margin-bottom:.35rem; text-align:center; line-height:1.3; }
+.branch-line { width:100%; border-top: 2px solid var(--border-med); margin-bottom: .6rem; position:relative; }
+.node {
+  border-radius: 10px; padding: .45rem .6rem; font-family:'Fira Code',monospace; font-weight:800;
+  font-size: .76rem; border: 2px solid var(--border-med); background: rgba(15,23,42,.7); color: var(--text);
+  text-align:center; min-width: 64px; transition: all .3s;
+}
+.node.decision { border-radius: 6px; border-color: #f43f5e; }
+.node.chance { border-radius: 50%; border-color: #06b6d4; width:54px; height:54px; display:flex; align-items:center; justify-content:center; padding:0; font-size:.68rem; }
+.node.leaf { border-color: var(--border-med); background: rgba(255,255,255,.03); font-size:.72rem; }
+.node.chosen { border-color: #10b981 !important; background: rgba(16,185,129,.18); color:#6ee7b7; box-shadow: 0 0 12px rgba(16,185,129,.35); }
+.branch.discarded { opacity: .35; }
+.leaf-input { width: 66px; background: rgba(15,23,42,.8); border:1px solid var(--border-med); color: var(--text); padding:.3rem; border-radius:6px; font-family:'Fira Code',monospace; text-align:center; font-size:.72rem; margin-top:.25rem; }
+.prob-input { width: 42px; background: rgba(6,182,212,.08); border:1px solid rgba(6,182,212,.3); color:#67e8f9; padding:.2rem; border-radius:5px; font-family:'Fira Code',monospace; text-align:center; font-size:.7rem; margin-top:.25rem; }
+.tree-sub { margin-top: .6rem; padding-top: .6rem; border-top: 2px dashed var(--border); }
+@media (max-width: 640px) {
+  .tree-wrap { margin: 0 -1.25rem; padding-left: 1.25rem; padding-right: 1.25rem; }
+}
+</style>
+</head>
+<body>
+
+<div id="nav-container"></div>
+
+<section class="page-header u7">
+  <div class="case-badge">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    Unidad 7 · Teoría de Juegos y Decisiones
+  </div>
+  <h1>Resolvedor de Juegos & Decisiones</h1>
+  <p>Fundamentos de Teoría de Juegos (Nash, Dilema del Prisionero) y calculadora completa de Teoría de Decisiones: criterios bajo incertidumbre y árbol de decisión con roll-back.</p>
+</section>
+
+<div class="content" style="max-width: 1150px; margin: 0 auto; padding: 2rem 5%;">
+
+  <div class="mod-tab-bar">
+    <button class="mod-tab-btn active" onclick="switchModule('mod0', this)"><span>📖</span> Fundamentos Teóricos</button>
+    <button class="mod-tab-btn" onclick="switchModule('mod1', this)"><span>⚖️</span> Módulo 1: Criterios de Decisión</button>
+    <button class="mod-tab-btn" onclick="switchModule('mod2', this)"><span>🌳</span> Módulo 2: Árbol de Decisión</button>
+  </div>
+
+  <!-- ══════════════════════ MÓDULO 0: TEORÍA ══════════════════════ -->
+  <div id="mod0" class="mod-content active">
+
+    <div class="card">
+      <h2>🎲 Teoría de Juegos</h2>
+      <p>Formalizada por <strong>Von Neumann y Morgenstern</strong> (1944). Estudia la elección de la conducta óptima cuando los costos y beneficios de cada opción <strong>no están determinados de antemano</strong>, sino que dependen de las elecciones de otros jugadores. Se representa mediante una <strong>matriz de pagos</strong>: relaciona las estrategias de cada jugador con la recompensa de cada combinación.</p>
+      <p style="font-size:.82rem; color: var(--text3);">Nota de cátedra: en la matriz de pagos, valor positivo = gana el jugador <strong>fila</strong>; valor negativo = gana el jugador <strong>columna</strong>.</p>
+
+      <h3>Clasificación de juegos — tocá cada tarjeta</h3>
+      <div class="flip-grid" id="flipGrid"></div>
+    </div>
+
+    <div class="card">
+      <h2>🤝 Juegos Cooperativos y Equilibrio de Nash</h2>
+      <p>En los <strong>juegos cooperativos</strong> los jugadores intercambian información y pueden colaborar formando <strong>coaliciones</strong> mediante contratos: el juego se vuelve una competencia entre coaliciones.</p>
+      <p>Un <strong>Equilibrio de Nash</strong> se alcanza cuando ningún jugador puede mejorar su resultado cambiando unilateralmente de estrategia, mientras los demás mantienen la suya. Esto <em>no implica</em> que sea lo mejor para el conjunto — el ejemplo clásico es el Dilema del Prisionero.</p>
+
+      <h3>Dilema del Prisionero (A.W. Tucker) — hacé clic en una celda</h3>
+      <p style="font-size:.85rem;">Condenas en años. Cada preso decide <strong>Cooperar</strong> (callar) o <strong>No Cooperar</strong> (confesar), sin poder comunicarse.</p>
+      <div class="payoff-demo">
+        <table>
+          <tr><th></th><th>A: Coopera</th><th>A: No Coopera</th></tr>
+          <tr><th>B: Coopera</th><td onclick="explainCell(this,'(-2,-2)')">(-2, -2)</td><td onclick="explainCell(this,'(-10,0)')">(-10, 0)</td></tr>
+          <tr><th>B: No Coopera</th><td onclick="explainCell(this,'(0,-10)')">(0, -10)</td><td id="nashCell" onclick="explainCell(this,'(-6,-6)')">(-6, -6)</td></tr>
+        </table>
+      </div>
+      <div style="text-align:center;">
+        <button class="btn-secondary" onclick="revealNash()">🎯 Revelar el Equilibrio de Nash</button>
+      </div>
+      <p id="nashExplain" style="text-align:center; margin-top:.8rem; min-height: 1.4em; color:#6ee7b7; font-weight:700;"></p>
+      <p style="font-size:.82rem; color: var(--text3);">Aunque (Coopera, Coopera) = (-2,-2) es mejor para ambos, no es un pacto creíble: cada uno tiene incentivo a romperlo unilateralmente. El único equilibrio estable es que ambos confiesen.</p>
+    </div>
+
+    <div class="card">
+      <h2>🧭 Teoría de Decisiones — Fundamentos</h2>
+      <p><em>"La principal diferencia entre la Teoría de Juegos y la Teoría de Decisiones radica en la interacción posible entre los jugadores"</em> — en Decisiones, el "rival" no es estratégico: son los <strong>estados de la naturaleza</strong>.</p>
+      <p>Notación: <span id="notationTeX">$E=\{E_1,\dots,E_m\}$ estados de la naturaleza (columnas) · $A=\{A_1,\dots,A_n\}$ alternativas (filas) · $x_{ij}$ = resultado de tomar $A_i$ si ocurre $E_j$.</span></p>
+
+      <h3>Tres contextos — elegí uno</h3>
+      <div class="context-toggle">
+        <button class="context-btn active" onclick="setContext(this,0)"><strong>Certidumbre</strong><span>Se conoce con certeza el estado que ocurrirá.</span></button>
+        <button class="context-btn" onclick="setContext(this,1)"><strong>Riesgo</strong><span>Se conocen los estados y sus probabilidades.</span></button>
+        <button class="context-btn" onclick="setContext(this,2)"><strong>Incertidumbre</strong><span>Se conocen los estados, no sus probabilidades.</span></button>
+      </div>
+      <p id="contextDetail" style="background: rgba(15,23,42,.5); border-radius:8px; padding:.9rem 1.1rem; font-size:.85rem;"></p>
+    </div>
+
+    <div class="card">
+      <h2>📐 Formulario — Criterios de Decisión</h2>
+      <div class="equations">
+        <div class="eq-line"><strong>Valor Esperado (bajo riesgo):</strong><br>$$VME(A_i)=\sum_{j=1}^{m} p_j \cdot x_{ij}$$</div>
+        <div class="eq-line"><strong>Wald (pesimista):</strong><br>$$\text{Ganancias: } \max_i(\min_j x_{ij}) \qquad \text{Costos: } \min_i(\max_j x_{ij})$$</div>
+        <div class="eq-line"><strong>Optimista (Maxi-Max):</strong><br>$$\max_i(\max_j x_{ij})$$</div>
+        <div class="eq-line"><strong>Hurwicz (α = índice de optimismo):</strong><br>$$S_i(\alpha)=\alpha\cdot\max_j x_{ij} + (1-\alpha)\cdot\min_j x_{ij}$$</div>
+        <div class="eq-line"><strong>Savage (arrepentimiento / regret):</strong><br>$$r_{ij}=\max_k x_{kj} - x_{ij} \qquad \text{Savage}=\min_i(\max_j r_{ij})$$</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══════════════════════ MÓDULO 1: CALCULADORA ══════════════════════ -->
+  <div id="mod1" class="mod-content">
+
+    <div class="card">
+      <h2>⚖️ Calculadora de Criterios de Decisión</h2>
+      <p>Editá la tabla de decisión (alternativas × estados de la naturaleza) y calculá los 5 criterios en simultáneo. Precargada con el ejercicio del <strong>Vendedor de Diarios</strong>.</p>
+
+      <div class="matrix-toolbar">
+        <button class="btn-secondary" onclick="addRow()">+ Alternativa</button>
+        <button class="btn-secondary" onclick="addCol()">+ Estado</button>
+        <button class="btn-secondary" onclick="loadExample()">↺ Cargar ejemplo (Vendedor de Diarios)</button>
+        <div class="type-toggle">
+          <button id="typeGain" class="active" onclick="setPayoffType(true)">Ganancias</button>
+          <button id="typeCost" onclick="setPayoffType(false)">Costos</button>
+        </div>
+      </div>
+
+      <div class="matrix-scroll"><table class="dec-table" id="decTable"></table></div>
+      <p id="probWarn" class="warn-box" style="display:none;">⚠️ Las probabilidades de los estados no suman 1.</p>
+
+      <div class="alpha-row">
+        <label style="color: var(--text2); font-weight:700; font-size:.85rem;">Índice de optimismo Hurwicz (α):</label>
+        <input type="range" id="alphaSlider" min="0" max="1" step="0.05" value="0.5" oninput="onAlphaChange()">
+        <span class="alpha-val" id="alphaVal">α = 0.50</span>
+      </div>
+
+      <div style="text-align:center; margin: 1rem 0;">
+        <button class="btn-primary" onclick="calculateCriteria()">🧮 Calcular Criterios</button>
+      </div>
+
+      <div id="resultsArea" class="results-area">
+        <div>
+          <h3>Resultados por alternativa</h3>
+          <div class="matrix-scroll"><table class="res-table" id="resTable"></table></div>
+        </div>
+        <div class="winners-row" id="winnersRow"></div>
+        <div>
+          <h3>Matriz de arrepentimiento (Savage)</h3>
+          <div class="matrix-scroll"><table class="res-table" id="regretTable"></table></div>
+        </div>
+        <div class="chart-box"><canvas id="critChart"></canvas></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══════════════════════ MÓDULO 2: ÁRBOL DE DECISIÓN ══════════════════════ -->
+  <div id="mod2" class="mod-content">
+
+    <div class="card">
+      <h2>🌳 Árbol de Decisión (Roll-Back)</h2>
+      <p>Caso: una empresa mueblera evalúa ir a una feria en septiembre (costo fijo de instalación si va). El clima es incierto; si hace buen tiempo, hay que decidir el tamaño del pedido antes de conocer la demanda real. Editá los valores y probabilidades, y resolvé el árbol de atrás hacia adelante.</p>
+      <p style="font-size:.8rem; color: var(--text3);">⬜ = vértice de decisión &nbsp;·&nbsp; ⚪ = vértice de azar &nbsp;·&nbsp; recuadros finales = hojas (resultado)</p>
+
+      <div style="text-align:center; margin: .8rem 0 1.2rem;">
+        <button class="btn-primary" onclick="solveTree()">▶ Resolver Árbol (Roll-Back)</button>
+      </div>
+
+      <div class="tree-wrap">
+        <div class="tree-level">
+
+          <!-- Rama: No ir -->
+          <div class="branch" id="branchNoIr">
+            <div class="branch-label">D1 · No ir a la feria</div>
+            <div class="branch-line"></div>
+            <div class="node leaf">Resultado<br><input type="number" class="leaf-input" id="leafNoIr" value="0"></div>
+          </div>
+
+          <!-- Rama: Ir -->
+          <div class="branch" id="branchIr">
+            <div class="branch-label">D1 · Ir a la feria</div>
+            <div class="branch-line"></div>
+            <div class="node decision">D1<br><span id="valD1">?</span></div>
+
+            <div class="tree-sub">
+              <div class="tree-level">
+
+                <!-- Mal tiempo -->
+                <div class="branch" id="branchMal">
+                  <div class="branch-label">Mal tiempo<br>p=<input type="number" class="prob-input" id="pMal" value="0.3" min="0" max="1" step="0.05" oninput="syncBuenTiempo()"></div>
+                  <div class="branch-line"></div>
+                  <div class="node leaf">No se instala<br><input type="number" class="leaf-input" id="leafMal" value="-40000"></div>
+                </div>
+
+                <!-- Buen tiempo -->
+                <div class="branch" id="branchBuen">
+                  <div class="branch-label">Buen tiempo<br>p=<span id="pBuenLabel">0.7</span></div>
+                  <div class="branch-line"></div>
+                  <div class="node chance">A1<br><span id="valA1">?</span></div>
+
+                  <div class="tree-sub">
+                    <div class="tree-level">
+
+                      <!-- Pedido Grande -->
+                      <div class="branch" id="branchGrande">
+                        <div class="branch-label">D2 · Pedido Grande</div>
+                        <div class="branch-line"></div>
+                        <div class="node decision">D2<br><span id="valGrande">?</span></div>
+
+                        <div class="tree-sub">
+                          <div class="tree-level">
+                            <div class="branch">
+                              <div class="branch-label">Demanda Alta<br>p=<input type="number" class="prob-input" id="pAlta" value="0.3" min="0" max="1" step="0.05"></div>
+                              <div class="branch-line"></div>
+                              <div class="node leaf">$<input type="number" class="leaf-input" id="leafGA" value="140000"></div>
+                            </div>
+                            <div class="branch">
+                              <div class="branch-label">Demanda Media<br>p=<input type="number" class="prob-input" id="pMedia" value="0.5" min="0" max="1" step="0.05"></div>
+                              <div class="branch-line"></div>
+                              <div class="node leaf">$<input type="number" class="leaf-input" id="leafGM" value="50000"></div>
+                            </div>
+                            <div class="branch">
+                              <div class="branch-label">Demanda Baja<br>p=<input type="number" class="prob-input" id="pBaja" value="0.2" min="0" max="1" step="0.05"></div>
+                              <div class="branch-line"></div>
+                              <div class="node leaf">$<input type="number" class="leaf-input" id="leafGB" value="-40000"></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Pedido Pequeño -->
+                      <div class="branch" id="branchPequeno">
+                        <div class="branch-label">D2 · Pedido Pequeño</div>
+                        <div class="branch-line"></div>
+                        <div class="node decision">D2<br><span id="valPequeno">?</span></div>
+
+                        <div class="tree-sub">
+                          <div class="tree-level">
+                            <div class="branch">
+                              <div class="branch-label">Demanda Alta<br>p=<span class="pAlta2">0.3</span></div>
+                              <div class="branch-line"></div>
+                              <div class="node leaf">$<input type="number" class="leaf-input" id="leafPA" value="65000"></div>
+                            </div>
+                            <div class="branch">
+                              <div class="branch-label">Demanda Media<br>p=<span class="pMedia2">0.5</span></div>
+                              <div class="branch-line"></div>
+                              <div class="node leaf">$<input type="number" class="leaf-input" id="leafPM" value="95000"></div>
+                            </div>
+                            <div class="branch">
+                              <div class="branch-label">Demanda Baja<br>p=<span class="pBaja2">0.2</span></div>
+                              <div class="branch-line"></div>
+                              <div class="node leaf">$<input type="number" class="leaf-input" id="leafPB" value="-10000"></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <p id="treeResult" style="text-align:center; margin-top:1.5rem; font-weight:700; color:#6ee7b7; min-height:1.4em;"></p>
+      <p style="font-size:.78rem; color: var(--text3); text-align:center;">Nota: el valor de "Demanda Media / Pedido Pequeño" (95.000) tiene calidad de OCR ambigua en el apunte original — verificalo con la profesora si necesitás el valor exacto de cátedra.</p>
+    </div>
+
+  </div>
+
+</div>
+
+<footer>
+  <strong>Investigación Operativa · UTN · Comisión Sábados 2026</strong><br>
+  Herramientas educativas de acceso libre para uso en clase y estudio individual.
+</footer>
+
+<script src="menu.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════════════
+// NAVEGACIÓN DE MÓDULOS
+// ═══════════════════════════════════════════════════════════════
+function switchModule(id, btn) {
+  document.querySelectorAll('.mod-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.mod-tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MÓDULO 0 · TEORÍA
+// ═══════════════════════════════════════════════════════════════
+const CLASSIFICATIONS = [
+  { front: 'N° de Jugadores', back: 'Bipersonales / N-personales' },
+  { front: 'N° de Estrategias', back: 'Juegos finitos / infinitos' },
+  { front: 'Evolución en el tiempo', back: 'Estáticos / Dinámicos (ganancia de información)' },
+  { front: 'Intercambio de información', back: 'Cooperativos (colaboran) / No cooperativos' },
+  { front: 'Variación de riqueza', back: 'Suma constante (caso: suma cero) / Suma no constante' },
+  { front: 'Información disponible', back: 'Completa (se conocen las ganancias de todos) / Incompleta' },
+  { front: 'Información adquirida', back: 'Perfecta (se conoce toda la historia) / Imperfecta' },
+];
+function buildFlipGrid() {
+  const grid = document.getElementById('flipGrid');
+  grid.innerHTML = CLASSIFICATIONS.map((c,i) => `
+    <div class="flip-card" onclick="this.classList.toggle('flipped')">
+      <div class="flip-inner">
+        <div class="flip-face flip-front">${c.front}</div>
+        <div class="flip-face flip-back">${c.back}</div>
+      </div>
+    </div>`).join('');
+}
+buildFlipGrid();
+
+function explainCell(el, label) {
+  document.getElementById('nashExplain').textContent = 'Resultado seleccionado: ' + label;
+}
+function revealNash() {
+  document.getElementById('nashCell').classList.add('nash');
+  document.getElementById('nashExplain').textContent = 'Equilibrio de Nash: (No Coopera, No Coopera) = (-6,-6). Ninguno puede mejorar cambiando de estrategia solo.';
+}
+
+const CONTEXT_DETAILS = [
+  'Se conocen los estados de la naturaleza y se sabe con certeza a cuál se llega al elegir determinada alternativa. No hace falta ningún criterio especial: se elige directamente la mejor opción para ese estado conocido.',
+  'Se conocen los estados de la naturaleza y sus probabilidades de ocurrencia $p_j$. Se usa el Criterio del Valor Esperado (VME), el criterio de lo más probable o el del escenario medio.',
+  'Se conocen los estados posibles pero NO sus probabilidades. Se aplican los 4 criterios de incertidumbre: Wald (pesimista), Optimista (Maxi-Max), Hurwicz y Savage (arrepentimiento) — ver Módulo 1.',
+];
+function setContext(btn, idx) {
+  document.querySelectorAll('.context-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('contextDetail').textContent = CONTEXT_DETAILS[idx];
+}
+setContext(document.querySelector('.context-btn'), 0);
+
+// ═══════════════════════════════════════════════════════════════
+// MÓDULO 1 · CALCULADORA DE CRITERIOS DE DECISIÓN
+// ═══════════════════════════════════════════════════════════════
+let gameState = {
+  rowLabels: [], colLabels: [], probs: [], data: [], isGain: true
+};
+
+function loadExample() {
+  gameState.rowLabels = ['Pedido 6','Pedido 7','Pedido 8','Pedido 9','Pedido 10'];
+  gameState.colLabels = ['Demanda 6','Demanda 7','Demanda 8','Demanda 9','Demanda 10'];
+  gameState.probs = [0.2,0.2,0.2,0.2,0.2];
+  gameState.data = [
+    [30,30,30,30,30],
+    [10,35,35,35,35],
+    [-10,15,40,40,40],
+    [-30,-5,20,45,45],
+    [-50,-25,0,50,50]
+  ];
+  gameState.isGain = true;
+  document.getElementById('typeGain').classList.add('active');
+  document.getElementById('typeCost').classList.remove('active');
+  renderMatrixEditor();
+  calculateCriteria();
+}
+
+function syncFromDOM() {
+  const rows = gameState.rowLabels.length, cols = gameState.colLabels.length;
+  for (let i=0;i<rows;i++) {
+    gameState.rowLabels[i] = document.getElementById('rowlabel-'+i).value || ('Alt. '+(i+1));
+    for (let j=0;j<cols;j++) {
+      gameState.data[i][j] = parseFloat(document.getElementById('cell-'+i+'-'+j).value) || 0;
+    }
+  }
+  for (let j=0;j<cols;j++) {
+    gameState.colLabels[j] = document.getElementById('collabel-'+j).value || ('Estado '+(j+1));
+    gameState.probs[j] = parseFloat(document.getElementById('prob-'+j).value) || 0;
+  }
+}
+
+function renderMatrixEditor() {
+  const rows = gameState.rowLabels.length, cols = gameState.colLabels.length;
+  let html = '<tr><th></th>';
+  for (let j=0;j<cols;j++) {
+    html += `<th><input type="text" id="collabel-${j}" value="${gameState.colLabels[j]}"><br><button class="col-del-btn" onclick="removeCol(${j})" title="Eliminar estado">×</button></th>`;
+  }
+  html += '<th></th></tr>';
+
+  html += '<tr class="prob-row"><th>Prob. p<sub>j</sub></th>';
+  for (let j=0;j<cols;j++) {
+    html += `<td><input type="number" id="prob-${j}" value="${gameState.probs[j]}" min="0" max="1" step="0.05"></td>`;
+  }
+  html += '<td></td></tr>';
+
+  for (let i=0;i<rows;i++) {
+    html += `<tr><th><input type="text" id="rowlabel-${i}" value="${gameState.rowLabels[i]}"></th>`;
+    for (let j=0;j<cols;j++) {
+      html += `<td><input type="number" id="cell-${i}-${j}" value="${gameState.data[i][j]}"></td>`;
+    }
+    html += `<td><button class="row-del-btn" onclick="removeRow(${i})" title="Eliminar alternativa">×</button></td></tr>`;
+  }
+  document.getElementById('decTable').innerHTML = html;
+}
+
+function addRow() {
+  syncFromDOM();
+  const cols = gameState.colLabels.length;
+  gameState.rowLabels.push('Alt. ' + (gameState.rowLabels.length+1));
+  gameState.data.push(new Array(cols).fill(0));
+  renderMatrixEditor();
+}
+function removeRow(i) {
+  syncFromDOM();
+  if (gameState.rowLabels.length <= 1) return;
+  gameState.rowLabels.splice(i,1);
+  gameState.data.splice(i,1);
+  renderMatrixEditor();
+}
+function addCol() {
+  syncFromDOM();
+  gameState.colLabels.push('Estado ' + (gameState.colLabels.length+1));
+  gameState.probs.push(0);
+  gameState.data.forEach(row => row.push(0));
+  renderMatrixEditor();
+}
+function removeCol(j) {
+  syncFromDOM();
+  if (gameState.colLabels.length <= 1) return;
+  gameState.colLabels.splice(j,1);
+  gameState.probs.splice(j,1);
+  gameState.data.forEach(row => row.splice(j,1));
+  renderMatrixEditor();
+}
+function setPayoffType(isGain) {
+  gameState.isGain = isGain;
+  document.getElementById('typeGain').classList.toggle('active', isGain);
+  document.getElementById('typeCost').classList.toggle('active', !isGain);
+}
+function onAlphaChange() {
+  const a = parseFloat(document.getElementById('alphaSlider').value);
+  document.getElementById('alphaVal').textContent = 'α = ' + a.toFixed(2);
+  if (document.getElementById('resultsArea').classList.contains('show')) calculateCriteria();
+}
+
+function fmt(n) {
+  if (!isFinite(n)) return '—';
+  const r = Math.round(n*100)/100;
+  return r.toLocaleString('es-AR', {maximumFractionDigits:2});
+}
+
+let critChartInstance = null;
+
+function calculateCriteria() {
+  syncFromDOM();
+  const { rowLabels, colLabels, probs, data, isGain } = gameState;
+  const n = rowLabels.length, m = colLabels.length;
+  const alpha = parseFloat(document.getElementById('alphaSlider').value);
+
+  const probSum = probs.reduce((a,b)=>a+b,0);
+  document.getElementById('probWarn').style.display = Math.abs(probSum-1) > 0.01 ? 'block' : 'none';
+
+  // VME
+  const vme = data.map(row => row.reduce((s,x,j) => s + x*probs[j], 0));
+  // Wald / Optimista / Hurwicz por fila
+  const rowMin = data.map(row => Math.min(...row));
+  const rowMax = data.map(row => Math.max(...row));
+  const wald = isGain ? rowMin.slice() : rowMax.slice();
+  const optimista = isGain ? rowMax.slice() : rowMin.slice();
+  const hurwicz = data.map((row,i) => isGain
+    ? alpha*rowMax[i] + (1-alpha)*rowMin[i]
+    : alpha*rowMin[i] + (1-alpha)*rowMax[i]);
+
+  // Savage: matriz de arrepentimiento
+  const colBest = [];
+  for (let j=0;j<m;j++) {
+    let vals = data.map(row => row[j]);
+    colBest[j] = isGain ? Math.max(...vals) : Math.min(...vals);
+  }
+  const regret = data.map(row => row.map((x,j) => isGain ? (colBest[j]-x) : (x-colBest[j])));
+  const savage = regret.map(row => Math.max(...row));
+
+  // Ganadores
+  const bestIdxOf = (arr, wantMax) => {
+    const target = wantMax ? Math.max(...arr) : Math.min(...arr);
+    return arr.map((v,i)=> Math.abs(v-target) < 1e-6 ? i : -1).filter(i=>i>=0);
+  };
+  const winVME = bestIdxOf(vme, isGain);
+  const winWald = bestIdxOf(wald, isGain);
+  const winOpt = bestIdxOf(optimista, isGain);
+  const winHur = bestIdxOf(hurwicz, isGain);
+  const winSav = bestIdxOf(savage, false); // savage siempre se minimiza
+
+  // Render tabla resultados
+  let html = '<tr><th>Alternativa</th><th>VME</th><th>Wald</th><th>Optimista</th><th>Hurwicz (α='+alpha.toFixed(2)+')</th><th>Savage (Regret Máx.)</th></tr>';
+  for (let i=0;i<n;i++) {
+    html += '<tr>';
+    html += `<td class="alt-name">${rowLabels[i]}</td>`;
+    html += `<td class="${winVME.includes(i)?'best':''}">${fmt(vme[i])}</td>`;
+    html += `<td class="${winWald.includes(i)?'best':''}">${fmt(wald[i])}</td>`;
+    html += `<td class="${winOpt.includes(i)?'best':''}">${fmt(optimista[i])}</td>`;
+    html += `<td class="${winHur.includes(i)?'best':''}">${fmt(hurwicz[i])}</td>`;
+    html += `<td class="${winSav.includes(i)?'best':''}">${fmt(savage[i])}</td>`;
+    html += '</tr>';
+  }
+  document.getElementById('resTable').innerHTML = html;
+
+  // Winners chips
+  const chipsHTML = [
+    ['VME', winVME], ['Wald', winWald], ['Optimista', winOpt], ['Hurwicz', winHur], ['Savage', winSav]
+  ].map(([label, idxs]) => `<div class="winner-chip">${label}: <b>${idxs.map(i=>rowLabels[i]).join(' / ')}</b></div>`).join('');
+  document.getElementById('winnersRow').innerHTML = chipsHTML;
+
+  // Regret table
+  let rhtml = '<tr><th>Alternativa</th>' + colLabels.map(c=>`<th>${c}</th>`).join('') + '<th>Máx.</th></tr>';
+  for (let i=0;i<n;i++) {
+    rhtml += `<tr><td class="alt-name">${rowLabels[i]}</td>`;
+    regret[i].forEach(r => rhtml += `<td>${fmt(r)}</td>`);
+    rhtml += `<td class="${winSav.includes(i)?'best':''}">${fmt(savage[i])}</td></tr>`;
+  }
+  document.getElementById('regretTable').innerHTML = rhtml;
+
+  document.getElementById('resultsArea').classList.add('show');
+
+  // Chart
+  const ctx = document.getElementById('critChart').getContext('2d');
+  if (critChartInstance) critChartInstance.destroy();
+  critChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: rowLabels,
+      datasets: [
+        { label: 'VME', data: vme, backgroundColor: '#3b82f6' },
+        { label: 'Wald', data: wald, backgroundColor: '#10b981' },
+        { label: 'Optimista', data: optimista, backgroundColor: '#f59e0b' },
+        { label: 'Hurwicz', data: hurwicz, backgroundColor: '#a855f7' },
+        { label: 'Savage (regret)', data: savage, backgroundColor: '#f43f5e' },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#94a3b8' } } },
+      scales: {
+        x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,.1)' } },
+        y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,.1)' } }
+      }
+    }
+  });
+}
+
+loadExample();
+
+// ═══════════════════════════════════════════════════════════════
+// MÓDULO 2 · ÁRBOL DE DECISIÓN
+// ═══════════════════════════════════════════════════════════════
+function syncBuenTiempo() {
+  const pMal = parseFloat(document.getElementById('pMal').value) || 0;
+  document.getElementById('pBuenLabel').textContent = (1-pMal).toFixed(2);
+}
+
+function val(id) { return parseFloat(document.getElementById(id).value) || 0; }
+
+function solveTree() {
+  const pAlta = val('pAlta'), pMedia = val('pMedia'), pBaja = val('pBaja');
+  const pMal = val('pMal'), pBuen = 1 - pMal;
+  document.getElementById('pBuenLabel').textContent = pBuen.toFixed(2);
+  document.querySelectorAll('.pAlta2').forEach(el=>el.textContent = pAlta.toFixed(2));
+  document.querySelectorAll('.pMedia2').forEach(el=>el.textContent = pMedia.toFixed(2));
+  document.querySelectorAll('.pBaja2').forEach(el=>el.textContent = pBaja.toFixed(2));
+
+  const leafGA = val('leafGA'), leafGM = val('leafGM'), leafGB = val('leafGB');
+  const leafPA = val('leafPA'), leafPM = val('leafPM'), leafPB = val('leafPB');
+  const leafMal = val('leafMal'), leafNoIr = val('leafNoIr');
+
+  const valGrande = pAlta*leafGA + pMedia*leafGM + pBaja*leafGB;
+  const valPequeno = pAlta*leafPA + pMedia*leafPM + pBaja*leafPB;
+  document.getElementById('valGrande').textContent = fmt(valGrande);
+  document.getElementById('valPequeno').textContent = fmt(valPequeno);
+
+  const d2Grande = valGrande >= valPequeno;
+  document.getElementById('branchGrande').classList.toggle('discarded', !d2Grande);
+  document.getElementById('branchPequeno').classList.toggle('discarded', d2Grande);
+  document.getElementById('valGrande').parentElement.classList.toggle('chosen', d2Grande);
+  document.getElementById('valPequeno').parentElement.classList.toggle('chosen', !d2Grande);
+
+  const valD2 = Math.max(valGrande, valPequeno);
+  const valA1 = pMal*leafMal + pBuen*valD2;
+  document.getElementById('valA1').textContent = fmt(valA1);
+
+  const irMejor = valA1 >= leafNoIr;
+  document.getElementById('branchIr').classList.toggle('discarded', !irMejor);
+  document.getElementById('branchNoIr').classList.toggle('discarded', irMejor);
+  document.getElementById('valD1').textContent = fmt(valA1);
+  document.getElementById('valD1').parentElement.classList.toggle('chosen', irMejor);
+
+  const valRaiz = Math.max(valA1, leafNoIr);
+  document.getElementById('treeResult').textContent =
+    `Decisión óptima: ${irMejor ? 'IR a la feria, con pedido ' + (d2Grande ? 'GRANDE' : 'PEQUEÑO') : 'NO IR a la feria'} → Valor esperado = $${fmt(valRaiz)}`;
+}
+solveTree();
+
+// ═══════════════════════════════════════════════════════════════
+// KATEX
+// ═══════════════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  if (typeof renderMathInElement !== 'undefined') {
+    renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ],
+      throwOnError: false
+    });
+  }
+});
+</script>
+</body>
+</html>

@@ -18,6 +18,8 @@ Each unit has a distinct primary accent color:
 - **Unit 3 (Gestión de Proyectos - PERT/CPM):** Amber (`#f59e0b`, `#fbbf24`)
 - **Unit 4 (Simulación de Montecarlo):** Emerald (`#10b981`, `#34d399`)
 - **Unit 5 (Modelos de Inventarios):** Fuchsia Pink (`#ec4899`, `#f472b6`)
+- **Unit 6 (Programación Lineal Continua):** Cyan (`#06b6d4`, `#67e8f9`)
+- **Unit 7 (Teoría de Juegos y Decisiones):** Rose (`#f43f5e`, `#fda4af`)
 
 ## 2. Architecture & Design Tokens
 

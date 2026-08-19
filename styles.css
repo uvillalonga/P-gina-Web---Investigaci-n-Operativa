@@ -110,6 +110,8 @@ body {
 .nav-logo .dot.u3 { background: var(--purple-accent, #a855f7); box-shadow: 0 0 8px var(--purple-accent, #a855f7); }
 .nav-logo .dot.u4 { background: linear-gradient(135deg, var(--amber), var(--rose)); box-shadow: 0 0 8px var(--amber); }
 .nav-logo .dot.u5 { background: linear-gradient(135deg, #f472b6, #ec4899); box-shadow: 0 0 8px #ec4899; }
+.nav-logo .dot.u6 { background: linear-gradient(135deg, #22d3ee, #06b6d4); box-shadow: 0 0 8px #06b6d4; }
+.nav-logo .dot.u7 { background: linear-gradient(135deg, #fb7185, #f43f5e); box-shadow: 0 0 8px #f43f5e; }
 
 .nav-unit {
   font-size: .72rem;
@@ -125,6 +127,8 @@ body {
 .nav-unit.u3 { color: var(--purple-accent, #a855f7); }
 .nav-unit.u4 { color: var(--amber); }
 .nav-unit.u5 { color: #ec4899; }
+.nav-unit.u6 { color: #06b6d4; }
+.nav-unit.u7 { color: #f43f5e; }
 
 /* ── DROPDOWN DE SELECCIÓN DE UNIDAD ── */
 .unit-select-wrapper {
@@ -163,6 +167,8 @@ body {
 .unit-select.u3 { border-color: rgba(168,85,247,.4); color: #c084fc; }
 .unit-select.u4 { border-color: rgba(245,158,11,.4); color: #fef08a; }
 .unit-select.u5 { border-color: rgba(236,72,153,.4); color: #f472b6; }
+.unit-select.u6 { border-color: rgba(6,182,212,.4); color: #67e8f9; }
+.unit-select.u7 { border-color: rgba(244,63,94,.4); color: #fda4af; }
 
 .unit-select option {
   background: #0b0f19;
@@ -191,6 +197,8 @@ a.nav-link.active.u2 { border-bottom-color: var(--emerald); }
 a.nav-link.active.u3 { border-bottom-color: var(--purple-accent, #a855f7); }
 a.nav-link.active.u4 { border-bottom-color: var(--amber); }
 a.nav-link.active.u5 { border-bottom-color: #ec4899; }
+a.nav-link.active.u6 { border-bottom-color: #06b6d4; }
+a.nav-link.active.u7 { border-bottom-color: #f43f5e; }
 
 .nav-sep {
   width: 1px;
@@ -249,6 +257,20 @@ a.nav-link.active.u5 { border-bottom-color: #ec4899; }
 /* Unit 5 specific gradient (Fuchsia Pink) */
 .page-header.u5 h1 {
   background: linear-gradient(135deg, #f472b6 0%, #ec4899 50%, #be185d 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Unit 6 specific gradient (Cyan) */
+.page-header.u6 h1 {
+  background: linear-gradient(135deg, #67e8f9 0%, #06b6d4 50%, #0e7490 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Unit 7 specific gradient (Rose) */
+.page-header.u7 h1 {
+  background: linear-gradient(135deg, #fda4af 0%, #f43f5e 50%, #9f1239 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }

@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unidad 6 · Programación Lineal Continua — Portal IO · UTN</title>
+<meta name="description" content="Método gráfico interactivo y resolvedor Simplex paso a paso (Gran M) con dualidad automática y detección de casos especiales · UTN Investigación Operativa.">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+/* ── EXCLUSIVE STYLES FOR UNIDAD 6 · PROGRAMACIÓN LINEAL CONTINUA ── */
+
+.mod-tab-bar { display:flex; gap:.75rem; justify-content:center; margin:1.5rem 0 2rem; flex-wrap:wrap; }
+.mod-tab-btn {
+  background: var(--surface); border: 1px solid var(--border-med); color: var(--text2);
+  padding: .75rem 1.25rem; border-radius: 12px; font-weight: 700; font-size: .88rem;
+  cursor: pointer; transition: all .25s ease; display:flex; align-items:center; gap:8px;
+  font-family: 'Inter', sans-serif;
+}
+.mod-tab-btn:hover { color: var(--text); border-color: rgba(6,182,212,.4); transform: translateY(-2px); }
+.mod-tab-btn.active { background: rgba(6,182,212,.15); border-color: #06b6d4; color: #67e8f9; box-shadow: 0 4px 20px rgba(6,182,212,.2); }
+.mod-content { display:none; animation: fadeIn .4s ease; }
+.mod-content.active { display:block; }
+
+.card {
+  background: var(--surface); border: 1px solid var(--border-med); border-radius: var(--radius);
+  padding: 1.75rem; margin-bottom: 1.5rem;
+}
+.card h2 { font-size: 1.25rem; font-weight: 800; margin-bottom: .75rem; color: var(--text); display:flex; align-items:center; gap:8px; }
+.card h3 { font-size: 1.02rem; font-weight: 700; margin: 1.1rem 0 .5rem; color: var(--text); }
+.card p { color: var(--text2); line-height: 1.7; font-size: .93rem; margin-bottom: .6rem; }
+.card p:last-child { margin-bottom: 0; }
+
+.vocab-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(230px,1fr)); gap: .8rem; margin-top: 1rem; }
+.vocab-item { background: rgba(15,23,42,.5); border:1px solid var(--border-med); border-radius:10px; padding: .8rem 1rem; }
+.vocab-item b { color:#67e8f9; display:block; font-size:.85rem; margin-bottom:.2rem; }
+.vocab-item span { color: var(--text2); font-size:.78rem; line-height:1.5; }
+
+/* Formulario config problema (compartido graf. y simplex) */
+.prob-config { display:flex; gap:1.5rem; flex-wrap:wrap; margin-bottom: 1.2rem; align-items:flex-end; }
+.stepper { display:flex; align-items:center; gap:.5rem; }
+.stepper button { width:30px; height:30px; border-radius:6px; border:1px solid var(--border-med); background: rgba(15,23,42,.6); color:var(--text); cursor:pointer; font-weight:800; }
+.stepper span { font-family:'Fira Code',monospace; font-weight:700; min-width:20px; text-align:center; }
+.sense-toggle { display:inline-flex; border: 1px solid var(--border-med); border-radius: 8px; overflow:hidden; }
+.sense-toggle button { background: transparent; border:none; color: var(--text2); padding:.55rem 1rem; cursor:pointer; font-weight:700; font-size:.82rem; font-family:'Inter',sans-serif; }
+.sense-toggle button.active { background: rgba(6,182,212,.18); color:#67e8f9; }
+
+.obj-row { display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; margin-bottom:1rem; font-family:'Fira Code',monospace; }
+.coef-input { width: 70px; background: rgba(15,23,42,.8); border:1px solid var(--border-med); color: var(--text); padding:.45rem; border-radius:6px; font-family:'Fira Code',monospace; text-align:center; font-size:.88rem; }
+.cons-row { display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; margin-bottom:.7rem; font-family:'Fira Code',monospace; }
+.sign-select { background: rgba(15,23,42,.8); border:1px solid var(--border-med); color:#67e8f9; padding:.45rem .3rem; border-radius:6px; font-weight:800; font-size:1rem; }
+
+/* GRAFICO */
+.graph-wrap { display:flex; gap:1.5rem; flex-wrap:wrap; }
+.graph-canvas-box { flex: 2; min-width: 320px; height: 420px; background: rgba(15,23,42,.4); border-radius: var(--radius); border:1px solid var(--border-med); padding:1rem; }
+.vertex-panel { flex: 1; min-width: 240px; }
+table.vtx-table { width:100%; border-collapse:collapse; font-size:.82rem; }
+table.vtx-table th, table.vtx-table td { border:1px solid var(--border-med); padding:.5rem; text-align:center; font-family:'Fira Code',monospace; }
+table.vtx-table th { background: rgba(255,255,255,.03); color: var(--text2); font-family:'Inter',sans-serif; }
+table.vtx-table tr.optimal td { background: rgba(16,185,129,.16); color:#6ee7b7; font-weight:800; }
+
+/* TABLEAU SIMPLEX */
+.tableau-wrap { overflow-x:auto; margin-bottom: 1.6rem; border:1px solid var(--border-med); border-radius: var(--radius); }
+.tableau-caption { padding: .7rem 1rem; background: rgba(6,182,212,.08); font-weight:700; color:#67e8f9; font-size:.88rem; border-bottom:1px solid var(--border-med); }
+table.tableau { border-collapse:collapse; width:100%; min-width: 640px; font-family:'Fira Code',monospace; font-size:.82rem; }
+table.tableau th, table.tableau td { border:1px solid var(--border); padding:.5rem .6rem; text-align:center; white-space:nowrap; }
+table.tableau th { background: rgba(255,255,255,.03); color: var(--text2); font-size:.72rem; }
+table.tableau td.pivot-cell { background: rgba(244,63,94,.28); color:#fda4af; font-weight:800; outline: 2px solid #f43f5e; }
+table.tableau tr.z-row td { background: rgba(6,182,212,.06); font-weight:700; color: var(--text); }
+table.tableau td.basic-var { font-weight:700; color:#67e8f9; font-family:'Inter',sans-serif; background: rgba(255,255,255,.02); }
+
+.status-banner { padding: 1rem 1.2rem; border-radius: var(--radius); font-weight:700; margin: 1rem 0; font-size: .92rem; }
+.status-optimal { background: rgba(16,185,129,.14); border:1px solid rgba(16,185,129,.35); color:#6ee7b7; }
+.status-warn { background: rgba(245,158,11,.14); border:1px solid rgba(245,158,11,.35); color:#fbbf24; }
+.status-error { background: rgba(244,63,94,.14); border:1px solid rgba(244,63,94,.35); color:#fda4af; }
+
+.solution-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(140px,1fr)); gap: .8rem; margin-top: .8rem; }
+.solution-tile { background: rgba(15,23,42,.5); border:1px solid var(--border-med); border-radius:10px; padding:.8rem; text-align:center; }
+.solution-tile .lbl { font-size:.72rem; color: var(--text2); text-transform:uppercase; letter-spacing:.4px; }
+.solution-tile .val { font-family:'Fira Code',monospace; font-weight:800; font-size:1.15rem; color:#67e8f9; margin-top:.3rem; }
+
+.special-table { width:100%; border-collapse:collapse; margin-top:1rem; font-size:.85rem; }
+.special-table th, .special-table td { border:1px solid var(--border-med); padding:.7rem; text-align:left; }
+.special-table th { background: rgba(255,255,255,.03); color: var(--text2); }
+.special-table td:first-child { font-weight:700; color:#67e8f9; white-space:nowrap; }
+
+.dual-box { background: rgba(15,23,42,.5); border:1px solid var(--border-med); border-radius: var(--radius); padding:1.2rem; margin-top:1rem; font-family:'Fira Code',monospace; font-size:.92rem; line-height:2; }
+</style>
+</head>
+<body>
+
+<div id="nav-container"></div>
+
+<section class="page-header u6">
+  <div class="case-badge">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 3v18h18"/><path d="M18.7 8 12 14.7 8.7 11.3 3 17"/></svg>
+    Unidad 6 · Programación Lineal Continua
+  </div>
+  <h1>Simplex & Método Gráfico</h1>
+  <p>Modelado, resolución gráfica de 2 variables, método Simplex paso a paso con Gran M, dualidad automática y detección de casos especiales.</p>
+</section>
+
+<div class="content" style="max-width: 1150px; margin: 0 auto; padding: 2rem 5%;">
+
+  <div class="mod-tab-bar">
+    <button class="mod-tab-btn active" onclick="switchModule('mod0', this)"><span>📖</span> Fundamentos</button>
+    <button class="mod-tab-btn" onclick="switchModule('mod1', this)"><span>📈</span> Módulo 1: Método Gráfico</button>
+    <button class="mod-tab-btn" onclick="switchModule('mod2', this)"><span>🧮</span> Módulo 2: Simplex</button>
+    <button class="mod-tab-btn" onclick="switchModule('mod3', this)"><span>🔁</span> Módulo 3: Dualidad</button>
+    <button class="mod-tab-btn" onclick="switchModule('mod4', this)"><span>⚠️</span> Módulo 4: Casos Especiales</button>
+  </div>
+
+  <!-- ══════════════════════ MÓDULO 0: TEORÍA ══════════════════════ -->
+  <div id="mod0" class="mod-content active">
+    <div class="card">
+      <h2>📐 Formulación del Modelo</h2>
+      <p>La planificación matemática posee un objetivo (el <strong>Funcional</strong>) a optimizar, sujeto a un conjunto de <strong>condiciones de vínculo</strong> (restricciones) definidas por las variables de decisión.</p>
+      <div class="equations">
+        <div class="eq-line"><strong>Forma canónica:</strong><br>$$z=\sum_j c_j x_j \to \max \quad \text{s.a.} \quad \sum_j a_{ij}x_j \le b_i \ \ \forall i, \quad x_j\ge0$$</div>
+        <div class="eq-line"><strong>Forma estándar (con holgura λ):</strong><br>$$\sum_j a_{ij}x_j+\lambda_i=b_i$$</div>
+        <div class="eq-line"><strong>Forma matricial:</strong><br>$$Z=C\cdot X \to \max \qquad A\cdot X = B$$</div>
+      </div>
+      <h3>Vocabulario exacto de cátedra</h3>
+      <div class="vocab-grid">
+        <div class="vocab-item"><b>x_j — Variables de decisión</b><span>Las "variables duras" del problema.</span></div>
+        <div class="vocab-item"><b>λ — Holgura / Sobrante</b><span>Variable slack para restricciones ≤.</span></div>
+        <div class="vocab-item"><b>μ — Excedente / Artificial</b><span>Para restricciones ≥ o =. Se penaliza con M (Gran M).</span></div>
+        <div class="vocab-item"><b>c_j — Coef. del funcional</b><span>Aporte de cada variable al objetivo.</span></div>
+        <div class="vocab-item"><b>a_ij — Coef. tecnológicos</b><span>Consumo de recurso i por unidad de x_j.</span></div>
+        <div class="vocab-item"><b>b_i — Términos independientes</b><span>Disponibilidad del recurso i.</span></div>
+        <div class="vocab-item"><b>Costo de Oportunidad</b><span>z_j-c_j de una variable no básica dura.</span></div>
+        <div class="vocab-item"><b>Valor Marginal</b><span>z_j-c_j de una λ no básica: cuánto pagaría por 1 unidad más del recurso.</span></div>
+        <div class="vocab-item"><b>Precio Sombra</b><span>Mismo valor que el marginal, visto desde el dual (vender el recurso).</span></div>
+        <div class="vocab-item"><b>Θ (Theta)</b><span>Razón b_i/a_ij — criterio de salida de variable.</span></div>
+        <div class="vocab-item"><b>TIP / TOP</b><span>Tabla Inicial / Óptima del Primal.</span></div>
+        <div class="vocab-item"><b>Base Degradada</b><span>Variable básica con valor 0 (degeneración).</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>🧭 Método Gráfico — pasos</h2>
+      <p>1. Graficar cada restricción como recta (cortes con los ejes). &nbsp; 2. La región factible es la intersección de los semiplanos + no negatividad. &nbsp; 3. Trazar la recta del funcional por el origen y desplazarla paralelamente: alejarse del origen maximiza, acercarse minimiza. &nbsp; 4. El óptimo está en un <strong>vértice</strong> del poliedro.</p>
+    </div>
+
+    <div class="card">
+      <h2>🧮 Método Simplex — criterio de parada</h2>
+      <div class="equations">
+        <div class="eq-line">Columna pivote (entra): MAX → $z_j-c_j$ más negativo &nbsp;|&nbsp; MIN → $z_j-c_j$ más positivo.</div>
+        <div class="eq-line">Fila pivote (sale): menor $\Theta_i = b_i/a_{ij}$ con $a_{ij}>0$.</div>
+        <div class="eq-line">Parada: MAX → todos $z_j-c_j\ge0$ &nbsp;|&nbsp; MIN → todos $z_j-c_j\le0$.</div>
+      </div>
+      <p style="font-size:.82rem; color: var(--text3);">Restricciones ≥ o = usan el <strong>Método de la Gran M</strong>: se agrega μ penalizada con un coeficiente M muy grande en el funcional (+M si es MIN, -M si es MAX) para forzarla a salir de la base.</p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════ MÓDULO 1: MÉTODO GRÁFICO ══════════════════════ -->
+  <div id="mod1" class="mod-content">
+    <div class="card">
+      <h2>📈 Método Gráfico Interactivo (2 variables)</h2>
+      <p>Pensado para regiones acotadas típicas de examen. Para casos de poliedro abierto/infactible usá el Módulo 2 (Simplex), que sí los detecta explícitamente.</p>
+
+      <div class="obj-row">
+        <strong>z =</strong>
+        <input type="number" class="coef-input" id="g_c1" value="400"> x₁ +
+        <input type="number" class="coef-input" id="g_c2" value="300"> x₂
+        <div class="sense-toggle">
+          <button id="g_max" class="active" onclick="setGraphSense(true)">Maximizar</button>
+          <button id="g_min" onclick="setGraphSense(false)">Minimizar</button>
+        </div>
+      </div>
+
+      <div id="graphConsRows"></div>
+      <div style="display:flex; gap:.6rem; margin: .8rem 0 1.2rem;">
+        <button class="btn-secondary" onclick="addGraphCons()">+ Restricción</button>
+        <button class="btn-secondary" onclick="loadGraphExample()">↺ Cargar ejemplo (piezas A/B)</button>
+        <button class="btn-primary" onclick="solveGraphical()">▶ Resolver</button>
+      </div>
+
+      <div class="graph-wrap">
+        <div class="graph-canvas-box"><canvas id="graphCanvas"></canvas></div>
+        <div class="vertex-panel">
+          <h3 style="margin-top:0;">Vértices factibles</h3>
+          <table class="vtx-table" id="vtxTable"></table>
+          <div id="graphMsg" style="margin-top:1rem;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════ MÓDULO 2: SIMPLEX ══════════════════════ -->
+  <div id="mod2" class="mod-content">
+    <div class="card">
+      <h2>🧮 Resolvedor Simplex Paso a Paso</h2>
+
+      <div class="prob-config">
+        <div>
+          <label style="color:var(--text2); font-size:.8rem; font-weight:700; display:block; margin-bottom:.3rem;">Variables (n)</label>
+          <div class="stepper"><button onclick="changeVars(-1)">−</button><span id="numVarsLbl">2</span><button onclick="changeVars(1)">+</button></div>
+        </div>
+        <div>
+          <label style="color:var(--text2); font-size:.8rem; font-weight:700; display:block; margin-bottom:.3rem;">Restricciones (m)</label>
+          <div class="stepper"><button onclick="changeCons(-1)">−</button><span id="numConsLbl">3</span><button onclick="changeCons(1)">+</button></div>
+        </div>
+        <div class="sense-toggle">
+          <button id="s_max" class="active" onclick="setSimplexSense(true)">Maximizar</button>
+          <button id="s_min" onclick="setSimplexSense(false)">Minimizar</button>
+        </div>
+        <button class="btn-secondary" onclick="loadSimplexExampleA()">↺ Ejemplo MAX (piezas A/B)</button>
+        <button class="btn-secondary" onclick="loadSimplexExampleB()">↺ Ejemplo MIN (Gran M, dietético)</button>
+      </div>
+
+      <div id="simplexObjRow" class="obj-row"></div>
+      <div id="simplexConsRows"></div>
+
+      <div style="text-align:center; margin: 1.2rem 0;">
+        <button class="btn-primary" onclick="runSimplex()">▶ Resolver con Simplex</button>
+      </div>
+
+      <div id="simplexStatus"></div>
+      <div id="simplexTableaus"></div>
+      <div id="simplexSolution"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════ MÓDULO 3: DUALIDAD ══════════════════════ -->
+  <div id="mod3" class="mod-content">
+    <div class="card">
+      <h2>🔁 Dualidad Automática</h2>
+      <p>Genera el dual del problema cargado en el <strong>Módulo 2</strong>. Válido para la forma simétrica: primal MAX con restricciones ≤, o primal MIN con restricciones ≥.</p>
+      <div style="text-align:center; margin: 1rem 0;">
+        <button class="btn-primary" onclick="generateDual()">🔁 Generar Dual desde el Módulo 2</button>
+      </div>
+      <div id="dualOutput"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════ MÓDULO 4: CASOS ESPECIALES ══════════════════════ -->
+  <div id="mod4" class="mod-content">
+    <div class="card">
+      <h2>⚠️ Casos Especiales — detección en el tableau</h2>
+      <table class="special-table">
+        <tr><th>Caso</th><th>Cómo se detecta en la tabla Simplex</th></tr>
+        <tr><td>Solución única</td><td>TOP con todos los z_j-c_j de signo estrictamente correcto (sin ceros extra en no básicas).</td></tr>
+        <tr><td>Múltiples óptimos</td><td>TOP con z_j-c_j = 0 en una columna <strong>no básica</strong> ("cero alternativo").</td></tr>
+        <tr><td>Degenerada</td><td>Empate en el Θ mínimo entre 2+ filas → una básica queda con Bk=0 ("base degradada").</td></tr>
+        <tr><td>No acotada (poliedro abierto)</td><td>En la columna pivote candidata, ningún a_ij &gt; 0 (no hay Θ calculable).</td></tr>
+        <tr><td>Infactible</td><td>Al finalizar Gran M, queda(n) variable(s) artificial(es) μ en la base con valor &gt; 0.</td></tr>
+      </table>
+      <p style="font-size:.82rem; color: var(--text3); margin-top:1rem;">Relación primal-dual de casos particulares: Soluciones Alternativas ↔ Solución Degenerada · Poliedro Abierto ↔ Solución Incompatible.</p>
+      <h3>Análisis de Sensibilidad — fórmula</h3>
+      <div class="equations">
+        <div class="eq-line">$$c_j' = c_j \pm \frac{z_j-c_j}{a_{ij}}$$</div>
+        <div class="eq-line" style="font-size:.85rem;">En MAX: signo "−" da el límite superior, "+" el inferior. En MIN es al revés. Ejemplo (caso piezas A/B): rango óptimo de c₁ ∈ [300, 600] manteniendo el mix x₁=32, x₂=16.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <strong>Investigación Operativa · UTN · Comisión Sábados 2026</strong><br>
+  Herramientas educativas de acceso libre para uso en clase y estudio individual.
+</footer>
+
+<script src="menu.js"></script>
+<script>
+function switchModule(id, btn) {
+  document.querySelectorAll('.mod-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.mod-tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+function fmt(n) {
+  if (!isFinite(n)) return '—';
+  const r = Math.round(n*10000)/10000;
+  return r.toLocaleString('es-AR', {maximumFractionDigits:4});
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MÓDULO 1 · MÉTODO GRÁFICO
+// ═══════════════════════════════════════════════════════════════
+let graphCons = [];
+let graphIsMax = true;
+
+function setGraphSense(isMax) {
+  graphIsMax = isMax;
+  document.getElementById('g_max').classList.toggle('active', isMax);
+  document.getElementById('g_min').classList.toggle('active', !isMax);
+}
+
+function renderGraphCons() {
+  const wrap = document.getElementById('graphConsRows');
+  wrap.innerHTML = graphCons.map((c,i) => `
+    <div class="cons-row">
+      <input type="number" class="coef-input" id="ga1-${i}" value="${c.a1}"> x₁ +
+      <input type="number" class="coef-input" id="ga2-${i}" value="${c.a2}"> x₂
+      <select class="sign-select" id="gsign-${i}">
+        <option value="<=" ${c.sign==='<='?'selected':''}>≤</option>
+        <option value=">=" ${c.sign==='>='?'selected':''}>≥</option>
+        <option value="=" ${c.sign==='='?'selected':''}>=</option>
+      </select>
+      <input type="number" class="coef-input" id="gb-${i}" value="${c.b}">
+      <button class="row-del-btn" style="background:rgba(244,63,94,.12);border:1px solid rgba(244,63,94,.35);color:#fda4af;border-radius:6px;width:26px;height:26px;cursor:pointer;font-weight:800;" onclick="removeGraphCons(${i})">×</button>
+    </div>`).join('');
+}
+function addGraphCons() { graphCons.push({a1:1,a2:1,sign:'<=',b:10}); renderGraphCons(); }
+function removeGraphCons(i) { if (graphCons.length<=1) return; graphCons.splice(i,1); renderGraphCons(); }
+function loadGraphExample() {
+  document.getElementById('g_c1').value = 400;
+  document.getElementById('g_c2').value = 300;
+  setGraphSense(true);
+  graphCons = [
+    {a1:9,a2:18,sign:'<=',b:720},
+    {a1:16,a2:8,sign:'<=',b:640},
+    {a1:10,a2:10,sign:'<=',b:480}
+  ];
+  renderGraphCons();
+  solveGraphical();
+}
+function syncGraphCons() {
+  graphCons.forEach((c,i) => {
+    c.a1 = parseFloat(document.getElementById('ga1-'+i).value) || 0;
+    c.a2 = parseFloat(document.getElementById('ga2-'+i).value) || 0;
+    c.sign = document.getElementById('gsign-'+i).value;
+    c.b = parseFloat(document.getElementById('gb-'+i).value) || 0;
+  });
+}
+
+function lineIntersection(l1, l2) {
+  const det = l1.a1*l2.a2 - l2.a1*l1.a2;
+  if (Math.abs(det) < 1e-9) return null;
+  const x = (l1.b*l2.a2 - l2.b*l1.a2) / det;
+  const y = (l1.a1*l2.b - l2.a1*l1.b) / det;
+  return {x, y};
+}
+function satisfiesAll(pt, lines, eps) {
+  return lines.every(c => {
+    const val = c.a1*pt.x + c.a2*pt.y;
+    if (c.sign === '<=') return val <= c.b + eps;
+    if (c.sign === '>=') return val >= c.b - eps;
+    return Math.abs(val - c.b) <= Math.max(eps*100, 1e-3);
+  });
+}
+
+let graphChartInstance = null;
+
+function solveGraphical() {
+  syncGraphCons();
+  const c1 = parseFloat(document.getElementById('g_c1').value) || 0;
+  const c2 = parseFloat(document.getElementById('g_c2').value) || 0;
+  const allLines = graphCons.concat([{a1:1,a2:0,sign:'>=',b:0},{a1:0,a2:1,sign:'>=',b:0}]);
+
+  const eps = 1e-6;
+  let candidates = [];
+  for (let i=0;i<allLines.length;i++) {
+    for (let j=i+1;j<allLines.length;j++) {
+      const p = lineIntersection(allLines[i], allLines[j]);
+      if (!p) continue;
+      if (p.x < -eps || p.y < -eps) continue;
+      if (satisfiesAll(p, allLines, 1e-4)) candidates.push({x: Math.max(0,p.x), y: Math.max(0,p.y)});
+    }
+  }
+  // dedupe
+  let vertices = [];
+  candidates.forEach(p => {
+    if (!vertices.some(v => Math.abs(v.x-p.x)<1e-4 && Math.abs(v.y-p.y)<1e-4)) vertices.push(p);
+  });
+
+  const msgEl = document.getElementById('graphMsg');
+  if (vertices.length === 0) {
+    document.getElementById('vtxTable').innerHTML = '';
+    msgEl.innerHTML = '<div class="status-banner status-error">No se encontró una región factible acotada con estas restricciones (posible caso infactible o poliedro abierto). Probá el Módulo 2 (Simplex) para confirmarlo.</div>';
+    if (graphChartInstance) { graphChartInstance.destroy(); graphChartInstance = null; }
+    return;
+  }
+
+  // ordenar por ángulo alrededor del centroide (polígono convexo)
+  const cx = vertices.reduce((s,v)=>s+v.x,0)/vertices.length;
+  const cy = vertices.reduce((s,v)=>s+v.y,0)/vertices.length;
+  vertices.sort((a,b) => Math.atan2(a.y-cy,a.x-cx) - Math.atan2(b.y-cy,b.x-cx));
+
+  vertices.forEach(v => v.z = c1*v.x + c2*v.y);
+  const zVals = vertices.map(v=>v.z);
+  const bestZ = graphIsMax ? Math.max(...zVals) : Math.min(...zVals);
+  vertices.forEach(v => v.optimal = Math.abs(v.z-bestZ) < 1e-4);
+
+  let th = '<tr><th>x₁</th><th>x₂</th><th>z</th></tr>';
+  vertices.forEach(v => {
+    th += `<tr class="${v.optimal?'optimal':''}"><td>${fmt(v.x)}</td><td>${fmt(v.y)}</td><td>${fmt(v.z)}</td></tr>`;
+  });
+  document.getElementById('vtxTable').innerHTML = th;
+
+  const opt = vertices.find(v=>v.optimal);
+  msgEl.innerHTML = `<div class="status-banner status-optimal">Óptimo: x₁* = ${fmt(opt.x)}, x₂* = ${fmt(opt.y)}, z* = ${fmt(opt.z)}</div>`;
+
+  // Plot
+  const maxCoord = Math.max(...vertices.map(v=>Math.max(v.x,v.y)), 1) * 1.3;
+  const polyData = vertices.map(v=>({x:v.x,y:v.y})).concat([{x:vertices[0].x,y:vertices[0].y}]);
+
+  const lineDatasets = graphCons.map((c,i) => {
+    let pts = [];
+    if (Math.abs(c.a2) > 1e-9) {
+      pts = [{x:0, y:(c.b-c.a1*0)/c.a2}, {x:maxCoord, y:(c.b-c.a1*maxCoord)/c.a2}];
+    } else {
+      pts = [{x: c.b/c.a1, y:0}, {x: c.b/c.a1, y:maxCoord}];
+    }
+    const palette = ['#f43f5e','#f59e0b','#a855f7','#3b82f6','#10b981','#ec4899'];
+    return { type:'line', label:`R${i+1}: ${c.a1}x₁+${c.a2}x₂${c.sign==='<='?'≤':c.sign==='>='?'≥':'='}${c.b}`,
+      data: pts, borderColor: palette[i%palette.length], borderDash:[6,4], borderWidth:2, pointRadius:0, fill:false };
+  });
+
+  const ctx = document.getElementById('graphCanvas').getContext('2d');
+  if (graphChartInstance) graphChartInstance.destroy();
+  graphChartInstance = new Chart(ctx, {
+    type: 'scatter',
+    data: {
+      datasets: [
+        { type:'line', label:'Región factible', data: polyData, borderColor:'#06b6d4', backgroundColor:'rgba(6,182,212,.15)', fill:true, pointRadius:0, borderWidth:2, tension:0 },
+        ...lineDatasets,
+        { type:'scatter', label:'Vértices', data: vertices.map(v=>({x:v.x,y:v.y})), backgroundColor:'#67e8f9', pointRadius:5 },
+        { type:'scatter', label:'Óptimo', data:[{x:opt.x,y:opt.y}], backgroundColor:'#10b981', pointRadius:9, pointStyle:'star' }
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins: { legend: { labels: { color:'#94a3b8', boxWidth:12, font:{size:10} } } },
+      scales: {
+        x: { min:0, max:maxCoord, title:{display:true,text:'x₁',color:'#94a3b8'}, ticks:{color:'#94a3b8'}, grid:{color:'rgba(148,163,184,.1)'} },
+        y: { min:0, max:maxCoord, title:{display:true,text:'x₂',color:'#94a3b8'}, ticks:{color:'#94a3b8'}, grid:{color:'rgba(148,163,184,.1)'} }
+      }
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MÓDULO 2 · SIMPLEX (motor genérico Gran M)
+// ═══════════════════════════════════════════════════════════════
+let simplex = { n:2, m:3, isMax:true, obj:[400,300], cons:[
+  {coefs:[9,18], sign:'<=', b:720},
+  {coefs:[16,8], sign:'<=', b:640},
+  {coefs:[10,10], sign:'<=', b:480}
+]};
+
+function changeVars(delta) {
+  syncSimplexFromDOM();
+  const newN = Math.max(1, Math.min(5, simplex.n + delta));
+  if (newN === simplex.n) return;
+  if (newN > simplex.n) {
+    simplex.obj.push(0);
+    simplex.cons.forEach(c => c.coefs.push(0));
+  } else {
+    simplex.obj.pop();
+    simplex.cons.forEach(c => c.coefs.pop());
+  }
+  simplex.n = newN;
+  document.getElementById('numVarsLbl').textContent = simplex.n;
+  renderSimplexInputs();
+}
+function changeCons(delta) {
+  syncSimplexFromDOM();
+  const newM = Math.max(1, Math.min(6, simplex.m + delta));
+  if (newM === simplex.m) return;
+  if (newM > simplex.m) simplex.cons.push({coefs: new Array(simplex.n).fill(0), sign:'<=', b:0});
+  else simplex.cons.pop();
+  simplex.m = newM;
+  document.getElementById('numConsLbl').textContent = simplex.m;
+  renderSimplexInputs();
+}
+function setSimplexSense(isMax) {
+  simplex.isMax = isMax;
+  document.getElementById('s_max').classList.toggle('active', isMax);
+  document.getElementById('s_min').classList.toggle('active', !isMax);
+}
+
+function renderSimplexInputs() {
+  let objHtml = '<strong>z =</strong>';
+  for (let j=0;j<simplex.n;j++) {
+    objHtml += ` <input type="number" class="coef-input" id="s_c${j}" value="${simplex.obj[j]}"> x${j+1} ${j<simplex.n-1?'+':''}`;
+  }
+  document.getElementById('simplexObjRow').innerHTML = objHtml;
+
+  let consHtml = '';
+  simplex.cons.forEach((c,i) => {
+    consHtml += '<div class="cons-row">';
+    for (let j=0;j<simplex.n;j++) {
+      consHtml += `<input type="number" class="coef-input" id="s_a${i}_${j}" value="${c.coefs[j]}"> x${j+1} ${j<simplex.n-1?'+':''}`;
+    }
+    consHtml += `<select class="sign-select" id="s_sign${i}">
+        <option value="<=" ${c.sign==='<='?'selected':''}>≤</option>
+        <option value=">=" ${c.sign==='>='?'selected':''}>≥</option>
+        <option value="=" ${c.sign==='='?'selected':''}>=</option>
+      </select>
+      <input type="number" class="coef-input" id="s_b${i}" value="${c.b}"></div>`;
+  });
+  document.getElementById('simplexConsRows').innerHTML = consHtml;
+}
+
+function syncSimplexFromDOM() {
+  for (let j=0;j<simplex.n;j++) {
+    const el = document.getElementById('s_c'+j);
+    if (el) simplex.obj[j] = parseFloat(el.value) || 0;
+  }
+  simplex.cons.forEach((c,i) => {
+    for (let j=0;j<simplex.n;j++) {
+      const el = document.getElementById(`s_a${i}_${j}`);
+      if (el) c.coefs[j] = parseFloat(el.value) || 0;
+    }
+    const signEl = document.getElementById('s_sign'+i);
+    const bEl = document.getElementById('s_b'+i);
+    if (signEl) c.sign = signEl.value;
+    if (bEl) c.b = parseFloat(bEl.value) || 0;
+  });
+}
+
+function loadSimplexExampleA() {
+  simplex = { n:2, m:3, isMax:true, obj:[400,300], cons:[
+    {coefs:[9,18], sign:'<=', b:720},
+    {coefs:[16,8], sign:'<=', b:640},
+    {coefs:[10,10], sign:'<=', b:480}
+  ]};
+  document.getElementById('numVarsLbl').textContent = simplex.n;
+  document.getElementById('numConsLbl').textContent = simplex.m;
+  setSimplexSense(true);
+  renderSimplexInputs();
+  runSimplex();
+}
+function loadSimplexExampleB() {
+  simplex = { n:2, m:3, isMax:false, obj:[0.5,0.9], cons:[
+    {coefs:[2000,5000], sign:'>=', b:3000},
+    {coefs:[400,200], sign:'>=', b:250},
+    {coefs:[100,100], sign:'>=', b:90}
+  ]};
+  document.getElementById('numVarsLbl').textContent = simplex.n;
+  document.getElementById('numConsLbl').textContent = simplex.m;
+  setSimplexSense(false);
+  renderSimplexInputs();
+  runSimplex();
+}
+
+// ── Motor Simplex genérico (Gran M numérico) ──
+function solveSimplexEngine(n, m, objCoefs, consInput, isMax) {
+  // Preprocesar: b_i >= 0
+  const cons = consInput.map(c => {
+    let coefs = c.coefs.slice(), sign = c.sign, b = c.b;
+    if (b < 0) {
+      coefs = coefs.map(v=>-v); b = -b;
+      sign = sign==='<=' ? '>=' : (sign==='>=' ? '<=' : '=');
+    }
+    return {coefs, sign, b};
+  });
+
+  const maxAbs = Math.max(1, ...objCoefs.map(Math.abs), ...cons.map(c=>Math.max(Math.abs(c.b),...c.coefs.map(Math.abs))));
+  const M = maxAbs * 1000;
+
+  // Construir columnas
+  const colNames = [];
+  const colCost = [];
+  const colIsArtificial = [];
+  for (let j=0;j<n;j++) { colNames.push('x'+(j+1)); colCost.push(objCoefs[j]); colIsArtificial.push(false); }
+  const lambdaColIdx = new Array(m).fill(-1);
+  const muColIdx = new Array(m).fill(-1);
+  cons.forEach((c,i) => {
+    if (c.sign==='<=' || c.sign==='>=') {
+      colNames.push('λ'+(i+1)); colCost.push(0); colIsArtificial.push(false);
+      lambdaColIdx[i] = colNames.length-1;
+    }
+  });
+  cons.forEach((c,i) => {
+    if (c.sign==='>=' || c.sign==='=') {
+      colNames.push('μ'+(i+1)); colCost.push(isMax ? -M : M); colIsArtificial.push(true);
+      muColIdx[i] = colNames.length-1;
+    }
+  });
+  const totalCols = colNames.length;
+
+  // Tabla inicial
+  let A = [];
+  let basisCol = [];
+  for (let i=0;i<m;i++) {
+    let row = new Array(totalCols).fill(0);
+    for (let j=0;j<n;j++) row[j] = cons[i].coefs[j];
+    if (lambdaColIdx[i] >= 0) row[lambdaColIdx[i]] = (cons[i].sign==='<=') ? 1 : -1;
+    if (muColIdx[i] >= 0) row[muColIdx[i]] = 1;
+    A.push(row);
+    basisCol.push(muColIdx[i] >= 0 ? muColIdx[i] : lambdaColIdx[i]);
+  }
+  let B = cons.map(c=>c.b);
+
+  const blocked = new Array(totalCols).fill(false);
+  const snapshots = [];
+  const eps = 1e-7;
+  let status = 'optimal';
+  let iter = 0;
+  const maxIter = 40;
+
+  function computeZjCj() {
+    let zjcj = new Array(totalCols).fill(0);
+    for (let j=0;j<totalCols;j++) {
+      let zj = 0;
+      for (let i=0;i<m;i++) zj += colCost[basisCol[i]] * A[i][j];
+      zjcj[j] = zj - colCost[j];
+    }
+    return zjcj;
+  }
+
+  function snapshot(enterIdx, leaveRow, theta, label) {
+    const zjcj = computeZjCj();
+    let Z = 0;
+    for (let i=0;i<m;i++) Z += colCost[basisCol[i]] * B[i];
+    snapshots.push({
+      A: A.map(r=>r.slice()), B: B.slice(), basisCol: basisCol.slice(),
+      zjcj, Z, enterIdx, leaveRow, theta: theta ? theta.slice() : null, label
+    });
+  }
+
+  snapshot(null, null, null, 'Tabla Inicial del Primal (TIP)');
+
+  while (iter < maxIter) {
+    iter++;
+    const zjcj = computeZjCj();
+    let enterIdx = -1, bestVal = 0;
+    for (let j=0;j<totalCols;j++) {
+      if (blocked[j]) continue;
+      if (basisCol.includes(j)) continue;
+      if (isMax) { if (zjcj[j] < bestVal - eps) { bestVal = zjcj[j]; enterIdx = j; } }
+      else { if (zjcj[j] > bestVal + eps) { bestVal = zjcj[j]; enterIdx = j; } }
+    }
+    if (enterIdx === -1) { status = 'optimal'; break; }
+
+    let theta = new Array(m).fill(null);
+    let leaveRow = -1, bestTheta = Infinity;
+    for (let i=0;i<m;i++) {
+      if (A[i][enterIdx] > eps) {
+        theta[i] = B[i] / A[i][enterIdx];
+        if (theta[i] < bestTheta - eps) { bestTheta = theta[i]; leaveRow = i; }
+      }
+    }
+    if (leaveRow === -1) { status = 'unbounded'; snapshot(enterIdx, null, theta, 'Sin razón Θ válida'); break; }
+
+    const leavingCol = basisCol[leaveRow];
+    if (colIsArtificial[leavingCol]) blocked[leavingCol] = true;
+
+    // pivoteo Gauss-Jordan
+    const pivot = A[leaveRow][enterIdx];
+    for (let j=0;j<totalCols;j++) A[leaveRow][j] /= pivot;
+    B[leaveRow] /= pivot;
+    for (let i=0;i<m;i++) {
+      if (i === leaveRow) continue;
+      const factor = A[i][enterIdx];
+      if (Math.abs(factor) < 1e-12) continue;
+      for (let j=0;j<totalCols;j++) A[i][j] -= factor * A[leaveRow][j];
+      B[i] -= factor * B[leaveRow];
+    }
+    basisCol[leaveRow] = enterIdx;
+
+    snapshot(enterIdx, leaveRow, theta, `Iteración ${iter} — Entra ${colNames[enterIdx]}, Sale ${colNames[leavingCol]}`);
+  }
+  if (iter >= maxIter && status === 'optimal') {
+    const zjcj = computeZjCj();
+    let stillNeg = false;
+    for (let j=0;j<totalCols;j++) { if (!blocked[j] && !basisCol.includes(j)) { if (isMax && zjcj[j] < -eps) stillNeg=true; if (!isMax && zjcj[j] > eps) stillNeg=true; } }
+    if (stillNeg) status = 'cycling';
+  }
+
+  // Chequear infactibilidad: artificial en base con valor > eps
+  let infeasible = false;
+  for (let i=0;i<m;i++) { if (colIsArtificial[basisCol[i]] && B[i] > 1e-4) infeasible = true; }
+  if (infeasible) status = 'infeasible';
+
+  // Chequear degeneración y múltiples óptimos en tabla final
+  let degenerate = false, alternate = false;
+  if (status === 'optimal') {
+    for (let i=0;i<m;i++) if (Math.abs(B[i]) < 1e-6) degenerate = true;
+    const finalZjCj = computeZjCj();
+    for (let j=0;j<totalCols;j++) {
+      if (!basisCol.includes(j) && !blocked[j] && Math.abs(finalZjCj[j]) < 1e-5) alternate = true;
+    }
+  }
+
+  const solution = new Array(totalCols).fill(0);
+  for (let i=0;i<m;i++) solution[basisCol[i]] = B[i];
+  let Zfinal = 0;
+  for (let i=0;i<m;i++) Zfinal += colCost[basisCol[i]] * B[i];
+
+  return { colNames, colCost, colIsArtificial, snapshots, status, solution, Zfinal, n, m, lambdaColIdx, basisCol, degenerate, alternate };
+}
+
+function renderTableauSnapshot(result, snap, idx, isLast) {
+  const { colNames } = result;
+  let label = snap.label;
+  if (isLast && result.status==='optimal') label = 'Tabla Óptima del Primal (TOP) — ' + label;
+  let html = `<div class="tableau-wrap"><div class="tableau-caption">${label}</div><table class="tableau"><tr><th>Ck</th><th>Xk</th><th>Bk</th>`;
+  colNames.forEach(c => html += `<th>${c}<br><span style="color:var(--text3);font-size:.68rem;">C=${fmt(result.colCost[colNames.indexOf(c)])}</span></th>`);
+  html += '<th>Θ</th></tr>';
+  for (let i=0;i<result.m;i++) {
+    html += '<tr>';
+    html += `<td>${fmt(result.colCost[snap.basisCol[i]])}</td>`;
+    html += `<td class="basic-var">${colNames[snap.basisCol[i]]}</td>`;
+    html += `<td>${fmt(snap.B[i])}</td>`;
+    for (let j=0;j<colNames.length;j++) {
+      const isPivot = (snap.enterIdx===j && snap.leaveRow===i);
+      html += `<td class="${isPivot?'pivot-cell':''}">${fmt(snap.A[i][j])}</td>`;
+    }
+    html += `<td>${snap.theta && snap.theta[i]!==null ? fmt(snap.theta[i]) : ''}</td>`;
+    html += '</tr>';
+  }
+  html += `<tr class="z-row"><td colspan="3">Z = ${fmt(snap.Z)}</td>`;
+  snap.zjcj.forEach(v => html += `<td>${fmt(v)}</td>`);
+  html += '<td></td></tr>';
+  html += '</table></div>';
+  return html;
+}
+
+function runSimplex() {
+  syncSimplexFromDOM();
+  const result = solveSimplexEngine(simplex.n, simplex.m, simplex.obj, simplex.cons, simplex.isMax);
+  window._lastSimplexResult = result;
+
+  document.getElementById('simplexTableaus').innerHTML = result.snapshots.map((s,i) => renderTableauSnapshot(result, s, i, i===result.snapshots.length-1)).join('');
+
+  let statusHtml = '';
+  if (result.status === 'unbounded') {
+    statusHtml = '<div class="status-banner status-error">⚠️ Poliedro Abierto: no hay ningún a_ij &gt; 0 en la columna pivote — el problema no tiene solución finita (no acotado).</div>';
+  } else if (result.status === 'infeasible') {
+    statusHtml = '<div class="status-banner status-error">⚠️ Solución Incompatible: quedan variables artificiales (μ) en la base con valor mayor a 0 — el problema no tiene solución factible.</div>';
+  } else if (result.status === 'cycling') {
+    statusHtml = '<div class="status-banner status-warn">⚠️ Se alcanzó el máximo de iteraciones sin cumplir el criterio de parada (posible ciclado por degeneración).</div>';
+  } else {
+    statusHtml = '<div class="status-banner status-optimal">✅ Solución Óptima encontrada.</div>';
+    if (result.alternate) statusHtml += '<div class="status-banner status-warn">🔀 Se detectó un cero alternativo: este problema tiene <strong>Soluciones Múltiples/Alternativas</strong> (infinitos óptimos sobre un segmento).</div>';
+    if (result.degenerate) statusHtml += '<div class="status-banner status-warn">🔸 Se detectó una <strong>Base Degradada</strong>: hay una variable básica con valor 0 (solución degenerada).</div>';
+  }
+  document.getElementById('simplexStatus').innerHTML = statusHtml;
+
+  if (result.status === 'optimal') {
+    let tiles = '';
+    for (let j=0;j<result.n;j++) tiles += `<div class="solution-tile"><div class="lbl">x${j+1}</div><div class="val">${fmt(result.solution[j])}</div></div>`;
+    for (let i=0;i<result.m;i++) {
+      const lc = result.lambdaColIdx[i];
+      if (lc>=0) tiles += `<div class="solution-tile"><div class="lbl">λ${i+1}</div><div class="val">${fmt(result.solution[lc])}</div></div>`;
+    }
+    tiles += `<div class="solution-tile" style="border-color:#06b6d4;"><div class="lbl">Z óptimo</div><div class="val" style="color:#06b6d4;">${fmt(result.Zfinal)}</div></div>`;
+    document.getElementById('simplexSolution').innerHTML = `<h3>Solución</h3><div class="solution-grid">${tiles}</div>`;
+  } else {
+    document.getElementById('simplexSolution').innerHTML = '';
+  }
+
+  if (typeof renderMathInElement !== 'undefined') renderMathInElement(document.body, {delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}], throwOnError:false});
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MÓDULO 3 · DUALIDAD
+// ═══════════════════════════════════════════════════════════════
+function generateDual() {
+  syncSimplexFromDOM();
+  const { n, m, obj, cons, isMax } = simplex;
+  const expectedSign = isMax ? '<=' : '>=';
+  const allMatch = cons.every(c => c.sign === expectedSign);
+
+  let html = '';
+  if (!allMatch) {
+    html += `<div class="status-banner status-warn">⚠️ El primal no está en forma simétrica pura (todas las restricciones deberían ser "${expectedSign==='<='?'≤':'≥'}" para un ${isMax?'MAX':'MIN'}). Se construye igualmente el dual asumiendo esa forma; revisá el resultado a mano si tus restricciones son mixtas.</div>`;
+  }
+
+  const dualSense = isMax ? 'MIN' : 'MAX';
+  let objStr = 'w = ' + cons.map((c,i) => `${fmt(c.b)}·y${i+1}`).join(' + ') + ` → ${dualSense}`;
+  let consStr = [];
+  for (let j=0;j<n;j++) {
+    const terms = cons.map((c,i) => `${fmt(c.coefs[j])}·y${i+1}`).join(' + ');
+    const rel = isMax ? '≥' : '≤';
+    consStr.push(`${terms} ${rel} ${fmt(obj[j])}   (x${j+1})`);
+  }
+
+  html += `<div class="dual-box">
+    <div><strong>Dual (${dualSense}):</strong></div>
+    <div>${objStr}</div>
+    <div style="margin-top:.5rem;">s.a.</div>
+    ${consStr.map(s=>`<div>${s}</div>`).join('')}
+    <div>y1..y${m} ≥ 0</div>
+  </div>`;
+
+  // Resolver el dual con el mismo motor y comparar Z
+  const dualCons = [];
+  for (let j=0;j<n;j++) {
+    dualCons.push({ coefs: cons.map(c=>c.coefs[j]), sign: isMax ? '>=' : '<=', b: obj[j] });
+  }
+  const dualObj = cons.map(c=>c.b);
+  const dualResult = solveSimplexEngine(m, n, dualObj, dualCons, !isMax);
+
+  html += `<div style="margin-top:1rem;">`;
+  if (dualResult.status === 'optimal') {
+    html += `<div class="status-banner status-optimal">Dual resuelto: w* = ${fmt(dualResult.Zfinal)} ${window._lastSimplexResult && window._lastSimplexResult.status==='optimal' ? '(Primal Z* = '+fmt(window._lastSimplexResult.Zfinal)+' — deberían coincidir)' : '(resolvé primero el Módulo 2 para comparar)'}</div>`;
+  } else {
+    html += `<div class="status-banner status-warn">El dual no llegó a una tabla óptima con este motor (estado: ${dualResult.status}).</div>`;
+  }
+  html += `</div>`;
+
+  document.getElementById('dualOutput').innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+graphCons = [
+  {a1:9,a2:18,sign:'<=',b:720},
+  {a1:16,a2:8,sign:'<=',b:640},
+  {a1:10,a2:10,sign:'<=',b:480}
+];
+renderGraphCons();
+solveGraphical();
+
+renderSimplexInputs();
+runSimplex();
+
+window.addEventListener('DOMContentLoaded', () => {
+  if (typeof renderMathInElement !== 'undefined') {
+    renderMathInElement(document.body, {
+      delimiters: [{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],
+      throwOnError: false
+    });
+  }
+});
+</script>
+</body>
+</html>
