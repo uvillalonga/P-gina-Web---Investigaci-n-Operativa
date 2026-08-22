@@ -91,6 +91,16 @@ table.tableau td.basic-var { font-weight:700; color:#67e8f9; font-family:'Inter'
 .special-table td:first-child { font-weight:700; color:#67e8f9; white-space:nowrap; }
 
 .dual-box { background: rgba(15,23,42,.5); border:1px solid var(--border-med); border-radius: var(--radius); padding:1.2rem; margin-top:1rem; font-family:'Fira Code',monospace; font-size:.92rem; line-height:2; }
+
+.case-card { border-left: 4px solid var(--border-med); padding-left: 1.25rem; margin: 1.75rem 0; }
+.case-card:first-of-type { margin-top: 1rem; }
+.case-card h3 { margin-top:0; display:flex; align-items:center; gap:.5rem; }
+.case-card .example-box { background: rgba(15,23,42,.6); border:1px solid var(--border-med); border-radius:10px; padding:.9rem 1.1rem; font-family:'Fira Code',monospace; font-size:.85rem; line-height:1.8; color:#e2e8f0; margin: .8rem 0; }
+.case-card .example-result { font-size:.82rem; color:#67e8f9; font-weight:700; margin-bottom:.8rem; }
+.case-card.c-unica { border-left-color:#10b981; }
+.case-card.c-alt { border-left-color:#06b6d4; }
+.case-card.c-degen { border-left-color:#f59e0b; }
+.case-card.c-unbounded, .case-card.c-infeasible { border-left-color:#f43f5e; }
 </style>
 </head>
 <body>
@@ -243,17 +253,71 @@ table.tableau td.basic-var { font-weight:700; color:#67e8f9; font-family:'Inter'
   <!-- ══════════════════════ MÓDULO 4: CASOS ESPECIALES ══════════════════════ -->
   <div id="mod4" class="mod-content">
     <div class="card">
-      <h2>⚠️ Casos Especiales — detección en el tableau</h2>
+      <h2>⚠️ Casos Especiales</h2>
+      <p>Un problema de PL "normal" tiene exactamente un vértice óptimo y una región factible acotada y no vacía. Los 5 casos de acá abajo son las 5 formas en que esa situación "ideal" se rompe. Cada uno tiene una causa <strong>geométrica</strong> (qué pasa en el gráfico con la región factible y la recta del funcional) y una <strong>firma algebraica</strong> (qué patrón exacto aparece en la tabla Simplex). Aprender a reconocer la firma es lo que te permite responder en un examen sin tener que dibujar nada.</p>
+
       <table class="special-table">
-        <tr><th>Caso</th><th>Cómo se detecta en la tabla Simplex</th></tr>
-        <tr><td>Solución única</td><td>TOP con todos los z_j-c_j de signo estrictamente correcto (sin ceros extra en no básicas).</td></tr>
-        <tr><td>Múltiples óptimos</td><td>TOP con z_j-c_j = 0 en una columna <strong>no básica</strong> ("cero alternativo").</td></tr>
-        <tr><td>Degenerada</td><td>Empate en el Θ mínimo entre 2+ filas → una básica queda con Bk=0 ("base degradada").</td></tr>
-        <tr><td>No acotada (poliedro abierto)</td><td>En la columna pivote candidata, ningún a_ij &gt; 0 (no hay Θ calculable).</td></tr>
-        <tr><td>Infactible</td><td>Al finalizar Gran M, queda(n) variable(s) artificial(es) μ en la base con valor &gt; 0.</td></tr>
+        <tr><th>Caso</th><th>Firma en la tabla</th></tr>
+        <tr><td>Única</td><td>TOP: todos los z_j-c_j de signo estrictamente correcto (ningún cero en no básica).</td></tr>
+        <tr><td>Múltiples óptimos</td><td>TOP: z_j-c_j = 0 en una columna <strong>no básica</strong> ("cero alternativo").</td></tr>
+        <tr><td>Degenerada</td><td>Empate en el Θ mínimo entre 2+ filas → una básica queda con Bk = 0.</td></tr>
+        <tr><td>No acotada</td><td>En la columna pivote candidata, ningún a_ij &gt; 0 (no hay Θ calculable).</td></tr>
+        <tr><td>Infactible</td><td>Al terminar Gran M queda(n) variable(s) artificial(es) μ en la base con valor &gt; 0.</td></tr>
       </table>
-      <p style="font-size:.82rem; color: var(--text3); margin-top:1rem;">Relación primal-dual de casos particulares: Soluciones Alternativas ↔ Solución Degenerada · Poliedro Abierto ↔ Solución Incompatible.</p>
-      <h3>Análisis de Sensibilidad — fórmula</h3>
+      <p style="font-size:.82rem; color: var(--text3); margin-top:1rem;">Relación primal-dual: Soluciones Alternativas (primal) ↔ Solución Degenerada (dual) · Poliedro Abierto (primal) ↔ Solución Incompatible (dual). Si un primal es no acotado, su dual es directamente infactible, y viceversa — nunca pueden ser ambos factibles con uno de los dos no acotado.</p>
+    </div>
+
+    <div class="card">
+      <h2>🔎 Los 5 casos, uno por uno</h2>
+
+      <div class="case-card c-unica">
+        <h3>✅ 1. Solución única</h3>
+        <p><strong>Geometría:</strong> es el caso "de manual". La recta de nivel del funcional (z = k) no es paralela a ningún lado del polígono factible. Al desplazarla lo más lejos posible del origen (MAX) o acercarla lo más posible (MIN), toca la región en un <strong>único</strong> vértice antes de perder contacto con ella. Cualquier otro vértice da un z peor.</p>
+        <p><strong>En la tabla:</strong> en la TOP, cada variable no básica tiene un z_j-c_j <em>estrictamente</em> del signo que exige el criterio de parada (positivo en MAX, negativo en MIN — ninguno en cero). Eso significa que meter a cualquiera de ellas en la base <em>empeoraría</em> z, sin excepción: no hay ningún "empate" que abra la puerta a otro óptimo.</p>
+        <div class="example-box">max z = 5x₁ + 4x₂<br>s.a.&nbsp; 6x₁ + 4x₂ ≤ 24<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x₁ + 2x₂ ≤ 6<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x₁, x₂ ≥ 0</div>
+        <div class="example-result">Óptimo: x₁* = 3, x₂* = 1.5, z* = 21 — un solo vértice gana, sin ambigüedad.</div>
+        <button class="btn-secondary" onclick="goToSimplexWithCase('unica')">▶ Ver resuelto en el Simplex</button>
+      </div>
+
+      <div class="case-card c-alt">
+        <h3>🔀 2. Múltiples óptimos (soluciones alternativas)</h3>
+        <p><strong>Geometría:</strong> acá la recta del funcional <strong>es paralela</strong> a una de las restricciones que queda activa en el óptimo. En vez de tocar la región en un punto, la recta de nivel óptima se "acuesta" exactamente sobre todo un <strong>lado</strong> (arista) del polígono. Entonces no hay un único ganador: los dos vértices en las puntas de esa arista — y todo punto intermedio, combinación convexa de ambos — dan exactamente el mismo z*. Infinitas soluciones óptimas, mismo valor de z.</p>
+        <p><strong>En la tabla:</strong> se llega a una TOP normal (criterio de parada cumplido), pero al menos una variable <strong>no básica</strong> tiene z_j-c_j = 0 ("cero alternativo"). Ese cero dice: "podría meter esta variable a la base sin que z cambie ni un poco" — es decir, existe otro vértice óptimo alcanzable con un pivote más, y el algoritmo simplemente se detuvo en uno de los dos porque el criterio de parada ya se cumplió.</p>
+        <div class="example-box">max z = 2x₁ + 4x₂<br>s.a.&nbsp; x₁ + 2x₂ ≤ 8<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x₁ ≤ 4<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x₂ ≤ 3</div>
+        <div class="example-result">z* = 16 tanto en (x₁,x₂)=(2,3) como en (4,2) — y en cualquier punto del segmento entre ambos, porque 2x₁+4x₂ es proporcional a x₁+2x₂ (la restricción que queda activa).</div>
+        <button class="btn-secondary" onclick="goToSimplexWithCase('alternativas')">▶ Ver resuelto en el Simplex</button>
+      </div>
+
+      <div class="case-card c-degen">
+        <h3>🔸 3. Solución degenerada (base degradada)</h3>
+        <p><strong>Geometría:</strong> pasa cuando en un mismo vértice se cruzan <strong>más restricciones de las estrictamente necesarias</strong> para definirlo (en 2D, un vértice normal lo definen 2 rectas; acá pasa una tercera exactamente por el mismo punto). El vértice "sobra" de restricciones. Cuando el algoritmo llega ahí, tiene que elegir arbitrariamente cuál de las restricciones empatadas usa para definir la base, y la que descarta queda registrada igual — pero con valor 0.</p>
+        <p><strong>En la tabla:</strong> al calcular Θ_i = b_i/a_ij para elegir la fila que sale, <strong>dos o más filas empatan</strong> en el Θ mínimo. El algoritmo elige una para pivotear; la otra queda en la base pero con Bk = 0 ("base degradada"). No es un error — la solución sigue siendo válida — pero es la puerta de entrada a que el algoritmo, en problemas grandes, cicle sin converger.</p>
+        <div class="example-box">max z = 3x₁ + 9x₂<br>s.a.&nbsp; x₁ + 4x₂ ≤ 8<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x₁ + 2x₂ ≤ 4</div>
+        <div class="example-result">Al entrar x₂, Θ empata en 2 para ambas filas (8/4 = 4/2 = 2). Tras el pivote degenerado, óptimo final: x₁* = 0, x₂* = 2, z* = 18, con una variable básica en 0.</div>
+        <button class="btn-secondary" onclick="goToSimplexWithCase('degenerada')">▶ Ver resuelto en el Simplex</button>
+      </div>
+
+      <div class="case-card c-unbounded">
+        <h3>🚀 4. No acotada (poliedro abierto)</h3>
+        <p><strong>Geometría:</strong> la región factible se extiende hasta el infinito exactamente en la dirección en la que crece el funcional. No es que "no haya restricciones" — puede haber varias — sino que ninguna de ellas cierra el paso en el sentido en que z mejora. Empujar la recta de nivel nunca deja de tocar la región: siempre hay un punto factible con z todavía más grande.</p>
+        <p><strong>En la tabla:</strong> se identifica una columna candidata a entrar (su z_j-c_j indica que mejoraría z), pero al calcular Θ, <strong>ningún</strong> a_ij de esa columna es positivo. Sin un a_ij &gt; 0 no hay ninguna fila que limite cuánto puede crecer esa variable — puede crecer sin límite, arrastrando a z con ella. Nota: no siempre se detecta en la primera iteración; a veces el algoritmo prueba otras variables antes de topar con la columna sin límite, como en el ejemplo de abajo (tarda 3 iteraciones).</p>
+        <div class="example-box">max z = x₁ + x₂<br>s.a.&nbsp; x₁ − x₂ ≤ 1<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x₁ ≤ 3</div>
+        <div class="example-result">x₂ no tiene ninguna cota superior real (la única restricción con x₂ le permite crecer libremente) → z crece sin límite.</div>
+        <button class="btn-secondary" onclick="goToSimplexWithCase('noAcotada')">▶ Ver resuelto en el Simplex</button>
+      </div>
+
+      <div class="case-card c-infeasible">
+        <h3>🚫 5. Infactible (solución incompatible)</h3>
+        <p><strong>Geometría:</strong> las restricciones se contradicen entre sí — no existe ningún punto del plano (ni siquiera uno solo) que las cumpla todas a la vez. La "región factible" es el conjunto vacío. No hay nada para graficar ni ningún vértice que evaluar.</p>
+        <p><strong>En la tabla:</strong> como no hay región factible real, el método de la Gran M no logra sacar de la base a alguna variable artificial μ (esa μ existe únicamente para "forzar" una solución de arranque en restricciones ≥ o =, y se supone que debería terminar en 0). Si al llegar al criterio de parada queda una μ en la base con valor <strong>mayor a 0</strong>, esa μ está "tapando" una violación real de una restricción — señal inequívoca de que el problema no tiene solución factible.</p>
+        <div class="example-box">min z = x₁ + x₂<br>s.a.&nbsp; x₁ + x₂ ≥ 6<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x₁ + x₂ ≤ 2</div>
+        <div class="example-result">Imposible cumplir "x₁+x₂ ≥ 6" y "x₁+x₂ ≤ 2" a la vez → infactible, se ve directo sin ni siquiera correr Simplex.</div>
+        <button class="btn-secondary" onclick="goToSimplexWithCase('infactible')">▶ Ver resuelto en el Simplex</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top:0;">Análisis de Sensibilidad — fórmula</h3>
       <div class="equations">
         <div class="eq-line">$$c_j' = c_j \pm \frac{z_j-c_j}{a_{ij}}$$</div>
         <div class="eq-line" style="font-size:.85rem;">En MAX: signo "−" da el límite superior, "+" el inferior. En MIN es al revés. Ejemplo (caso piezas A/B): rango óptimo de c₁ ∈ [300, 600] manteniendo el mix x₁=32, x₂=16.</div>
@@ -802,6 +866,49 @@ function generateDual() {
   html += `</div>`;
 
   document.getElementById('dualOutput').innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MÓDULO 4 · CASOS ESPECIALES (ejemplos guiados)
+// ═══════════════════════════════════════════════════════════════
+const specialCases = {
+  unica: { n:2, m:2, isMax:true, obj:[5,4], cons:[
+    {coefs:[6,4], sign:'<=', b:24},
+    {coefs:[1,2], sign:'<=', b:6}
+  ]},
+  alternativas: { n:2, m:3, isMax:true, obj:[2,4], cons:[
+    {coefs:[1,2], sign:'<=', b:8},
+    {coefs:[1,0], sign:'<=', b:4},
+    {coefs:[0,1], sign:'<=', b:3}
+  ]},
+  degenerada: { n:2, m:2, isMax:true, obj:[3,9], cons:[
+    {coefs:[1,4], sign:'<=', b:8},
+    {coefs:[1,2], sign:'<=', b:4}
+  ]},
+  noAcotada: { n:2, m:2, isMax:true, obj:[1,1], cons:[
+    {coefs:[1,-1], sign:'<=', b:1},
+    {coefs:[1,0], sign:'<=', b:3}
+  ]},
+  infactible: { n:2, m:2, isMax:false, obj:[1,1], cons:[
+    {coefs:[1,1], sign:'>=', b:6},
+    {coefs:[1,1], sign:'<=', b:2}
+  ]}
+};
+
+function goToSimplexWithCase(key) {
+  const cfg = specialCases[key];
+  simplex = JSON.parse(JSON.stringify(cfg));
+  document.getElementById('numVarsLbl').textContent = simplex.n;
+  document.getElementById('numConsLbl').textContent = simplex.m;
+  setSimplexSense(simplex.isMax);
+  renderSimplexInputs();
+  runSimplex();
+
+  document.querySelectorAll('.mod-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.mod-tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('mod2').classList.add('active');
+  document.querySelectorAll('.mod-tab-btn')[2].classList.add('active');
+  document.querySelector('.mod-tab-bar').scrollIntoView({behavior:'smooth', block:'start'});
 }
 
 // ═══════════════════════════════════════════════════════════════

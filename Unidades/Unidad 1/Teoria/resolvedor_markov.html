@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resolvedor Dinámico de Cadenas de Markov</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;800&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --surface: rgba(30, 41, 59, 0.7);
+            --surface-hover: rgba(30, 41, 59, 0.9);
+            --border: rgba(148, 163, 184, 0.2);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --emerald: #10b981;
+            --rose: #f43f5e;
+            --amber: #f59e0b;
+            --purple: #8b5cf6;
+            --cyan: #06b6d4;
+        }
+        
+        .c-0 { color: #3b82f6; }
+        .c-1 { color: #10b981; }
+        .c-2 { color: #f59e0b; }
+        .c-3 { color: #8b5cf6; }
+        .c-4 { color: #f43f5e; }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.03), transparent 25%),
+                radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.03), transparent 25%);
+        }
+
+        header {
+            padding: 1.5rem 5%;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(11, 15, 25, 0.8);
+        }
+
+        .header-left h1 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #60a5fa, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.25rem;
+        }
+
+        .header-left p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        main {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 3rem;
+        }
+
+        /* PANEL CONFIGURACION */
+        .config-panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s;
+        }
+        
+        .config-panel.collapsed {
+            opacity: 0.6;
+            transform: scale(0.98);
+            pointer-events: none;
+            overflow: hidden;
+            height: 100px;
+        }
+
+        .control-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        .input-num {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 0.6rem 1rem;
+            border-radius: 6px;
+            font-family: 'Fira Code', monospace;
+            font-size: 1.1rem;
+            width: 80px;
+            text-align: center;
+        }
+
+        .input-num:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+        
+        .btn-secondary:hover {
+            color: var(--text-main);
+            background: rgba(255,255,255,0.05);
+        }
+
+        /* MATRIX INPUT GRID */
+        .matrix-setup {
+            display: flex;
+            gap: 2rem;
+            overflow-x: auto;
+            padding-bottom: 1rem;
+        }
+
+        .matrix-names, .matrix-probs {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .prob-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .prob-cell {
+            width: 75px;
+        }
+        
+        .prob-cell input {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 0.8rem 0.5rem;
+            border-radius: 6px;
+            font-family: 'Fira Code', monospace;
+            text-align: center;
+        }
+        .prob-cell input:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: rgba(15, 23, 42, 0.9);
+        }
+
+        .sum-badge {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.1);
+        }
+        .sum-badge.error { background: rgba(244, 63, 94, 0.2); color: var(--rose); }
+        .sum-badge.ok { background: rgba(16, 185, 129, 0.2); color: var(--emerald); }
+
+        .name-input {
+            width: 150px;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--accent);
+            color: var(--text-main);
+            padding: 0.8rem;
+            border-radius: 6px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+        }
+
+        /* RESULT AREA */
+        .results-area {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        
+        .results-area.show {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            opacity: 1;
+        }
+
+        .viz-container {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .graph-panel, .methods-panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            flex: 1;
+            min-width: 400px;
+        }
+
+        .panel-title {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            font-weight: 700;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+        }
+
+        /* SVG Graph Styling */
+        svg.markov-graph {
+            width: 100%;
+            height: 450px;
+            background: rgba(15, 23, 42, 0.3);
+            border-radius: 8px;
+            overflow: visible;
+        }
+
+        .node circle {
+            fill: #0b0f19;
+            stroke-width: 4px;
+            transition: all 0.3s;
+        }
+        
+        .node text {
+            font-family: 'Inter', sans-serif;
+            font-weight: 800;
+            font-size: 1.1rem;
+            text-anchor: middle;
+            dominant-baseline: central;
+        }
+        
+        .edge path {
+            fill: none;
+            stroke: var(--text-muted);
+            stroke-width: 2.5px;
+            marker-end: url(#arrowhead);
+            transition: stroke 0.3s, stroke-width 0.3s;
+        }
+        
+        .edge path:hover {
+            stroke: var(--text-main);
+            stroke-width: 4px;
+        }
+
+        .edge text {
+            fill: var(--text-main);
+            font-family: 'Fira Code', monospace;
+            font-size: 0.95rem;
+            font-weight: bold;
+            background: var(--bg-color);
+            text-shadow: 2px 2px 0 #0b0f19, -2px -2px 0 #0b0f19, 2px -2px 0 #0b0f19, -2px 2px 0 #0b0f19;
+        }
+
+        /* Methods UI */
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: rgba(15,23,42,0.5);
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+            padding: 0.6rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .tab-btn:hover { background: rgba(255,255,255,0.05); }
+        
+        .tab-btn.active {
+            background: rgba(59, 130, 246, 0.15);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .method-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        .method-content.active { display: block; }
+
+        .equations {
+            font-family: 'Fira Code', monospace;
+            background: rgba(15, 23, 42, 0.6);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            font-size: 1rem;
+            overflow-x: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .eq-line {
+            line-height: 1.6;
+        }
+
+        .math-mat {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0 5px;
+            vertical-align: middle;
+            border-left: 2px solid var(--text-muted);
+            border-right: 2px solid var(--text-muted);
+            border-radius: 6px;
+            padding: 8px 12px;
+            background: rgba(0,0,0,0.2);
+        }
+        
+        .math-row {
+            padding: 3px 0;
+            display: flex;
+            gap: 15px;
+        }
+        
+        .math-col {
+            text-align: center;
+            min-width: 45px;
+        }
+
+        /* Final Bars Chart */
+        .chart-container {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            height: 300px;
+            width: 100%;
+            border-bottom: 2px solid var(--border);
+            position: relative;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            background: var(--surface);
+            border-radius: 12px;
+        }
+
+        .bar-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            gap: 1rem;
+        }
+
+        .bar-wrapper {
+            height: 220px;
+            width: 80px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px 8px 0 0;
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+            border: 1px dashed rgba(255,255,255,0.1);
+            border-bottom: none;
+        }
+
+        .bar-fill {
+            width: 100%;
+            height: 0%;
+            transition: height 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            display: flex;
+            justify-content: center;
+            border-radius: 4px 4px 0 0;
+            box-shadow: inset 0 4px 10px rgba(255,255,255,0.2);
+        }
+
+        .bar-value {
+            position: absolute;
+            top: -30px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            font-family: 'Fira Code', monospace;
+            color: #ffffff;
+            text-shadow: 0px 2px 4px rgba(0,0,0,0.9);
+        }
+
+        .bar-label {
+            font-size: 0.95rem;
+            font-weight: bold;
+            text-align: center;
+            color: var(--text-muted);
+            max-width: 100px;
+            word-wrap: break-word;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* COLORS */
+        .color-bg-0 { stroke: #3b82f6; }
+        .color-fill-0 { background-color: #3b82f6; }
+        .color-text-0 { color: #3b82f6; fill: #3b82f6; }
+        .color-bg-1 { stroke: #10b981; }
+        .color-fill-1 { background-color: #10b981; }
+        .color-text-1 { color: #10b981; fill: #10b981; }
+        .color-bg-2 { stroke: #f59e0b; }
+        .color-fill-2 { background-color: #f59e0b; }
+        .color-text-2 { color: #f59e0b; fill: #f59e0b; }
+        .color-bg-3 { stroke: #8b5cf6; }
+        .color-fill-3 { background-color: #8b5cf6; }
+        .color-text-3 { color: #8b5cf6; fill: #8b5cf6; }
+        .color-bg-4 { stroke: #f43f5e; }
+        .color-fill-4 { background-color: #f43f5e; }
+        .color-text-4 { color: #f43f5e; fill: #f43f5e; }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-left">
+            <h1>Resolvedor Dinámico de Cadenas de Markov</h1>
+            <p>Ingresa tu propia matriz y resuelve mediante 4 métodos distintos</p>
+        </div>
+        <div>
+            <button class="btn-secondary" onclick="location.reload()">Reiniciar</button>
+        </div>
+    </header>
+
+    <main>
+        
+        <!-- PANEL DE CONFIGURACION -->
+        <section class="config-panel" id="config-panel">
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.5rem;">
+                <div class="control-group" style="margin:0;">
+                    <label>Cantidad de Estados (2 a 5)</label>
+                    <input type="number" id="num-states" class="input-num" value="3" min="2" max="5" onchange="buildMatrixUI()">
+                </div>
+                <!-- Controls top right config -->
+                <div>
+                     <button class="btn-secondary" onclick="loadExample()">Cargar Ejemplo (Call Center)</button>
+                </div>
+            </div>
+
+            <div class="matrix-setup">
+                <!-- Names Column -->
+                <div class="matrix-names" id="matrix-names-container">
+                    <!-- Injected by JS -->
+                </div>
+                
+                <!-- Probabilities Grid -->
+                <div class="matrix-probs" id="matrix-probs-container">
+                    <!-- Injected by JS -->
+                </div>
+            </div>
+
+            <div style="margin-top: 2rem; display: flex; justify-content: flex-end;">
+                <button class="btn-primary" onclick="solve()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                    Generar Grafo y Resolver
+                </button>
+            </div>
+            <div id="error-msg" style="color: var(--rose); margin-top: 1rem; text-align: right; font-weight: 600; display: none;">Error: Las filas deben sumar exactamente 1.0</div>
+        </section>
+
+        <!-- AREA DE RESULTADOS -->
+        <section class="results-area" id="results-area">
+            
+            <div class="viz-container">
+                <!-- GRAFO -->
+                <div class="graph-panel">
+                    <div class="panel-title">Grafo de Transición</div>
+                    <svg class="markov-graph" id="markov-svg">
+                        <defs>
+                            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="35" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="var(--text-muted)" />
+                            </marker>
+                        </defs>
+                        <g id="svg-edges"></g>
+                        <g id="svg-nodes"></g>
+                    </svg>
+                </div>
+
+                <!-- METODOS -->
+                <div class="methods-panel">
+                    <div class="panel-title">Resolución Paso a Paso</div>
+                    
+                    <div class="tabs">
+                        <button class="tab-btn active" onclick="showMethod('directo')">Método Directo (Límite)</button>
+                        <button class="tab-btn" onclick="showMethod('flujo')">Flujo Probabilístico</button>
+                        <button class="tab-btn" onclick="showMethod('chapman')">Chapman-Kolmogorov</button>
+                        <button class="tab-btn" onclick="showMethod('intensidad')">Matriz Intensidad</button>
+                    </div>
+
+                    <div id="methods-container">
+                        <!-- Injected by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- GRAFICO DE BARRAS (RESULTADO FINAL) -->
+            <div class="graph-panel" style="width: 100%;">
+                <div class="panel-title" style="text-align: center;">Probabilidades de Estado Estable (Régimen Permanente)</div>
+                <div class="chart-container" id="final-chart">
+                    <!-- Injected by JS -->
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <script>
+        const MAX_STATES = 5;
+        let currentStateNames = [];
+        let currentP = [];
+        let steadyState = [];
+
+        // Inicializar interfaz al cargar
+        window.onload = () => {
+            buildMatrixUI();
+        };
+
+        function buildMatrixUI() {
+            const num = parseInt(document.getElementById('num-states').value);
+            if(num < 2 || num > MAX_STATES) return;
+
+            const namesContainer = document.getElementById('matrix-names-container');
+            const probsContainer = document.getElementById('matrix-probs-container');
+            
+            // Generate labels row for probs
+            let htmlProbs = `<div class="prob-row">`;
+            for(let j=0; j<num; j++) {
+                htmlProbs += `<div class="prob-cell" style="text-align:center; color:var(--text-muted); font-weight:bold;">S${j+1}</div>`;
+            }
+            htmlProbs += `<div style="width: 50px">Suma</div></div>`;
+            
+            let htmlNames = `<div style="height:25px; margin-bottom: 10px;"></div>`;
+
+            for(let i=0; i<num; i++) {
+                // Nombre del estado
+                let savedName = currentStateNames[i] || `Estado ${i+1}`;
+                htmlNames += `<input type="text" class="name-input" id="name-${i}" value="${savedName}" style="border-left-color: var(--accent)" placeholder="S${i+1}" onchange="saveNames()">`;
+
+                // Fila de matriz
+                htmlProbs += `<div class="prob-row">`;
+                for(let j=0; j<num; j++) {
+                    let savedVal = currentP[i] && currentP[i][j] !== undefined ? currentP[i][j] : (i===j ? 1 : 0);
+                    // Prevent matrix destruction on resize if possible, but for simplicity reset to diagonal 1s
+                    if(!currentP[i]) savedVal = (i===j ? 1 : 0);
+                    
+                    htmlProbs += `
+                        <div class="prob-cell">
+                            <input type="number" id="p-${i}-${j}" value="${savedVal}" step="0.01" min="0" max="1" oninput="validateRow(${i}, ${num})">
+                        </div>`;
+                }
+                htmlProbs += `<div class="sum-badge ok" id="sum-${i}">1.00</div></div>`;
+            }
+
+            namesContainer.innerHTML = htmlNames;
+            probsContainer.innerHTML = htmlProbs;
+            
+            // Recolor name borders dynamically
+            for(let i=0; i<num; i++){
+                document.getElementById(`name-${i}`).classList.add(`color-text-${i}`);
+                document.getElementById(`name-${i}`).style.borderColor = `inherit`; // relies on default color
+            }
+
+            saveNames();
+        }
+
+        function validateRow(row, num) {
+            let sum = 0;
+            for(let j=0; j<num; j++) {
+                let val = parseFloat(document.getElementById(`p-${row}-${j}`).value) || 0;
+                sum += val;
+            }
+            const badge = document.getElementById(`sum-${row}`);
+            badge.innerText = sum.toFixed(2);
+            if(Math.abs(sum - 1.0) < 0.001) {
+                badge.className = "sum-badge ok";
+            } else {
+                badge.className = "sum-badge error";
+            }
+        }
+
+        function saveNames() {
+            const num = parseInt(document.getElementById('num-states').value);
+            currentStateNames = [];
+            for(let i=0; i<num; i++) {
+                let val = document.getElementById(`name-${i}`).value.trim();
+                if(!val) val = `S${i+1}`;
+                currentStateNames.push(val);
+            }
+        }
+
+        function loadExample() {
+            document.getElementById('num-states').value = 3;
+            currentStateNames = ["Conmutador", "Ventas", "Pedidos"];
+            currentP = [
+                [0.0, 0.3, 0.7],
+                [0.6, 0.0, 0.4],
+                [1.0, 0.0, 0.0]
+            ];
+            buildMatrixUI();
+        }
+
+        // --- MATH ENGINE --- //
+
+        function multiplyMatrix(A, B) {
+            let result = new Array(A.length).fill(0).map(() => new Array(B[0].length).fill(0));
+            for (let i = 0; i < A.length; i++) {
+                for (let j = 0; j < B[0].length; j++) {
+                    for (let k = 0; k < A[0].length; k++) {
+                        result[i][j] += A[i][k] * B[k][j];
+                    }
+                }
+            }
+            return result;
+        }
+
+        function multiplyVectorMatrix(v, P) {
+            let result = Array(P[0].length).fill(0);
+            for (let j = 0; j < P[0].length; j++) {
+                for (let i = 0; i < v.length; i++) {
+                    result[j] += v[i] * P[i][j];
+                }
+            }
+            return result;
+        }
+
+        function findSteadyState(P) {
+            let n = P.length;
+            let v = Array(n).fill(1/n); // starting with uniform distribution
+            // Iterar por 100 pasos (Método de la Potencia) para caso aproximado.
+            // Sirve para cadenas ergódicas.
+            for(let step=0; step<100; step++) {
+                v = multiplyVectorMatrix(v, P);
+            }
+            return v;
+        }
+
+        function matrixPower(P, pow) {
+            let res = P;
+            for(let i=1; i<pow; i++){
+                res = multiplyMatrix(res, P);
+            }
+            return res;
+        }
+
+        // --- MAIN RESOLVE ACTION --- //
+
+        function solve() {
+            const num = parseInt(document.getElementById('num-states').value);
+            saveNames();
+            
+            // Build Matrix P from UI
+            P = [];
+            let valid = true;
+            for(let i=0; i<num; i++) {
+                let row = [];
+                let sum = 0;
+                for(let j=0; j<num; j++) {
+                    let val = parseFloat(document.getElementById(`p-${i}-${j}`).value) || 0;
+                    row.push(val);
+                    sum += val;
+                }
+                P.push(row);
+                if(Math.abs(sum - 1.0) > 0.001) valid = false;
+            }
+
+            if(!valid) {
+                document.getElementById('error-msg').style.display = "block";
+                return;
+            }
+            document.getElementById('error-msg').style.display = "none";
+            
+            // Calculate steady state internally
+            steadyState = findSteadyState(P);
+            
+            // Render Graph
+            drawGraph(num, currentStateNames, P);
+
+            // Render Methods textual logic
+            generateMethodsSections(num, currentStateNames, P, steadyState);
+            
+            // Render Chart
+            renderChart(num, currentStateNames, steadyState);
+
+            // Show UI
+            document.getElementById('config-panel').classList.add('collapsed');
+            document.getElementById('results-area').classList.add('show');
+            setTimeout(() => {
+                document.getElementById('results-area').scrollIntoView({behavior: 'smooth', block: 'start'});
+            }, 300);
+            
+            showMethod('directo');
+        }
+
+        // --- GRAPHICS: SVG GRAPH --- //
+
+        function drawGraph(N, names, P) {
+            const edgesGroup = document.getElementById('svg-edges');
+            const nodesGroup = document.getElementById('svg-nodes');
+            edgesGroup.innerHTML = '';
+            nodesGroup.innerHTML = '';
+
+            const cx = 250; 
+            const cy = 200; // Offset center slightly
+            const R = 130;
+            const nodeRadius = 30;
+
+            let positions = [];
+            for(let i=0; i<N; i++) {
+                let angle = (i * 2 * Math.PI / N) - (Math.PI / 2);
+                let x = cx + R * Math.cos(angle);
+                let y = cy + R * Math.sin(angle);
+                positions.push({x, y});
+            }
+
+            // Draw edges
+            for(let i=0; i<N; i++) {
+                for(let j=0; j<N; j++) {
+                    let p = P[i][j];
+                    if(p > 0) {
+                        let sx = positions[i].x;
+                        let sy = positions[i].y;
+                        let tx = positions[j].x;
+                        let ty = positions[j].y;
+                        
+                        let pathD = "";
+                        let textPos = {x:0, y:0};
+
+                        if(i === j) {
+                            // Self-loop
+                            let angle = (i * 2 * Math.PI / N) - (Math.PI / 2);
+                            let lx = sx + 70 * Math.cos(angle - 0.5);
+                            let ly = sy + 70 * Math.sin(angle - 0.5);
+                            let rx = sx + 70 * Math.cos(angle + 0.5);
+                            let ry = sy + 70 * Math.sin(angle + 0.5);
+                            pathD = `M ${sx} ${sy} C ${lx} ${ly}, ${rx} ${ry}, ${sx} ${sy}`;
+                            textPos.x = sx + 80 * Math.cos(angle);
+                            textPos.y = sy + 80 * Math.sin(angle);
+                        } else {
+                            // Between nodes. Use Quadratic Bezier to curve slightly.
+                            let dx = tx - sx;
+                            let dy = ty - sy;
+                            let dist = Math.sqrt(dx*dx + dy*dy);
+                            
+                            // Normal vector for curve pointing OUTWARDS
+                            let nx = dy / dist;
+                            let ny = -dx / dist;
+                            
+                            // Curve strength
+                            let curveScale = 50;
+                            // Move control point
+                            let mx = sx + dx/2 + nx * curveScale;
+                            let my = sy + dy/2 + ny * curveScale;
+
+                            pathD = `M ${sx} ${sy} Q ${mx} ${my} ${tx} ${ty}`;
+                            
+                            // True midpoint of the quadratic curve
+                            let curveMidX = 0.25*sx + 0.5*mx + 0.25*tx;
+                            let curveMidY = 0.25*sy + 0.5*my + 0.25*ty;
+
+                            // Text position slightly off center on the curve
+                            textPos.x = curveMidX + nx * 15;
+                            textPos.y = curveMidY + ny * 15;
+                        }
+
+                        // Create svg edge
+                        edgesGroup.innerHTML += `
+                            <g class="edge">
+                                <path d="${pathD}" />
+                                <text x="${textPos.x}" y="${textPos.y}">${p.toFixed(2)}</text>
+                            </g>
+                        `;
+                    }
+                }
+            }
+
+            // Draw nodes
+            for(let i=0; i<N; i++) {
+                // Short name for circle
+                let shortName = names[i].substring(0, 2).toUpperCase();
+                nodesGroup.innerHTML += `
+                    <g class="node node-${i}" transform="translate(${positions[i].x}, ${positions[i].y})">
+                        <circle r="${nodeRadius}" class="color-bg-${i}" fill="#0b0f19" />
+                        <text class="color-text-${i}" fill="currentColor">${shortName}</text>
+                    </g>
+                `;
+            }
+        }
+
+        // --- MATH RENDER: METHODS GENERATOR --- //
+        function showMethod(id) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector(`.tab-btn[onclick="showMethod('${id}')"]`).classList.add('active');
+            
+            document.querySelectorAll('.method-content').forEach(m => m.classList.remove('active'));
+            document.getElementById(`content-${id}`).classList.add('active');
+        }
+
+        function createMathMatXML(mat, isHighlight=false) {
+            let html = `<div class="math-mat" ${isHighlight ? 'style="border-color:var(--emerald); box-shadow: 0 0 10px rgba(16,185,129,0.2);"' : ''}>`;
+            for(let r=0; r<mat.length; r++) {
+                html += `<div class="math-row" ${isHighlight ? 'style="color:var(--emerald); font-weight:bold;"' : ''}>`;
+                for(let c=0; c<mat[0].length; c++) {
+                    let val = (typeof mat[r][c] === 'number') ? mat[r][c].toFixed(4) : mat[r][c];
+                    html += `<div class="math-col">${val}</div>`;
+                }
+                html += `</div>`;
+            }
+            html += `</div>`;
+            return html;
+        }
+
+        function generateMethodsSections(N, names, P, pi) {
+            const container = document.getElementById('methods-container');
+            
+            // Prefix variables
+            let piVars = names.map((n, i) => `π<sub>${i+1}</sub>`);
+            let piStr = `[${piVars.join(', ')}]`;
+
+            let html = "";
+
+            window.savedMatrixP = P; // Save for dynamic elevation
+            setTimeout(() => { if(typeof updateCustomPower === 'function') updateCustomPower(); }, 0);
+
+            /* 1. METODO DIRECTO (LIMITE) */
+            let P10 = matrixPower(P, 10);
+            html += `<div class="method-content active" id="content-directo">
+                <div class="equations">
+                    <div class="eq-line" style="color:var(--accent); font-weight:bold;">Aproximación Numérica por Potencias (Límite para n → ∞)</div>
+                    <div class="eq-line">Multiplicamos la Matriz P por si misma sucesivamente para observar la convergencia del sistema iterativo.</div>
+                    
+                    <div class="eq-line" style="margin-top: 1rem;">Para <b>n = 10</b>: P<sup>10</sup> = ${createMathMatXML(P10)}</div>
+                    
+                    <div class="eq-line" style="margin-top: 1.5rem; display: flex; align-items: center; gap: 10px;">
+                        <span>Probar matriz a la potencia <b>n = </b></span>
+                        <input type="number" id="custom-n" value="20" min="1" max="1000" class="input-num" style="width: 80px; padding: 0.4rem;" onchange="updateCustomPower()">
+                    </div>
+                    
+                    <div class="eq-line" id="custom-power-result" style="margin-top: 0.5rem; display: flex; align-items:center; gap: 10px;">
+                        <!-- Injected by updateCustomPower -->
+                    </div>
+                    
+                    <div class="eq-line" style="margin-top: 1.5rem;">Observando como las filas se estabilizan con la misma distribución para cualquier estado inicial, deducimos el vector de probabilidad de régimen permanente:</div>
+                    <div class="eq-line" style="font-size: 1.2rem; font-weight: 800; margin-top: 0.5rem; text-align:center;">
+                        π = [${pi.map((p,i) => `<span class="color-text-${i}">${p.toFixed(4)}</span>`).join(', ')}]
+                    </div>
+                </div>
+            </div>`;
+
+            /* 2. FLUJO PROBABILISTICO */
+            html += `<div class="method-content" id="content-flujo">
+                <div class="equations">
+                    <div class="eq-line" style="color:var(--accent); font-weight:bold;">Conservación del Flujo: Entrada al Nodo = Salida del Nodo</div>
+                    <div class="eq-line" style="color:var(--text-muted);">Para cada nodo que definimos, analizamos qué probabilidades ingresan desde los demás (incluso sí mismos no cuentan como flujo neto) y que interacciones salen.</div>`;
+            
+            for(let i=0; i<N; i++) {
+                let htmlEntra = [];
+                let htmlSale = [];
+                let eqL = [];
+                let eqR = [];
+
+                for(let j=0; j<N; j++) {
+                    if (i !== j) {
+                        // Entra a i desde j: P[j][i]
+                        if (P[j][i] > 0) {
+                            htmlEntra.push(`[Entra desde ${names[j]}]`);
+                            eqL.push(`${piVars[j]}·(${P[j][i].toFixed(2)})`);
+                        }
+                        // Sale de i a j: P[i][j]
+                        if (P[i][j] > 0) {
+                            htmlSale.push(`[Sale a ${names[j]}]`);
+                            eqR.push(`${piVars[i]}·(${P[i][j].toFixed(2)})`);
+                        }
+                    }
+                }
+                
+                let inStr = htmlEntra.join(' + ') || '0';
+                let outStr = htmlSale.join(' + ') || '0';
+                let eqLStr = eqL.join(' + ') || '0';
+                let eqRStr = eqR.join(' + ') || '0';
+
+                html += `<div class="eq-line" style="margin-top: 1rem;"><b class="color-text-${i}">Nodo ${names[i]} (S${i+1}):</b></div>`;
+                html += `<div class="eq-line" style="font-size:0.9rem">${inStr} = ${outStr}</div>`;
+                html += `<div class="eq-line">${eqLStr} = <b>${eqRStr}</b></div>`;
+            }
+            html += `<div class="eq-line" style="margin-top: 1.5rem; color: var(--emerald); font-weight: bold; text-align:center;">Resolviendo el sistema lineal se halla π.</div>
+                </div>
+            </div>`;
+
+            /* 3. CHAPMAN-KOLMOGOROV */
+            let P_display = P.map(row => row.map(v => v.toFixed(2)));
+            html += `<div class="method-content" id="content-chapman">
+                <div class="equations">
+                    <div class="eq-line" style="color:var(--accent); font-weight:bold;">Sistema por Producto Matricial (π·P = π)</div>
+                    <div class="eq-line" style="display:flex; justify-content:center; align-items:center; gap: 10px; margin: 1rem 0;">
+                        <span>${piStr} × </span>
+                        ${createMathMatXML(P_display)}
+                        <span> = ${piStr}</span>
+                    </div>
+                    <div class="eq-line" style="color:var(--text-muted);">El sistema se construye multiplicando el vector fila por cada columna:</div>`;
+            
+            for(let c=0; c<N; c++) {
+                let terms = [];
+                for(let r=0; r<N; r++) {
+                    terms.push(`${piVars[r]}·(${P[r][c].toFixed(2)})`);
+                }
+                html += `<div class="eq-line" style="margin-top: 0.5rem;"><b class="color-text-${c}">Eje de Columna ${c+1}:</b></div>`;
+                html += `<div class="eq-line">${terms.join(' + ')} = ${piVars[c]}</div>`;
+            }
+            html += `<div class="eq-line" style="margin-top: 1.5rem; color: var(--emerald); font-weight: bold; text-align:center;">Agrupando términos similares arribamos a un sistema homogéneo para despejar π.</div>
+                </div>
+            </div>`;
+
+            /* 4. MATRIZ DE INTENSIDAD */
+            let M_display = [];
+            for(let r=0; r<N; r++) {
+                let row = [];
+                for(let c=0; c<N; c++) {
+                    let val = P[r][c] - (r===c ? 1 : 0);
+                    row.push(val.toFixed(2));
+                }
+                M_display.push(row);
+            }
+
+            html += `<div class="method-content" id="content-intensidad">
+                <div class="equations">
+                    <div class="eq-line" style="color:var(--accent); font-weight:bold;">Matriz de Intensidad de Transición M (M = P - I)</div>
+                    <div class="eq-line">Teniendo la ecuación π·P = π, restando π a la izquierda se reordena a: π·(P - I) = 0.</div>
+                    
+                    <div class="eq-line" style="display:flex; justify-content:center; align-items:center; gap: 10px; margin: 1rem 0;">
+                        <span>M = </span>
+                        ${createMathMatXML(M_display)}
+                    </div>
+                    <div class="eq-line" style="color:var(--text-muted);">Transponiendo las columnas forman el siguiente sistema lineal igualado a cero:</div>`;
+            for(let c=0; c<N; c++) {
+                let terms = [];
+                for(let r=0; r<N; r++) {
+                    let val = (P[r][c] - (r===c ? 1 : 0)).toFixed(2);
+                    terms.push(`${val}·${piVars[r]}`);
+                }
+                html += `<div class="eq-line"><b>Columna ${c+1}:</b> ${terms.join(' + ').replace('+ -', '- ')} = 0</div>`;
+            }
+            html += `<div class="eq-line" style="margin-top: 1rem; font-size: 0.9rem;">El sistema es linealmente dependiente infinito numéricamente. Agregamos la última condición de la variable aleatoria (Sumatoria de probabilidades debe ser igual a 1).</div>`;
+            html += `<div class="eq-line"><b>Cierre:</b> ${piVars.join(' + ')} = 1.0</div>`;
+            html += `<div class="eq-line" style="margin-top: 1rem; color: var(--emerald); font-weight: bold; text-align:center;">Resolviendo, se obtiene π.</div>
+                </div>
+            </div>`;
+
+            container.innerHTML = html;
+        }
+
+        function updateCustomPower() {
+            if(!window.savedMatrixP) return;
+            const n = parseInt(document.getElementById('custom-n').value) || 1;
+            const Pn = matrixPower(window.savedMatrixP, n);
+            const isHigh = (n >= 15);
+            document.getElementById('custom-power-result').innerHTML = `<span>P<sup>${n}</sup> = </span>` + createMathMatXML(Pn, isHigh);
+        }
+
+        // --- GRAPHICS: FINAL BARS --- //
+
+        function renderChart(N, names, pi) {
+            const chartArea = document.getElementById('final-chart');
+            chartArea.innerHTML = '';
+            
+            for(let i=0; i<N; i++) {
+                let p = pi[i];
+                let percentStr = (p * 100).toFixed(1) + '%';
+                
+                chartArea.innerHTML += `
+                    <div class="bar-group">
+                        <div class="bar-wrapper">
+                            <div class="bar-fill color-fill-${i}" id="final-bar-${i}">
+                                <div class="bar-value">${percentStr}</div>
+                            </div>
+                        </div>
+                        <div class="bar-label color-text-${i}">${names[i]}</div>
+                    </div>
+                `;
+            }
+
+            // Animate height on next frame
+            setTimeout(() => {
+                for(let i=0; i<N; i++) {
+                    let elem = document.getElementById(`final-bar-${i}`);
+                    if(elem) {
+                        elem.style.height = `${(pi[i] * 100)}%`;
+                    }
+                }
+            }, 100);
+        }
+
+    </script>
+</body>
+</html>

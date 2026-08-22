@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Procesos de Nacimiento y Muerte - Cadenas de Markov</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;800&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --surface: rgba(30, 41, 59, 0.7);
+            --surface-hover: rgba(30, 41, 59, 0.9);
+            --border: rgba(148, 163, 184, 0.2);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --emerald: #10b981;
+            --rose: #f43f5e;
+            --amber: #f59e0b;
+        }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.05), transparent 25%),
+                radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.05), transparent 25%);
+        }
+
+        header {
+            padding: 1.5rem 5%;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(11, 15, 25, 0.8);
+        }
+
+        .header-left h1 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #60a5fa, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.25rem;
+        }
+
+        .header-left p { color: var(--text-muted); font-size: 0.95rem; }
+
+        main { width: 100%; max-width: 1400px; margin: 0 auto; padding: 3rem 2rem; display: flex; flex-direction: column; gap: 3rem; }
+
+        .config-panel {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 12px; padding: 2rem; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s;
+        }
+
+        .control-group { margin-bottom: 1.5rem; }
+        .control-group label {
+            display: block; margin-bottom: 0.5rem; color: var(--text-muted);
+            font-weight: 600; font-size: 0.9rem; text-transform: uppercase;
+        }
+
+        .input-num {
+            background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border);
+            color: var(--text-main); padding: 0.6rem 1rem; border-radius: 6px;
+            font-family: 'Fira Code', monospace; font-size: 1.1rem; width: 80px; text-align: center;
+        }
+        .input-num:focus { outline: none; border-color: var(--accent); }
+
+        .btn-primary {
+            background: var(--accent); color: white; border: none; padding: 0.8rem 1.5rem;
+            border-radius: 8px; font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer;
+            transition: all 0.2s; font-size: 1rem; display: inline-flex; align-items: center; gap: 8px;
+        }
+        .btn-primary:hover { background: #2563eb; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3); }
+
+        .btn-secondary {
+            background: transparent; color: var(--text-muted); border: 1px solid var(--border);
+            padding: 0.6rem 1rem; border-radius: 8px; cursor: pointer; transition: all 0.2s; font-weight: 600;
+        }
+        .btn-secondary:hover { color: var(--text-main); background: rgba(255,255,255,0.05); }
+
+        /* EDITOR VISUAL EN LÍNEA */
+        .editor-container {
+            display: flex; gap: 10px; align-items: center; overflow-x: auto; padding: 2rem 0; min-height: 250px;
+        }
+
+        .node-block {
+            display: flex; flex-direction: column; align-items: center; position: relative;
+        }
+
+        .node-circle {
+            width: 70px; height: 70px; border-radius: 50%; border: 4px solid var(--accent);
+            background: #0b0f19; display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; font-weight: 800; font-family: 'Fira Code', monospace;
+            z-index: 2; box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+            position: relative;
+        }
+
+        .transitions-block {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            width: 140px; position: relative; height: 100px;
+        }
+
+        .edge-right, .edge-left {
+            position: absolute; width: 100%; height: 2px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        
+        .edge-right { top: 25px; border-top: 3px solid var(--emerald); }
+        .edge-right::after {
+            content: "▶"; position: absolute; right: -5px; top: -11px; color: var(--emerald); font-size: 18px;
+        }
+
+        .edge-left { bottom: 25px; border-bottom: 3px solid var(--rose); }
+        .edge-left::before {
+            content: "◀"; position: absolute; left: -5px; bottom: -11px; color: var(--rose); font-size: 18px;
+        }
+
+        .rate-input {
+            width: 80px; text-align: center; background: rgba(15, 23, 42, 0.9);
+            border: 1px solid var(--border); color: white; padding: 5px;
+            border-radius: 4px; font-family: 'Fira Code', monospace; z-index: 3;
+            font-size: 1.1rem;
+        }
+        .rate-input.lambda { color: var(--emerald); border-color: rgba(16, 185, 129, 0.3); margin-top: -30px; }
+        .rate-input.mu { color: var(--rose); border-color: rgba(244, 63, 94, 0.3); margin-bottom: -30px; }
+        
+        .rate-input:focus { outline: none; border-color: currentColor; background: #000; }
+
+        .node-value {
+            margin-top: 15px; background: rgba(255,255,255,0.05); padding: 5px 10px;
+            border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 0.85rem; color: var(--text-muted);
+            text-align: center; display: flex; flex-direction: column; align-items: center; gap: 5px;
+        }
+        .node-value input {
+            width: 50px; text-align: center; background: transparent; border: none;
+            border-bottom: 1px dashed var(--text-muted); color: var(--text-main); font-weight: bold;
+        }
+        .node-value input:focus { outline: none; border-color: var(--accent); }
+
+        /* RESULT AREA */
+        .results-area { display: none; opacity: 0; transition: opacity 0.5s; }
+        .results-area.show { display: flex; flex-direction: column; gap: 2rem; opacity: 1; }
+        
+        .panels-wrapper { display: flex; gap: 2rem; flex-wrap: wrap; }
+        
+        .methods-panel {
+            background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+            padding: 1.5rem; flex: 1; min-width: 400px;
+        }
+
+        .panel-title { font-size: 1.2rem; color: var(--text-muted); margin-bottom: 1rem; font-weight: 700; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+
+        .tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+        .tab-btn { background: rgba(15,23,42,0.5); color: var(--text-muted); border: 1px solid var(--border); padding: 0.6rem 1rem; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
+        .tab-btn:hover { background: rgba(255,255,255,0.05); }
+        .tab-btn.active { background: rgba(59, 130, 246, 0.15); border-color: var(--accent); color: var(--accent); }
+
+        .method-content { display: none; animation: fadeIn 0.3s ease; }
+        .method-content.active { display: block; }
+
+        .equations { font-family: 'Fira Code', monospace; background: rgba(15, 23, 42, 0.6); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--border); color: var(--text-main); font-size: 1rem; overflow-x: auto; display: flex; flex-direction: column; gap: 0.8rem; }
+        .eq-line { line-height: 1.6; }
+
+        .math-mat { display: inline-flex; flex-direction: column; align-items: center; margin: 0 5px; vertical-align: middle; border-left: 2px solid var(--text-muted); border-right: 2px solid var(--text-muted); border-radius: 6px; padding: 8px 12px; background: rgba(0,0,0,0.2); }
+        .math-row { padding: 3px 0; display: flex; gap: 15px; }
+        .math-col { text-align: center; min-width: 45px; }
+
+        /* BARS CHART */
+        .chart-container { display: flex; align-items: flex-end; justify-content: space-around; height: 300px; width: 100%; border-bottom: 2px solid var(--border); position: relative; margin-top: 2rem; padding-top: 2rem; background: var(--surface); border-radius: 12px; }
+        .bar-group { display: flex; flex-direction: column; align-items: center; width: 100%; gap: 1rem; }
+        .bar-wrapper { height: 220px; width: 80px; background: rgba(255, 255, 255, 0.03); border-radius: 8px 8px 0 0; position: relative; display: flex; align-items: flex-end; border: 1px dashed rgba(255,255,255,0.1); border-bottom: none; }
+        .bar-fill { width: 100%; height: 0%; transition: height 1s cubic-bezier(0.34, 1.56, 0.64, 1); position: relative; display: flex; justify-content: center; border-radius: 4px 4px 0 0; box-shadow: inset 0 4px 10px rgba(255,255,255,0.2); background-color: var(--accent); }
+        .bar-value { position: absolute; top: -30px; font-size: 1.2rem; font-weight: 800; font-family: 'Fira Code', monospace; color: #ffffff; text-shadow: 0px 2px 4px rgba(0,0,0,0.9); }
+        .bar-label { font-size: 1.2rem; font-weight: bold; text-align: center; color: var(--text-main); }
+
+        .expected-value-box {
+            font-size: 1.8rem; font-family: 'Inter', sans-serif; font-weight: 800;
+            background: rgba(30,41,59,0.8); border: 2px solid var(--emerald); color: var(--emerald);
+            padding: 1rem 2rem; border-radius: 12px; margin-top: 2rem; text-align: center; box-shadow: 0 0 20px rgba(16,185,129,0.1);
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-left">
+            <h1>Cadenas de Markov - Procesos de Nacimiento y Muerte</h1>
+            <p>Editor Visual de Grafo (Tasa de Llegada λ y Salida μ) con Resolución Unificada</p>
+        </div>
+        <div>
+            <button class="btn-secondary" onclick="location.reload()">Vaciar y Reiniciar</button>
+        </div>
+    </header>
+
+    <main>
+        <section class="config-panel" id="config-panel">
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.5rem;">
+                <div class="control-group" style="margin:0;">
+                    <label>Cantidad de Nodos (Estados)</label>
+                    <input type="number" id="num-states" class="input-num" value="4" min="2" max="25" onchange="buildGraphEditor()">
+                </div>
+                <div style="display:flex; gap: 10px;">
+                    <button class="btn-secondary" onclick="loadExample(1)">Ej: Barbería</button>
+                    <button class="btn-secondary" onclick="loadExample(2)">Ej: Máquinas Variables</button>
+                </div>
+            </div>
+
+            <div class="editor-container" id="editor-container">
+                <!-- Injected via JS -->
+            </div>
+
+            <div style="margin-top: 2rem; display: flex; justify-content: flex-end;">
+                <button class="btn-primary" onclick="solve()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M12 5l7 7-7 7"></path></svg>
+                    Calcular y Resolver (4 Métodos)
+                </button>
+            </div>
+        </section>
+
+        <section class="results-area" id="results-area">
+            
+            <div class="methods-panel" style="width: 100%; text-align: center; border-color: var(--accent); background: rgba(15, 23, 42, 0.4);">
+                <div class="panel-title" style="border:none; margin-bottom: 1rem; color:var(--text-main);">Matriz de Intensidad Global Armíada (Q)</div>
+                <div style="color:var(--text-muted); font-size: 0.9rem; margin-bottom:1rem;">Esta es la matriz Q subyacente generada por tu grafo. La misma actuará como punto de partida para todos los métodos de resolución mostrados abajo.</div>
+                <div style="display:flex; justify-content:center; align-items:center; overflow-x:auto; padding: 1rem;" id="q-matrix-preview">
+                    <!-- Injected via JS -->
+                </div>
+            </div>
+
+            <div class="panels-wrapper">
+                <div class="methods-panel" style="width: 100%;">
+                    <div class="panel-title">Resolución Paso a Paso del Sistema</div>
+                    
+                    <div class="tabs">
+                        <button class="tab-btn active" onclick="showMethod('flujo')">Flujo Probabilístico (Balance)</button>
+                        <button class="tab-btn" onclick="showMethod('matrizQ')">Matriz Intensidad (Q) Analítica</button>
+                        <button class="tab-btn" onclick="showMethod('chapman')">Chapman-Kolmogorov Continuo</button>
+                        <button class="tab-btn" onclick="showMethod('directo')">Método Directo (Iterativo Pⁿ)</button>
+                    </div>
+
+                    <div id="methods-container">
+                        <!-- Injected via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="methods-panel" style="width: 100%; border-color: var(--emerald);">
+                <div class="panel-title" style="text-align: center; border:none; margin:0; color:var(--text-main);">Régimen Permanente y Valor Esperado (L)</div>
+                
+                <div id="l-result" class="expected-value-box">
+                    L = 0.00
+                </div>
+
+                <div class="chart-container" id="final-chart">
+                    <!-- Injected via JS -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        let ratesLambda = []; // rates lambda[i] goes from state i to i+1
+        let ratesMu = [];     // rates mu[i] goes from state i to i-1
+        let stateValues = []; // Value associated with each node for expectation
+        
+        let Q = [];
+        let steadyState = [];
+
+        window.onload = () => { buildGraphEditor(); };
+
+        function buildGraphEditor() {
+            let num = parseInt(document.getElementById('num-states').value);
+            if(num < 2) { num = 2; document.getElementById('num-states').value = 2; }
+            if(num > 25) { num = 25; document.getElementById('num-states').value = 25; }
+
+            // Preserve old values
+            let oldLambda = [...ratesLambda];
+            let oldMu = [...ratesMu];
+            let oldVals = [...stateValues];
+
+            ratesLambda = Array(Math.max(0, num-1)).fill(0);
+            ratesMu = Array(num).fill(0);
+            stateValues = Array(num).fill(0);
+
+            for (let i = 0; i < num; i++) {
+                stateValues[i] = oldVals[i] !== undefined ? oldVals[i] : i;
+                if (i < num - 1) {
+                    ratesLambda[i] = oldLambda[i] !== undefined ? oldLambda[i] : 1;
+                }
+                if (i > 0) {
+                    ratesMu[i] = oldMu[i] !== undefined ? oldMu[i] : 1;
+                }
+            }
+
+            renderGraph();
+        }
+
+        function renderGraph() {
+            const container = document.getElementById('editor-container');
+            let num = parseInt(document.getElementById('num-states').value);
+            container.innerHTML = '';
+
+            for (let i = 0; i < num; i++) {
+                // Node block
+                let nodeHTML = `
+                    <div class="node-block">
+                        <div class="node-circle" id="node-${i}">${i}</div>
+                        <div class="node-value">
+                            Valor n
+                            <input type="number" id="val-${i}" value="${stateValues[i]}" onchange="updateVal(${i}, this.value)">
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += nodeHTML;
+
+                if (i < num - 1) {
+                    // Transitions block
+                    let transHTML = `
+                        <div class="transitions-block">
+                            <div class="edge-right"></div>
+                            <input type="number" step="0.01" class="rate-input lambda" id="lam-${i}" value="${ratesLambda[i]}" onchange="updateLambda(${i}, this.value)" title="Tasa de Nacimiento (λ${i}) hacia el nodo ${i+1}">
+                            
+                            <input type="number" step="0.01" class="rate-input mu" id="mu-${i+1}" value="${ratesMu[i+1]}" onchange="updateMu(${i+1}, this.value)" title="Tasa de Muerte (μ${i+1}) hacia el nodo ${i}">
+                            <div class="edge-left"></div>
+                        </div>
+                    `;
+                    container.innerHTML += transHTML;
+                }
+            }
+        }
+
+        function updateLambda(idx, val) { ratesLambda[idx] = parseFloat(val) || 0; }
+        function updateMu(idx, val) { ratesMu[idx] = parseFloat(val) || 0; }
+        function updateVal(idx, val) { stateValues[idx] = parseFloat(val) || 0; }
+
+        function loadExample(id) {
+            if (id === 1) {
+                // Barberia M/M/1/2
+                document.getElementById('num-states').value = 3;
+                ratesLambda = [0.3333333, 0.3333333];
+                ratesMu = [0, 4, 4];
+                stateValues = [0, 1, 2];
+                buildGraphEditor();
+            } else if (id === 2) {
+                // Máquinas: λ variable = n * λ, etc o específico
+                document.getElementById('num-states').value = 3;
+                ratesLambda = [2, 1]; // Estado 0 => 2 maq funcan, tasa falla = 2*1. Estado 1 => 1 maq funca, falla = 1*1.
+                ratesMu = [0, 2, 2]; // Reparación siempre es 1 operario µ=2.
+                stateValues = [0, 1, 2];
+                buildGraphEditor();
+            }
+        }
+
+        function solve() {
+            const num = parseInt(document.getElementById('num-states').value);
+            
+            // Build Intensity Matrix Q
+            Q = [];
+            for (let i = 0; i < num; i++) {
+                let row = Array(num).fill(0);
+                let sum = 0;
+                if (i < num - 1) {
+                    row[i+1] = ratesLambda[i];
+                    sum += ratesLambda[i];
+                }
+                if (i > 0) {
+                    row[i-1] = ratesMu[i];
+                    sum += ratesMu[i];
+                }
+                row[i] = -sum;
+                Q.push(row);
+            }
+
+            // A * p = B for exact solution
+            let A = [];
+            for(let i=0; i<num; i++) {
+                let col = [];
+                for(let j=0; j<num; j++) {
+                    col.push(Q[j][i]);
+                }
+                A.push(col);
+            }
+            // Replace last row of A with 1s
+            for(let j=0; j<num; j++) A[num-1][j] = 1;
+            
+            let B = Array(num).fill(0);
+            B[num-1] = 1;
+            
+            steadyState = gaussianElimination(A, B);
+
+            // Populate the static preview of Q matrix before generating tabs
+            document.getElementById('q-matrix-preview').innerHTML = createGridMatrix(Q, 'Q');
+
+            // Generate Methods Views
+            generateMethodsSections(num, Q, steadyState);
+            renderChart(num, steadyState, stateValues);
+
+            document.getElementById('config-panel').classList.add('collapsed');
+            document.getElementById('results-area').classList.add('show');
+            setTimeout(() => { document.getElementById('results-area').scrollIntoView({behavior: 'smooth', block: 'start'}); }, 300);
+            
+            showMethod('flujo');
+        }
+
+        function gaussianElimination(A, b) {
+            let n = A.length;
+            let m = A.map(r => [...r]); 
+            let bv = [...b];
+            
+            for (let i=0; i<n; i++) m[i].push(bv[i]);
+            
+            for (let i=0; i<n; i++) {
+                let maxEl = Math.abs(m[i][i]);
+                let maxRow = i;
+                for (let k=i+1; k<n; k++) {
+                    if (Math.abs(m[k][i]) > maxEl) {
+                        maxEl = Math.abs(m[k][i]);
+                        maxRow = k;
+                    }
+                }
+                let tmp = m[maxRow]; m[maxRow] = m[i]; m[i] = tmp;
+                
+                let pivot = m[i][i];
+                if (Math.abs(pivot) < 1e-10) continue; 
+                
+                for(let k=i; k<=n; k++) m[i][k] /= pivot;
+                for(let j=0; j<n; j++) {
+                    if (i !== j) {
+                        let factor = m[j][i];
+                        for (let k=i; k<=n; k++) m[j][k] -= factor * m[i][k];
+                    }
+                }
+            }
+            return m.map(row => row[n]);
+        }
+
+        function createGridMatrix(mat, name="Q") {
+            let html = `<table style="border-collapse: collapse; margin: 10px; font-family: 'Fira Code', monospace; font-size: 1.1rem; color: white;">`;
+            
+            // Header row
+            html += `<tr><td style="padding: 10px 15px; font-weight: 800; font-size: 1.3rem; color: var(--accent); text-align: center; border-right: 1px solid rgba(255,255,255,0.3); border-bottom: 1px solid rgba(255,255,255,0.3);">${name}</td>`;
+            for(let c=0; c<mat[0].length; c++) {
+                html += `<td style="padding: 10px 15px; font-weight: bold; font-size: 1.2rem; color: white; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.3); border-left: 1px solid rgba(255,255,255,0.3);">${c}</td>`;
+            }
+            html += `</tr>`;
+            
+            // Data rows
+            for(let r=0; r<mat.length; r++) {
+                html += `<tr>`;
+                // Row header
+                html += `<td style="padding: 10px 15px; font-weight: bold; font-size: 1.2rem; color: white; text-align: center; border-right: 1px solid rgba(255,255,255,0.3); border-top: 1px solid rgba(255,255,255,0.3);">${r}</td>`;
+                
+                // Data cells
+                for(let c=0; c<mat[0].length; c++) {
+                    let val = (typeof mat[r][c] === 'number') ? mat[r][c].toFixed(4) : mat[r][c];
+                    html += `<td style="padding: 10px 15px; text-align: center; border: 1px solid rgba(255,255,255,0.3);">${val}</td>`;
+                }
+                html += `</tr>`;
+            }
+            html += `</table>`;
+            return html;
+        }
+
+        function createMathMatXML(mat) {
+            let html = `<div class="math-mat">`;
+            for(let r=0; r<mat.length; r++) {
+                html += `<div class="math-row">`;
+                for(let c=0; c<mat[0].length; c++) {
+                    let val = (typeof mat[r][c] === 'number') ? mat[r][c].toFixed(4) : mat[r][c];
+                    html += `<div class="math-col">${val}</div>`;
+                }
+                html += `</div>`;
+            }
+            html += `</div>`;
+            return html;
+        }
+
+        function multiplyMatrix(A, B) {
+            let result = new Array(A.length).fill(0).map(() => new Array(B[0].length).fill(0));
+            for (let i = 0; i < A.length; i++) {
+                for (let j = 0; j < B[0].length; j++) {
+                    for (let k = 0; k < A[0].length; k++) {
+                        result[i][j] += A[i][k] * B[k][j];
+                    }
+                }
+            }
+            return result;
+        }
+
+        function matrixPower(P, pow) {
+            let res = P;
+            for(let i=1; i<pow; i++){ res = multiplyMatrix(res, P); }
+            return res;
+        }
+
+        function generateMethodsSections(N, Q, pi) {
+            const container = document.getElementById('methods-container');
+            let pVars = Array.from({length:N}, (_,i)=>`p(${i})`);
+            let html = "";
+
+            // METODO 1: FLUJO PROBABILISTICO (BALANCE)
+            html += `<div class="method-content active" id="content-flujo">
+                <div class="equations">
+                    <div class="eq-line" style="color:var(--accent); font-weight:bold;">Equilibrio de Flujos Probabilísticos (Entrada = Salida)</div>
+                    <div class="eq-line" style="color:var(--text-muted);">En un proceso de Nacimiento y Muerte, el balance se simplifica notablemente. Podemos equilibrar la tasa probabilística que "sube" (cruza a la derecha) con la tasa que "baja" (cruza a la izquierda) efectuando <b>un corte entre cada par de nodos adyacentes</b> n y n+1:</div>
+                    <div class="eq-line" style="margin: 1rem 0; font-size:1.1rem; text-align:center;">p(n) · λ<sub>n</sub>  =  p(n+1) · μ<sub>n+1</sub></div>
+                    <div class="eq-line" style="color:var(--text-muted);">Aplicando esto en cascada desde el nodo 0, podemos despejar todas las probabilidades encadenadas directamente en función de la probabilidad inicial p(0):</div>`;
+            
+            for(let i=0; i<N-1; i++) {
+                let ratio = (ratesLambda[i] && ratesMu[i+1]) ? (ratesLambda[i]/ratesMu[i+1]).toFixed(4) : "∞";
+                html += `<div class="eq-line" style="margin-top: 0.5rem;">Corte ${i} a ${i+1}: <b>p(${i+1}) = p(${i}) · (λ<sub>${i}</sub> / μ<sub>${i+1}</sub>) = p(${i}) · (${ratesLambda[i].toFixed(2)} / ${ratesMu[i+1].toFixed(2)})</b> &nbsp;=>&nbsp; <span style="color:var(--emerald)">p(${i+1}) = ${ratio} · p(${i})</span></div>`;
+            }
+
+            html += `<div class="eq-line" style="margin-top: 1.5rem; color:var(--text-muted);">Reemplazamos estos factores equivalentes en la <b>Equación de Cierre</b> (sabiendo que todas las p(n) deben sumar 1):</div>
+                     <div class="eq-line" style="margin-top: 0.5rem; font-size: 1.1rem;"><b>Condición de Cierre:</b> ${pVars.join(' + ')} = 1.0</div>
+                     <div class="eq-line" style="margin-top: 1rem; color: var(--emerald); font-weight: bold; text-align:center;">Al despejar el factor común p(0) determinamos su valor en concreto, y multiplicando luego por cada fracción obtenemos las demás p(n).</div>
+                </div>
+            </div>`;
+
+            // METODO 2: MATRIZ INTENSIDAD Q (ANALITICA)
+            let A_display = [];
+            for(let r=0; r<N; r++) {
+                let row = [];
+                for(let c=0; c<N; c++) {
+                    if(c === N-1) row.push("1.00");
+                    else row.push(Q[r][c]);
+                }
+                A_display.push(row);
+            }
+            let B_vector = Array(N).fill("0"); B_vector[N-1] = "1";
+
+            html += `<div class="method-content" id="content-matrizQ">
+                <div class="equations">
+                    <div class="eq-line" style="color:var(--accent); font-weight:bold;">Matriz Intensidad Q y Despeje Analítico Multivariable ( p · A = B )</div>
+                    <div class="eq-line" style="color:var(--text-muted);">Las tasas del grafo se insertan matricialmente. Los elementos fuera de la diagonal (d<sub>ij</sub>) son las transiciones de llegada/salida que ingresaste, y la diagonal (d<sub>ii</sub>) es la suma negativa de su fila.</div>
+                    <div class="eq-line" style="display:flex; justify-content:center; align-items:center; gap: 10px; margin: 1rem 0;">
+                        <span>Q = </span>${createMathMatXML(Q)}
+                    </div>
+                    <div class="eq-line" style="color:var(--text-muted);">Por la propiedad de flujo estacionario p·Q=0, las columnas de Q son "linealmente dependientes", dando infinitos resultados matriciales. Para hallar la única distribución donde las probabilidades sumen 1 (∑p=1), <b>desechamos la última columna</b> y en su lugar <b>incorporamos el vector unitario</b> de unos. Definimos a esta nueva matriz <b>A</b>:</div>
+                    <div class="eq-line" style="display:flex; justify-content:center; align-items:center; gap: 10px; overflow-x: auto; margin-top:1rem;">
+                        <span style="font-weight:bold; color:var(--emerald);">[p(0)...p(n)] · </span>${createMathMatXML(A_display)}
+                        <span style="font-weight:bold; color:var(--emerald);"> = [${B_vector.join(' ')}]</span>
+                    </div>
+                    <div class="eq-line" style="margin-top: 1rem; color: var(--emerald); font-weight: bold; text-align:center;">Invirtiendo analíticamente y multiplicando (p = B × A<sup>-1</sup>) el resultado es directo.</div>
+                </div>
+            </div>`;
+
+            // METODO 3: CHAPMAN-KOLMOGOROV (Derivadas)
+            html += `<div class="method-content" id="content-chapman">
+                <div class="equations">
+                    <div class="eq-line" style="color:var(--accent); font-weight:bold;">Ecuaciones Diferenciales de Chapman-Kolmogorov ( p'(t) = 0 )</div>
+                    <div class="eq-line" style="color:var(--text-muted);">En tiempo continuo, Chapman-Kolmogorov da lugar al sistema de ecuaciones diferenciales hacia adelante (Forward Equations), que revelan la tasa de cambio de la probabilidad a lo largo del tiempo t.</div>
+                    <div class="eq-line" style="color:var(--text-muted);">Para que se alcance el estado estacionario / permanente, la probabilidad debe estancar y su derivada temporal es matemáticamente CERO (dp/dt = 0). Armamos el sistema multiplicando la distribución p por las columnas de Q:</div>`;
+            for(let c=0; c<N; c++) {
+                let terms = [];
+                for(let r=0; r<N; r++) {
+                    if (Q[r][c] !== 0) terms.push(`${Q[r][c].toFixed(2)}·${pVars[r]}`);
+                }
+                html += `<div class="eq-line" style="margin-top:0.8rem"><b>Derivada Nodo ${c} &nbsp;[ dp(${c})/dt ]:</b> ${terms.join(' + ').replace('+ -', '- ')} = <b style="color:var(--rose)">0</b></div>`;
+            }
+            html += `<div class="eq-line" style="margin-top: 1.5rem; color: var(--emerald); font-weight: bold; text-align:center;">Queda delineado el mismo sistema algebraico de P·Q = 0, que se cierra sumando las probabilidades y despejando.</div>
+                </div></div>`;
+
+            // METODO 4: METODO DIRECTO (Límite Pn Uniformización)
+            let max_q = 0;
+            for(let i=0; i<N; i++) { if(Math.abs(Q[i][i]) > max_q) max_q = Math.abs(Q[i][i]); }
+            let dt = max_q > 0 ? 1 / (max_q + 1) : 1; // +1 to ensure P_ii is > 0 and stochastic
+            
+            let P_discreto = [];
+            for(let i=0; i<N; i++) {
+                let row = [];
+                for(let j=0; j<N; j++) {
+                    let val = (i===j ? 1 : 0) + Q[i][j] * dt;
+                    row.push(val);
+                }
+                P_discreto.push(row);
+            }
+            
+            let P50 = matrixPower(P_discreto, 50);
+
+            html += `<div class="method-content" id="content-directo">
+                <div class="equations">
+                    <div class="eq-line" style="color:var(--accent); font-weight:bold;">Método Directo (Límite Iterativo Discreto Lim n→∞ de Pⁿ)</div>
+                    <div class="eq-line" style="color:var(--text-muted);">En la unidad de discreto usabas el Límite de Pⁿ cuando n es grande. Aunque actuamos en un ambiente continuo, podemos <b>uniformizar / discretizar</b> computacionalmente la matriz de tasas de transición (Q) transformando las intensidades en probabilidades reales (Matriz P) reduciendo a un salto de tiempo Δt hipotético ínfimo (aquí Δt = ${dt.toFixed(4)}):</div>
+                    <div class="eq-line" style="display:flex; justify-content:center; align-items:center; gap: 10px; margin: 1rem 0;">
+                        <span>P(Δt) = I + Q·Δt = </span>${createMathMatXML(P_discreto)}
+                    </div>
+                    <div class="eq-line" style="color:var(--text-muted);">Ahora poseemos la transición en cada "micro-paso". Para observar la evolución "infinita", iteramos la matriz sobre sí misma emulando n saltos de la cadena iterativa. Aquí el resultado en el escenario n = 50:</div>
+                    <div class="eq-line" style="display:flex; justify-content:center; align-items:center; gap: 10px; margin: 1rem 0;">
+                        <span>P<sup>50</sup> = </span>${createMathMatXML(P50)}
+                    </div>
+                    <div class="eq-line" style="color:var(--text-muted);">Como ves, <b>todas las filas terminan siendo idénticas</b>: no importa de dónde empiece el sistema al paso 0, convergerá incondicionalmente a la misma distribución constante. Las probabilidades en esos valores convergentes son nuestro Régimen Permanente buscado.</div>
+                </div>
+            </div>`;
+
+            container.innerHTML = html;
+        }
+
+        function showMethod(id) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector(`.tab-btn[onclick="showMethod('${id}')"]`).classList.add('active');
+            
+            document.querySelectorAll('.method-content').forEach(m => m.classList.remove('active'));
+            document.getElementById(`content-${id}`).classList.add('active');
+        }
+
+        function renderChart(N, pi, values) {
+            const chartArea = document.getElementById('final-chart');
+            const lResult = document.getElementById('l-result');
+            chartArea.innerHTML = '';
+            
+            let expectedL = 0;
+            
+            for(let i=0; i<N; i++) {
+                let p = pi[i];
+                expectedL += p * values[i];
+                let percentStr = (p * 100).toFixed(1) + '%';
+                
+                chartArea.innerHTML += `
+                    <div class="bar-group">
+                        <div class="bar-wrapper">
+                            <div class="bar-fill" id="final-bar-${i}">
+                                <div class="bar-value">${percentStr}</div>
+                            </div>
+                        </div>
+                        <div style="text-align:center;">
+                            <div class="bar-label">Nodo ${i}</div>
+                            <div style="font-size: 0.8rem; color:var(--text-muted); margin-top:5px;">[ p(${i}) ]</div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            lResult.innerHTML = `<div style="font-size: 0.9rem; font-weight: 500; color:var(--text-muted); margin-bottom: 0.8rem; text-transform:none;">Largo de Todo el Sistema En Régimen Permanente: ∑ (n × p(n))</div>L = ${expectedL.toFixed(4)}`;
+
+            setTimeout(() => {
+                for(let i=0; i<N; i++) {
+                    let elem = document.getElementById(`final-bar-${i}`);
+                    if(elem) elem.style.height = `${Math.max(1, pi[i] * 100)}%`;
+                }
+            }, 100);
+        }
+
+    </script>
+</body>
+</html>

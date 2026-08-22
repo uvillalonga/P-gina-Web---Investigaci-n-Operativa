@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resolución Interactiva: Call Center (Cadenas de Markov)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;800&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --surface: rgba(30, 41, 59, 0.7);
+            --surface-hover: rgba(30, 41, 59, 0.9);
+            --border: rgba(148, 163, 184, 0.1);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --emerald: #10b981;
+            --rose: #f43f5e;
+            --amber: #f59e0b;
+            --purple: #8b5cf6;
+            --cyan: #06b6d4;
+            --conmutador-color: #3b82f6; /* Blue */
+            --ventas-color: #10b981; /* Emerald */
+            --pedidos-color: #f59e0b; /* Amber */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.05), transparent 25%),
+                radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.05), transparent 25%);
+        }
+
+        header {
+            padding: 1.5rem 5%;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(11, 15, 25, 0.8);
+        }
+
+        .header-left h1 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #60a5fa, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.25rem;
+        }
+
+        .header-left p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* CENTRAL SCROLLYTELLING LAYOUT */
+        main.cascade-main {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 4rem; /* Spacer between steps */
+        }
+
+        .step-section {
+            display: none; /* Hidden logic */
+            gap: 2rem;
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            align-items: center; /* keep items vertically aligned */
+        }
+
+        .step-section.active {
+            display: flex;
+        }
+
+        .step-section.active.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .step-desc {
+            flex: 1;
+            min-width: 350px;
+            max-width: 450px;
+        }
+
+        .step-viz {
+            flex: 2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(15, 23, 42, 0.2);
+            border-radius: 12px;
+            padding: 2rem;
+            border: 1px solid var(--border);
+        }
+
+        /* STEPS STYLING */
+        .step-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            position: relative;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .step-card.active-state {
+            border-color: var(--accent);
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.15);
+        }
+
+        .step-card.completed-state {
+            border-color: rgba(16, 185, 129, 0.3);
+            opacity: 0.85; /* dim previous steps subtly */
+        }
+
+        .step-badge {
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 0.2rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .step-card.active-state .step-badge {
+            border-color: var(--accent);
+            color: var(--accent);
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
+        }
+        
+        .step-card.completed-state .step-badge {
+            color: var(--emerald);
+            border-color: var(--emerald);
+        }
+
+        .step-content {
+            margin-top: 5px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: var(--text-main);
+        }
+
+        .highlight-data {
+            color: var(--amber);
+            font-weight: bold;
+            font-family: 'Fira Code', monospace;
+        }
+
+        button.btn-next {
+            margin-top: 1.5rem;
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.8rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            width: 100%;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: block;
+        }
+
+        button.btn-next.hidden {
+            display: none !important;
+        }
+
+        button.btn-next:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+        }
+
+        /* Matrix Styling */
+        .matrix {
+            display: grid;
+            grid-template-columns: min-content auto;
+            gap: 10px;
+            font-family: 'Fira Code', monospace;
+            font-size: 1.4rem;
+        }
+
+        .mat-header-row {
+            display: flex;
+            justify-content: space-around;
+            padding-left: 20px;
+            font-weight: bold;
+            color: var(--text-muted);
+        }
+        
+        .mat-body {
+            display: flex;
+            position: relative;
+        }
+        
+        .mat-body::before, .mat-body::after {
+            content: '';
+            width: 15px;
+            position: absolute;
+            top: -5px; bottom: -5px;
+            border: 3px solid var(--accent);
+            border-radius: 5px;
+        }
+        
+        .mat-body::before { left: 0; border-right: none; }
+        .mat-body::after { right: 0; border-left: none; }
+        
+        table.mat-table {
+            border-collapse: separate;
+            border-spacing: 25px 15px;
+            padding: 0 10px;
+        }
+        
+        .mat-table td {
+            text-align: center;
+            min-width: 50px;
+        }
+        
+        .mat-row-label {
+            font-weight: bold;
+            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            text-align: right;
+            padding-right: 15px;
+            padding-top: 15px;
+            padding-bottom: 15px;
+        }
+
+        .header-c { color: var(--conmutador-color); }
+        .header-v { color: var(--ventas-color); }
+        .header-p { color: var(--pedidos-color); }
+
+        /* SVG Graph Styling */
+        svg.markov-graph {
+            width: 100%;
+            max-width: 600px;
+            height: 500px;
+            overflow: visible;
+        }
+
+        .node circle {
+            fill: #0b0f19; /* Explicit dark background so letters are readable */
+            stroke-width: 4px;
+            transition: all 0.3s;
+        }
+        
+        .node text {
+            font-family: 'Inter', sans-serif;
+            font-weight: 900;
+            font-size: 2rem;
+            text-anchor: middle;
+            dominant-baseline: central;
+        }
+
+        .node-c text { fill: var(--conmutador-color); }
+        .node-v text { fill: var(--ventas-color); }
+        .node-p text { fill: var(--pedidos-color); }
+
+        .node-c circle { stroke: var(--conmutador-color); box-shadow: none; fill: var(--bg-color) !important; }
+        .node-v circle { stroke: var(--ventas-color); fill: var(--bg-color) !important; }
+        .node-p circle { stroke: var(--pedidos-color); fill: var(--bg-color) !important; }
+        
+        .node:hover circle {
+            /* minimal feedback to not blind the text */
+            filter: brightness(1.5);
+            stroke-width: 6px;
+        }
+
+        .edge path {
+            fill: none;
+            stroke: var(--text-muted);
+            stroke-width: 3px;
+            marker-end: url(#arrowhead);
+            /* anim initialization */
+            opacity: 0;
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+        }
+
+        .edge.anim path {
+            opacity: 0.6;
+            animation: drawPath 1.5s forwards ease-in-out;
+            transition: stroke 0.3s;
+        }
+        
+        .edge path:hover {
+            stroke: var(--text-main);
+            stroke-width: 4px;
+            opacity: 1 !important;
+        }
+
+        @keyframes drawPath {
+            to { stroke-dashoffset: 0; }
+        }
+
+        .edge text {
+            fill: var(--text-main);
+            font-family: 'Fira Code', monospace;
+            font-size: 1.1rem;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        .edge.anim text {
+            opacity: 1;
+            transition-delay: 1s;
+        }
+
+        /* Final Bars Chart Styling */
+        .chart-container {
+            display: none;
+            align-items: flex-end;
+            justify-content: space-around;
+            height: 350px;
+            width: 100%;
+            border-bottom: 3px solid rgba(255,255,255,0.2);
+            position: relative;
+            animation: fadeIn 1s ease-out;
+            margin-top: 3rem;
+        }
+
+        .chart-container.visible {
+            display: flex;
+        }
+
+        .bar-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            gap: 1.5rem;
+        }
+
+        .bar-wrapper {
+            height: 280px;
+            width: 90px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px 8px 0 0;
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+            border: 1px dashed rgba(255,255,255,0.1);
+            border-bottom: none;
+            overflow: visible;
+        }
+
+        .bar-fill {
+            width: 100%;
+            height: 0%;
+            transition: height 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            box-shadow: inset 0 4px 10px rgba(255,255,255,0.3);
+            display: flex;
+            justify-content: center;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .bar-value {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            top: 15px; 
+            font-size: 1.3rem;
+            font-weight: 800;
+            font-family: 'Fira Code', monospace;
+            color: #ffffff;
+            text-shadow: 0px 2px 4px rgba(0,0,0,0.9);
+            z-index: 10;
+        }
+
+        .bar-label {
+            font-size: 1.1rem;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+            width: 100%;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .tab-btn {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid transparent;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .tab-btn:hover {
+            background: rgba(255,255,255,0.05);
+            color: var(--text-main);
+        }
+
+        .tab-btn.active {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .method-content {
+            display: none;
+            width: 100%;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .method-content.active {
+            display: block;
+        }
+
+        .equations {
+            font-family: 'Fira Code', monospace;
+            background: rgba(15, 23, 42, 0.6);
+            padding: 2rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            color: var(--amber);
+            width: 100%;
+            font-size: 1rem;
+            overflow-x: auto;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .eq-line {
+            margin-bottom: 0.7rem;
+            line-height: 1.5;
+            width: 100%;
+        }
+        .eq-flex {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            width: 100%;
+        }
+        
+        .cascade-step {
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.5s ease;
+            max-height: 0;
+            overflow: hidden;
+            width: 100%;
+            margin-bottom: 0;
+        }
+
+        .cascade-step.visible {
+            opacity: 1;
+            transform: translateY(0);
+            max-height: 600px;
+            margin-bottom: 1rem;
+        }
+
+        .btn-cascade {
+            margin-top: 1.5rem;
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid var(--accent);
+            color: var(--text-main);
+            padding: 0.6rem 2rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-cascade:hover {
+            background: var(--accent);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+        
+        .btn-cascade.hidden {
+            display: none;
+        }
+
+        .math-mat {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0 5px;
+            vertical-align: middle;
+            border-left: 2px solid var(--text-muted);
+            border-right: 2px solid var(--text-muted);
+            border-radius: 6px;
+            padding: 8px 12px;
+            color: var(--text-main);
+            background: rgba(0,0,0,0.2);
+            transition: all 0.3s;
+        }
+        .math-row {
+            padding: 3px 0;
+            display: flex;
+            gap: 20px;
+        }
+        .math-col {
+            text-align: center;
+            min-width: 45px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-left">
+            <h1>Cadenas de Markov: Caso Call Center</h1>
+            <p>Paso a paso de un ejercicio de final (18/12/23)</p>
+        </div>
+    </header>
+
+    <main class="cascade-main" id="main-scroller">
+        
+        <!-- STEP 1 -->
+        <section class="step-section active show" id="step-1">
+            <div class="step-desc">
+                <div class="step-card active-state" id="card-1">
+                    <div class="step-badge">Paso 1</div>
+                    <div class="step-content">
+                        <h3 style="margin-bottom: 10px; color: var(--text-main);">El Enunciado</h3>
+                        <p>En un servicio de call center el 100% las llamadas inician en el Conmutador y luego todas se derivan a Ventas y/o Pedidos.</p>
+                        <p style="margin-top: 10px;">• El <span class="highlight-data">30%</span> de las llamadas en Conmutador se derivan a Ventas.<br>
+                        • El <span class="highlight-data">40%</span> de llamados en Ventas pasan a Pedidos.<br>
+                        • El <span class="highlight-data">100%</span> de los llamados en Pedidos vuelven al Conmutador.<br>
+                        • Ningún llamado finaliza en Ventas o Pedidos.</p>
+                    </div>
+                    <button class="btn-next" onclick="nextSection(2)">Siguiente: Definir Estados</button>
+                </div>
+            </div>
+            <div class="step-viz">
+                <div style="text-align: center;">
+                    <svg width="150" height="150" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 2rem;">
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                    </svg>
+                    <h2 style="font-size: 2rem; color: var(--text-main);">El Sistema Telefónico</h2>
+                    <p style="color: var(--text-muted); font-size: 1.2rem; margin-top: 1rem; max-width: 400px; line-height: 1.5;">
+                        ¿Dónde pasará más tiempo una llamada aleatoria a largo plazo?
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- STEP 2 -->
+        <section class="step-section" id="step-2">
+            <div class="step-desc">
+                <div class="step-card active-state" id="card-2">
+                    <div class="step-badge">Paso 2</div>
+                    <div class="step-content">
+                        <h3 style="margin-bottom: 10px; color: var(--text-main);">Identificación de los Estados</h3>
+                        <p>En un modelo de Cadenas de Markov, lo primero es definir el espacio de estados <b>S</b> de la variable aleatoria. ¿Dónde puede estar una llamada en un momento dado?</p>
+                        <ul style="margin-top: 10px; margin-left: 20px; line-height: 1.8;">
+                            <li><b class="header-c">C:</b> Conmutador</li>
+                            <li><b class="header-v">V:</b> Ventas</li>
+                            <li><b class="header-p">P:</b> Pedidos</li>
+                        </ul>
+                    </div>
+                    <button class="btn-next" onclick="nextSection(3)">Siguiente: Matriz de Transición</button>
+                </div>
+            </div>
+            <div class="step-viz">
+                <div style="text-align: center;">
+                    <h2 style="font-size: 2.5rem; letter-spacing: 2px;">S = {<span class="header-c">C</span>, <span class="header-v">V</span>, <span class="header-p">P</span>}</h2>
+                </div>
+            </div>
+        </section>
+
+        <!-- STEP 3 -->
+        <section class="step-section" id="step-3">
+            <div class="step-desc">
+                <div class="step-card active-state" id="card-3">
+                    <div class="step-badge">Paso 3</div>
+                    <div class="step-content">
+                        <h3 style="margin-bottom: 10px; color: var(--text-main);">Construyendo la Matriz (P)</h3>
+                        <p>Traducimos los porcentajes del texto a probabilidades:</p>
+                        <ul style="margin-top: 10px; margin-left: 20px; line-height: 1.8;">
+                            <li><b>Desde C:</b> 30% a V (0.3). Como no finalizan, el resto (70%) va a P (0.7).</li>
+                            <li><b>Desde V:</b> 40% a P (0.4). Al no finalizar, el 60% restante vuelve a C (0.6).</li>
+                            <li><b>Desde P:</b> 100% vuelve a C (1.0).</li>
+                        </ul>
+                    </div>
+                    <button class="btn-next" onclick="nextSection(4)">Siguiente: Dibujar Grafo</button>
+                </div>
+            </div>
+            <div class="step-viz">
+                <div class="matrix">
+                    <div></div> <!-- Empty Corner -->
+                    <div class="mat-header-row">
+                        <div class="header-c" style="padding-left: 2px;">C</div>
+                        <div class="header-v" style="padding-left: 6px;">V</div>
+                        <div class="header-p" style="padding-left: 6px;">P</div>
+                    </div>
+                    
+                    <div class="mat-row-label">
+                        <div class="header-c">C</div>
+                        <div class="header-v">V</div>
+                        <div class="header-p">P</div>
+                    </div>
+                    <div class="mat-body">
+                        <table class="mat-table">
+                            <tr>
+                                <td style="color:#64748b;">0</td>
+                                <td style="color:var(--text-main);">0.3</td>
+                                <td style="color:var(--text-main);">0.7</td>
+                            </tr>
+                            <tr>
+                                <td style="color:var(--text-main);">0.6</td>
+                                <td style="color:#64748b;">0</td>
+                                <td style="color:var(--text-main);">0.4</td>
+                            </tr>
+                            <tr>
+                                <td style="color:var(--text-main);">1</td>
+                                <td style="color:#64748b;">0</td>
+                                <td style="color:#64748b;">0</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- STEP 4 -->
+        <section class="step-section" id="step-4">
+            <div class="step-desc">
+                <div class="step-card active-state" id="card-4">
+                    <div class="step-badge">Paso 4</div>
+                    <div class="step-content">
+                        <h3 style="margin-bottom: 10px; color: var(--text-main);">Grafo de Transición</h3>
+                        <p>El grafo asociado visualiza los estados como <b>Nodos</b> y las transiciones como <b>Arcos</b> con su probabilidad.</p>
+                        <p style="margin-top: 10px;">Podemos ver que todos los estados se comunican entre sí. Por lo tanto, es una <b>Cadena Ergódica</b>, lo que nos permite calcular su probabilidad a largo plazo.</p>
+                    </div>
+                    <button class="btn-next" onclick="nextSection(5)">Siguiente: Análisis a Largo Plazo</button>
+                </div>
+            </div>
+            <div class="step-viz">
+                <svg class="markov-graph" id="markov-svg">
+                    <defs>
+                        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="28" refY="3.5" orient="auto">
+                            <polygon points="0 0, 10 3.5, 0 7" fill="var(--text-muted)" />
+                        </marker>
+                    </defs>
+
+                    <!-- Edges -->
+                    <g class="edge" id="edge-cv"><path d="M 300 80 Q 180 120 150 250" /><text x="210" y="160">0.3</text></g>
+                    <g class="edge" id="edge-cp"><path d="M 300 80 Q 420 120 450 250" /><text x="390" y="160">0.7</text></g>
+                    <g class="edge" id="edge-vp"><path d="M 150 250 L 450 250" /><text x="285" y="240">0.4</text></g>
+                    <g class="edge" id="edge-vc"><path d="M 150 250 Q 230 180 300 80" stroke-dasharray="0" /><text x="210" y="210">0.6</text></g>
+                    <g class="edge" id="edge-pc"><path d="M 450 250 Q 370 180 300 80" /><text x="390" y="210">1.0</text></g>
+
+                    <!-- Nodes -->
+                    <g class="node node-c" transform="translate(300, 80)"><circle r="35" /><text>C</text></g>
+                    <g class="node node-v" transform="translate(150, 250)"><circle r="35" /><text>V</text></g>
+                    <g class="node node-p" transform="translate(450, 250)"><circle r="35" /><text>P</text></g>
+                </svg>
+            </div>
+        </section>
+
+        <!-- STEP 5 (LARGE) -->
+        <section class="step-section" id="step-5" style="align-items: flex-start;">
+            <div class="step-desc">
+                <div class="step-card active-state" id="card-5" style="position: sticky; top: 120px;">
+                    <div class="step-badge">Paso 5</div>
+                    <div class="step-content">
+                        <h3 style="margin-bottom: 10px; color: var(--text-main);">Régimen Permanente / Estabilidad</h3>
+                        <p>Queremos saber π = [π<sub>C</sub>, π<sub>V</sub>, π<sub>P</sub>] tal que <b>π×P = π</b> y la suma sea 1.</p>
+                        <p style="margin-top: 10px;">Existen distintos métodos para resolver esta estabilidad matemática dependiente del enfoque analítico que tomemos.</p>
+                        <p style="margin-top: 10px; padding: 10px; background: rgba(59,130,246,0.1); border-radius: 6px; border-left: 2px solid var(--accent); color: var(--text-main);">
+                            <i>Nota pedagógica: A la derecha, elige uno de los métodos para desglosar la resolución matemática capa por capa.</i>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="step-viz" style="flex-direction: column; padding-top: 1.5rem;">
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="showMethod('directo')">Método Directo (Límite)</button>
+                    <button class="tab-btn" onclick="showMethod('flujo')">Flujo Probabilístico</button>
+                    <button class="tab-btn" onclick="showMethod('chapman')">Chapman-Kolmogorov</button>
+                    <button class="tab-btn" onclick="showMethod('intensidad')">Matriz Intensidad</button>
+                </div>
+
+                <!-- NUEVO METODO DIRECTO (LIMITE) -->
+                <div class="method-content active" id="method-directo">
+                    <div class="equations">
+                        <div class="cascade-step visible" data-step="1">
+                            <div class="eq-line" style="color: var(--text-main); font-weight: bold; border-bottom: 1px solid var(--border); padding-bottom: 5px; margin-bottom: 15px;">Aproximación Numérica por Potencias (Límite)</div>
+                            <div class="eq-line" style="color: var(--text-muted);">Calculamos el límite de la matriz de transición P cuando n → ∞.</div>
+                        </div>
+                        <div class="cascade-step" data-step="2">
+                            <div class="eq-line">Al elevar la matriz a una potencia, por ejemplo <b>n = 10</b> empezamos a ver el patrón de convergencia:</div>
+                            <div class="eq-line eq-flex" style="margin: 1.5rem 0;">
+                                <span>P<sup>10</sup> = </span>
+                                <div class="math-mat">
+                                    <div class="math-row">
+                                        <div class="math-col">0.4716</div>
+                                        <div class="math-col">0.1415</div>
+                                        <div class="math-col">0.3868</div>
+                                    </div>
+                                    <div class="math-row">
+                                        <div class="math-col">0.4718</div>
+                                        <div class="math-col">0.1415</div>
+                                        <div class="math-col">0.3867</div>
+                                    </div>
+                                    <div class="math-row">
+                                        <div class="math-col">0.4717</div>
+                                        <div class="math-col">0.1415</div>
+                                        <div class="math-col">0.3868</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="cascade-step" data-step="3">
+                            <div class="eq-line">Aumentamos la potencia iterativa a <b>n = 20</b> y el sistema se estabiliza. Las filas son ahora virtualmente idénticas:</div>
+                            <div class="eq-line eq-flex" style="margin: 1.5rem 0;">
+                                <span>P<sup>20</sup> = </span>
+                                <div class="math-mat" style="box-shadow: 0 0 15px rgba(16,185,129,0.2); border-color: var(--emerald);">
+                                    <div class="math-row" style="color: var(--emerald); font-weight: bold;">
+                                        <div class="math-col header-c">0.4717</div>
+                                        <div class="math-col header-v">0.1415</div>
+                                        <div class="math-col header-p">0.3868</div>
+                                    </div>
+                                    <div class="math-row" style="color: var(--emerald); font-weight: bold;">
+                                        <div class="math-col header-c">0.4717</div>
+                                        <div class="math-col header-v">0.1415</div>
+                                        <div class="math-col header-p">0.3868</div>
+                                    </div>
+                                    <div class="math-row" style="color: var(--emerald); font-weight: bold;">
+                                        <div class="math-col header-c">0.4717</div>
+                                        <div class="math-col header-v">0.1415</div>
+                                        <div class="math-col header-p">0.3868</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="cascade-step" data-step="4">
+                            <div class="eq-line" style="margin-top:1rem;">Las tres filas convergen al mismo vector de probabilidades de estado estable:</div>
+                            <div class="eq-line" style="font-size: 1.4rem; font-weight: 800; margin-top: 15px;">
+                                π = [<span class="header-c">0.4717</span>, <span class="header-v">0.1415</span>, <span class="header-p">0.3868</span>]
+                            </div>
+                        </div>
+                        
+                        <button class="btn-cascade" id="btn-cascade-directo" onclick="nextCascadeStep('directo')">Siguiente Paso</button>
+                    </div>
+                </div>
+                <!-- FLUJO PROBABILÍSTICO -->
+                <div class="method-content" id="method-flujo">
+                    <div class="equations">
+                        <div class="cascade-step visible" data-step="1">
+                            <div class="eq-line" style="color: var(--text-main); font-weight: bold; border-bottom: 1px solid var(--border); padding-bottom: 5px; margin-bottom: 15px;">Conservación del Flujo: Entrada = Salida</div>
+                            <div class="eq-line" style="color: var(--text-main);">Analizamos qué probabilidad entra al nodo y cuál sale de él:</div>
+                        </div>
+                        
+                        <div class="cascade-step" data-step="2">
+                            <div class="eq-line" style="margin-top: 1rem;"><b class="header-v">Nodo Ventas (V):</b></div>
+                            <div class="eq-line">[Entra desde C] = [Sale a P] + [Sale a C]</div>
+                            <div class="eq-line">π<sub>C</sub>·(0.3) = π<sub>V</sub>·(0.4 + 0.6) &nbsp;=>&nbsp; <b>0.3·π<sub>C</sub> = 1.0·π<sub>V</sub></b></div>
+                        </div>
+
+                        <div class="cascade-step" data-step="3">
+                            <div class="eq-line" style="margin-top: 1rem;"><b class="header-p">Nodo Pedidos (P):</b></div>
+                            <div class="eq-line">[Entra desde C] + [Entra desde V] = [Sale a C]</div>
+                            <div class="eq-line">π<sub>C</sub>·(0.7) + π<sub>V</sub>·(0.4) = π<sub>P</sub>·(1.0) &nbsp;=>&nbsp; <b>0.7·π<sub>C</sub> + 0.4·π<sub>V</sub> = 1.0·π<sub>P</sub></b></div>
+                        </div>
+
+                        <div class="cascade-step" data-step="4">
+                            <div class="eq-line" style="margin-top: 1rem;"><b class="header-c">Nodo Conmutador (C):</b></div>
+                            <div class="eq-line">[Entra desde V] + [Entra desde P] = [Sale a V] + [Sale a P]</div>
+                            <div class="eq-line">π<sub>V</sub>·(0.6) + π<sub>P</sub>·(1.0) = π<sub>C</sub>·(0.3 + 0.7)</div>
+                            <div class="eq-line" style="margin-top: 1rem; color: var(--emerald); font-weight: bold;">Se genera el mismo sistema y despejamos π</div>
+                        </div>
+                        
+                        <button class="btn-cascade" id="btn-cascade-flujo" onclick="nextCascadeStep('flujo')">Siguiente Paso</button>
+                    </div>
+                </div>
+
+                <!-- CHAPMAN-KOLMOGOROV -->
+                <div class="method-content" id="method-chapman">
+                    <div class="equations">
+                        <div class="cascade-step visible" data-step="1">
+                            <div class="eq-line" style="color: var(--text-main); font-weight: bold; border-bottom: 1px solid var(--border); padding-bottom: 5px; margin-bottom: 15px;">Ecuaciones por Producto Matricial (π·P = π)</div>
+                            <div class="eq-line" style="color: var(--text-muted);">Multiplicando el vector fila por cada columna de P:</div>
+                        </div>
+                        
+                        <div class="cascade-step" data-step="2">
+                            <div class="eq-line eq-flex" style="margin: 1.5rem 0;">
+                                <span>[π<sub>C</sub>, π<sub>V</sub>, π<sub>P</sub>]</span> 
+                                <span>×</span>
+                                <div class="math-mat">
+                                    <div class="math-row">
+                                        <div class="math-col">0</div>
+                                        <div class="math-col" style="color: var(--text-main)">0.3</div>
+                                        <div class="math-col" style="color: var(--text-main)">0.7</div>
+                                    </div>
+                                    <div class="math-row">
+                                        <div class="math-col" style="color: var(--text-main)">0.6</div>
+                                        <div class="math-col">0</div>
+                                        <div class="math-col" style="color: var(--text-main)">0.4</div>
+                                    </div>
+                                    <div class="math-row">
+                                        <div class="math-col" style="color: var(--text-main)">1</div>
+                                        <div class="math-col">0</div>
+                                        <div class="math-col">0</div>
+                                    </div>
+                                </div>
+                                <span>=</span>
+                                <span>[π<sub>C</sub>, π<sub>V</sub>, π<sub>P</sub>]</span>
+                            </div>
+                        </div>
+
+                        <div class="cascade-step" data-step="3">
+                            <div class="eq-line" style="margin-top: 1.5rem;"><b>Producto Fila x <span class="header-v">Columna 2 (V)</span>:</b></div>
+                            <div class="eq-line">π<sub>C</sub>·(0.3) + π<sub>V</sub>·(0) + π<sub>P</sub>·(0) = π<sub>V</sub></div>
+                        </div>
+                        
+                        <div class="cascade-step" data-step="4">
+                            <div class="eq-line" style="margin-top: 1rem;"><b>Producto Fila x <span class="header-p">Columna 3 (P)</span>:</b></div>
+                            <div class="eq-line">π<sub>C</sub>·(0.7) + π<sub>V</sub>·(0.4) + π<sub>P</sub>·(0) = π<sub>P</sub></div>
+                        </div>
+
+                        <div class="cascade-step" data-step="5">
+                            <div class="eq-line" style="margin-top: 1rem;"><b>Producto Fila x <span class="header-c">Columna 1 (C)</span>:</b></div>
+                            <div class="eq-line">π<sub>C</sub>·(0) + π<sub>V</sub>·(0.6) + π<sub>P</sub>·(1) = π<sub>C</sub></div>
+                            <div class="eq-line" style="margin-top: 1rem; color: var(--emerald); font-weight: bold;">Se genera el mismo sistema y despejamos π</div>
+                        </div>
+                        
+                        <button class="btn-cascade" id="btn-cascade-chapman" onclick="nextCascadeStep('chapman')">Siguiente Paso</button>
+                    </div>
+                </div>
+
+                <!-- MATRIZ INTENSIDAD DE TRANSICION -->
+                <div class="method-content" id="method-intensidad">
+                    <div class="equations">
+                        <div class="cascade-step visible" data-step="1">
+                            <div class="eq-line" style="color: var(--text-main); font-weight: bold; border-bottom: 1px solid var(--border); padding-bottom: 5px; margin-bottom: 15px;">Matriz Intensidad de Transición (M = P - I)</div>
+                            <div class="eq-line" style="color: var(--text-muted);">Al sistema π·P = π se lo puede reescribir como π·(P - I) = 0</div>
+                        </div>
+                        
+                        <div class="cascade-step" data-step="2">
+                            <div class="eq-line" style="color: var(--text-muted);">Restando 1 en la diagonal principal de P obtenemos la Matriz M:</div>
+                            <div class="eq-line eq-flex" style="margin: 1.5rem 0;">
+                                <span>M = </span>
+                                <div class="math-mat">
+                                    <div class="math-row">
+                                        <div class="math-col" style="color: var(--rose); font-weight:bold;">-1</div>
+                                        <div class="math-col" style="color: var(--text-main)">0.3</div>
+                                        <div class="math-col" style="color: var(--text-main)">0.7</div>
+                                    </div>
+                                    <div class="math-row">
+                                        <div class="math-col" style="color: var(--text-main)">0.6</div>
+                                        <div class="math-col" style="color: var(--rose); font-weight:bold;">-1</div>
+                                        <div class="math-col" style="color: var(--text-main)">0.4</div>
+                                    </div>
+                                    <div class="math-row">
+                                        <div class="math-col" style="color: var(--text-main)">1</div>
+                                        <div class="math-col" style="color: var(--text-muted)">0</div>
+                                        <div class="math-col" style="color: var(--rose); font-weight:bold;">-1</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="cascade-step" data-step="3">
+                            <div class="eq-line" style="margin-top: 1rem;">Resolviendo el sistema homogéneo π·M = 0 (columnas):</div>
+                            <div class="eq-line">Col 1: -1·π<sub>C</sub> + 0.6·π<sub>V</sub> + 1.0·π<sub>P</sub> = 0</div>
+                            <div class="eq-line">Col 2: 0.3·π<sub>C</sub> - 1.0·π<sub>V</sub> + 0·π<sub>P</sub> = 0</div>
+                            <div class="eq-line">Col 3: 0.7·π<sub>C</sub> + 0.4·π<sub>V</sub> - 1.0·π<sub>P</sub> = 0</div>
+                        </div>
+                        
+                        <div class="cascade-step" data-step="4">
+                            <div class="eq-line" style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--text-muted);">El sistema es linealmente dependiente, reemplazamos una ecuación por la sumatoria de probabilidades.</div>
+                            <div class="eq-line" style="margin-top: 1rem; color: var(--emerald); font-weight: bold;">Se genera el mismo sistema y despejamos π</div>
+                        </div>
+                        
+                        <button class="btn-cascade" id="btn-cascade-intensidad" onclick="nextCascadeStep('intensidad')">Siguiente Paso</button>
+                    </div>
+                </div>
+
+                <!-- Gráfico de Regimen Permanente (Barras) -->
+                <div class="chart-container">
+                    <div class="bar-group">
+                        <div class="bar-wrapper">
+                            <div class="bar-fill" id="final-bar-c" style="background-color: var(--conmutador-color)">
+                                <div class="bar-value">47%</div>
+                            </div>
+                        </div>
+                        <div class="bar-label header-c">Conmutador</div>
+                    </div>
+                    
+                    <div class="bar-group">
+                        <div class="bar-wrapper">
+                            <div class="bar-fill" id="final-bar-v" style="background-color: var(--ventas-color)">
+                                <div class="bar-value">14%</div>
+                            </div>
+                        </div>
+                        <div class="bar-label header-v">Ventas</div>
+                    </div>
+
+                    <div class="bar-group">
+                        <div class="bar-wrapper">
+                            <div class="bar-fill" id="final-bar-p" style="background-color: var(--pedidos-color)">
+                                <div class="bar-value">39%</div>
+                            </div>
+                        </div>
+                        <div class="bar-label header-p">Pedidos</div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        function nextSection(step) {
+            // Marcar el card actual como completed y esconder su boton
+            const activeCard = document.querySelector('.step-card.active-state');
+            if (activeCard) {
+                activeCard.classList.remove('active-state');
+                activeCard.classList.add('completed-state');
+                const btn = activeCard.querySelector('.btn-next');
+                if(btn) btn.classList.add('hidden');
+            }
+
+            // Reveal la siguiente seccion
+            const section = document.getElementById(`step-${step}`);
+            if (section) {
+                section.classList.add('active');
+                
+                // Si es el grafo, animar las flechas
+                if(step === 4) {
+                    const edges = section.querySelectorAll('.edge');
+                    edges.forEach((edge, idx) => {
+                        setTimeout(() => {
+                            edge.classList.add('anim');
+                        }, idx * 300 + 300);
+                    });
+                }
+                
+                // Allow display flex to apply before opacity transition
+                setTimeout(() => {
+                    section.classList.add('show');
+                    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 50);
+            }
+        }
+
+        // Tab Switching Logic
+        function showMethod(methodId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.method-content').forEach(content => content.classList.remove('active'));
+
+            const btn = document.querySelector(`.tab-btn[onclick="showMethod('${methodId}')"]`);
+            if (btn) btn.classList.add('active');
+
+            const content = document.getElementById(`method-${methodId}`);
+            content.classList.add('active');
+            
+            // Reset cascade
+            const steps = content.querySelectorAll('.cascade-step');
+            steps.forEach(s => {
+                if (s.getAttribute('data-step') === '1') {
+                    s.classList.add('visible');
+                } else {
+                    s.classList.remove('visible');
+                }
+            });
+            
+            // Restablecer el botón de Siguiente Paso
+            const cascadeBtn = document.getElementById(`btn-cascade-${methodId}`);
+            if (cascadeBtn) cascadeBtn.classList.remove('hidden');
+            
+            // Ocultar el gráfico de barras finales hasta llegar al último paso
+            const chart = document.querySelector('.chart-container');
+            if (chart) chart.classList.remove('visible');
+            
+            // Reset bar height
+            document.getElementById('final-bar-c').style.height = '0%';
+            document.getElementById('final-bar-v').style.height = '0%';
+            document.getElementById('final-bar-p').style.height = '0%';
+        }
+
+        function nextCascadeStep(methodId) {
+            const content = document.getElementById(`method-${methodId}`);
+            const steps = Array.from(content.querySelectorAll('.cascade-step'));
+            
+            for (let i = 0; i < steps.length; i++) {
+                if (!steps[i].classList.contains('visible')) {
+                    steps[i].classList.add('visible');
+                    
+                    // Si se reveló el último paso
+                    if (i === steps.length - 1) {
+                        document.getElementById(`btn-cascade-${methodId}`).classList.add('hidden');
+                        document.querySelector('.chart-container').classList.add('visible');
+                        
+                        setTimeout(() => {
+                            document.getElementById('final-bar-c').style.height = '47.17%';
+                            document.getElementById('final-bar-v').style.height = '14.15%';
+                            document.getElementById('final-bar-p').style.height = '38.68%';
+                            
+                            // Scroll to bottom
+                            window.scrollBy({top: 400, behavior: 'smooth'});
+                        }, 150);
+                    }
+                    break;
+                }
+            }
+        }
+    </script>
+</body>
+</html>
