@@ -201,6 +201,22 @@ table.tableau td.basic-var { font-weight:700; color:#67e8f9; font-family:'Inter'
         </div>
       </div>
     </div>
+
+    <div class="card">
+      <h2>📈 Precio Sombra — ¿cuánto vale una unidad más de cada recurso?</h2>
+      <p>El precio sombra y_i* de una restricción es cuánto mejora z* si le das <strong>una unidad más</strong> de disponibilidad (b_i) a ese recurso, dejando todo lo demás igual. No es una constante del problema: solo vale mientras la <strong>región factible siga tocando el mismo vértice óptimo "vecino"</strong> — apenas la recta de esa restricción se corre lo suficiente, el vértice ganador cambia y el precio sombra cambia con él (casi siempre hacia abajo). Graficando z* en función de b_i el resultado es una curva escalonada de pendiente decreciente: la forma de una <strong>curva de utilidad/demanda marginal decreciente</strong> — cuanto más tenés de un recurso, menos vale la unidad extra.</p>
+      <p style="font-size:.82rem; color: var(--text3);">Elegí abajo qué restricción analizar: el gráfico recalcula el óptimo barriendo su b_i (dejando fijas las demás restricciones y el funcional) y detecta automáticamente dónde cambia de vértice — sin tocar la tabla Simplex, solo re-resolviendo el gráfico muchas veces.</p>
+
+      <div class="prob-config" style="margin-bottom:.5rem;">
+        <div>
+          <label style="color:var(--text2); font-size:.8rem; font-weight:700; display:block; margin-bottom:.3rem;">Restricción a analizar</label>
+          <select class="sign-select" id="shadowConsSelect" onchange="analyzeShadowPrice()"></select>
+        </div>
+      </div>
+
+      <div class="graph-canvas-box" style="height:280px;"><canvas id="shadowCanvas"></canvas></div>
+      <div id="shadowResult" style="margin-top:1rem;"></div>
+    </div>
   </div>
 
   <!-- ══════════════════════ MÓDULO 2: SIMPLEX ══════════════════════ -->
@@ -317,11 +333,12 @@ table.tableau td.basic-var { font-weight:700; color:#67e8f9; font-family:'Inter'
     </div>
 
     <div class="card">
-      <h3 style="margin-top:0;">Análisis de Sensibilidad — fórmula</h3>
+      <h3 style="margin-top:0;">Análisis de Sensibilidad de c_j — fórmula</h3>
       <div class="equations">
         <div class="eq-line">$$c_j' = c_j \pm \frac{z_j-c_j}{a_{ij}}$$</div>
         <div class="eq-line" style="font-size:.85rem;">En MAX: signo "−" da el límite superior, "+" el inferior. En MIN es al revés. Ejemplo (caso piezas A/B): rango óptimo de c₁ ∈ [300, 600] manteniendo el mix x₁=32, x₂=16.</div>
       </div>
+      <p style="font-size:.82rem; color: var(--text3); margin-top:.8rem;">Para la sensibilidad de b_i (precio sombra) con gráfico interactivo, ver el <strong>Módulo 1 · Método Gráfico</strong> — ahí se puede ver la región factible cambiando de forma en tiempo real.</p>
     </div>
   </div>
 
@@ -436,11 +453,15 @@ function solveGraphical() {
     if (!vertices.some(v => Math.abs(v.x-p.x)<1e-4 && Math.abs(v.y-p.y)<1e-4)) vertices.push(p);
   });
 
+  populateShadowSelect();
+
   const msgEl = document.getElementById('graphMsg');
   if (vertices.length === 0) {
     document.getElementById('vtxTable').innerHTML = '';
     msgEl.innerHTML = '<div class="status-banner status-error">No se encontró una región factible acotada con estas restricciones (posible caso infactible o poliedro abierto). Probá el Módulo 2 (Simplex) para confirmarlo.</div>';
     if (graphChartInstance) { graphChartInstance.destroy(); graphChartInstance = null; }
+    if (shadowChartInstance) { shadowChartInstance.destroy(); shadowChartInstance = null; }
+    document.getElementById('shadowResult').innerHTML = '';
     return;
   }
 
@@ -500,6 +521,118 @@ function solveGraphical() {
       }
     }
   });
+
+  analyzeShadowPrice();
+}
+
+// ── Precio sombra dinámico: re-resuelve el gráfico barriendo b_i ──
+function computeOptimalAt(consList, c1, c2, isMax) {
+  const allLines = consList.concat([{a1:1,a2:0,sign:'>=',b:0},{a1:0,a2:1,sign:'>=',b:0}]);
+  const eps = 1e-6;
+  let candidates = [];
+  for (let i=0;i<allLines.length;i++) {
+    for (let j=i+1;j<allLines.length;j++) {
+      const p = lineIntersection(allLines[i], allLines[j]);
+      if (!p) continue;
+      if (p.x < -eps || p.y < -eps) continue;
+      if (satisfiesAll(p, allLines, 1e-4)) candidates.push(p);
+    }
+  }
+  if (candidates.length === 0) return null;
+  const zVals = candidates.map(p => c1*Math.max(0,p.x) + c2*Math.max(0,p.y));
+  return isMax ? Math.max(...zVals) : Math.min(...zVals);
+}
+
+function populateShadowSelect() {
+  const sel = document.getElementById('shadowConsSelect');
+  if (!sel) return;
+  const prevIdx = sel.value !== '' ? parseInt(sel.value) : 0;
+  sel.innerHTML = graphCons.map((c,i) =>
+    `<option value="${i}">R${i+1}: ${fmt(c.a1)}x₁+${fmt(c.a2)}x₂ ${c.sign==='<='?'≤':c.sign==='>='?'≥':'='} ${fmt(c.b)}</option>`
+  ).join('');
+  sel.value = (prevIdx < graphCons.length) ? prevIdx : 0;
+}
+
+let shadowChartInstance = null;
+function analyzeShadowPrice() {
+  const sel = document.getElementById('shadowConsSelect');
+  if (!sel || graphCons.length === 0) return;
+  const idx = parseInt(sel.value) || 0;
+  const c1 = parseFloat(document.getElementById('g_c1').value) || 0;
+  const c2 = parseFloat(document.getElementById('g_c2').value) || 0;
+  const baseB = graphCons[idx].b;
+  const span = Math.max(Math.abs(baseB), 10) * 1.5;
+  const lo = Math.max(0, baseB - span);
+  const hi = baseB + span;
+  const N = 160;
+
+  const pts = [];
+  for (let k=0;k<=N;k++) {
+    const b = lo + (hi-lo)*k/N;
+    const trial = graphCons.map((c,i) => i===idx ? {a1:c.a1,a2:c.a2,sign:c.sign,b} : c);
+    pts.push({x:b, z: computeOptimalAt(trial, c1, c2, graphIsMax)});
+  }
+
+  let curIdx = 0, bestDiff = Infinity;
+  pts.forEach((p,i) => { const d = Math.abs(p.x-baseB); if (d<bestDiff) { bestDiff=d; curIdx=i; } });
+
+  let shadowPrice = null;
+  if (curIdx>0 && curIdx<pts.length-1 && pts[curIdx-1].z!==null && pts[curIdx+1].z!==null) {
+    shadowPrice = (pts[curIdx+1].z - pts[curIdx-1].z) / (pts[curIdx+1].x - pts[curIdx-1].x);
+  }
+
+  function slopeBetween(i,j) {
+    if (pts[i].z===null || pts[j].z===null) return null;
+    return (pts[j].z - pts[i].z) / (pts[j].x - pts[i].x);
+  }
+  let lowIdx = curIdx, highIdx = curIdx;
+  const tol = Math.max(Math.abs(shadowPrice||0)*0.03, 1e-3);
+  if (shadowPrice !== null) {
+    while (lowIdx>0) {
+      const s = slopeBetween(lowIdx-1, lowIdx);
+      if (s===null || Math.abs(s-shadowPrice)>tol) break;
+      lowIdx--;
+    }
+    while (highIdx<pts.length-1) {
+      const s = slopeBetween(highIdx, highIdx+1);
+      if (s===null || Math.abs(s-shadowPrice)>tol) break;
+      highIdx++;
+    }
+  }
+  const rangeLo = pts[lowIdx].x, rangeHi = pts[highIdx].x;
+  const rangeLoTxt = (lowIdx===0 && lo>1e-6) ? `≤ ${fmt(lo)}` : fmt(rangeLo);
+  const rangeHiTxt = (highIdx===pts.length-1) ? '∞' : fmt(rangeHi);
+
+  const canvas = document.getElementById('shadowCanvas');
+  if (shadowChartInstance) { shadowChartInstance.destroy(); shadowChartInstance = null; }
+  if (canvas) {
+    shadowChartInstance = new Chart(canvas.getContext('2d'), {
+      type: 'line',
+      data: {
+        datasets: [
+          { label:'z*(b)', data: pts.map(p=>({x:p.x,y:p.z})), spanGaps:false,
+            borderColor:'#06b6d4', backgroundColor:'rgba(6,182,212,.12)', fill:true, borderWidth:2.5, pointRadius:0, tension:0 },
+          { type:'scatter', label:'Actual', data:[{x:baseB, y:pts[curIdx].z}], backgroundColor:'#f43f5e', pointRadius:7, pointStyle:'star' }
+        ]
+      },
+      options: {
+        responsive:true, maintainAspectRatio:false,
+        plugins: { legend:{display:false}, tooltip:{ callbacks: { label: c => `b=${fmt(c.parsed.x)} → z*=${fmt(c.parsed.y)}` } } },
+        scales: {
+          x: { type:'linear', min:lo, max:hi, title:{display:true,text:`b (RHS de R${idx+1})`,color:'#94a3b8'}, ticks:{color:'#94a3b8'}, grid:{color:'rgba(148,163,184,.1)'} },
+          y: { type:'linear', title:{display:true,text:'z* (funcional óptimo)',color:'#94a3b8'}, ticks:{color:'#94a3b8'}, grid:{color:'rgba(148,163,184,.1)'} }
+        }
+      }
+    });
+  }
+
+  const resEl = document.getElementById('shadowResult');
+  if (!resEl) return;
+  if (shadowPrice === null) {
+    resEl.innerHTML = '<div class="status-banner status-warn">No se pudo estimar el precio sombra cerca del valor actual (la región se vuelve infactible ahí mismo).</div>';
+  } else {
+    resEl.innerHTML = `<div class="status-banner status-optimal">Precio sombra actual (R${idx+1}, b=${fmt(baseB)}): y* ≈ ${fmt(shadowPrice)} por unidad — se mantiene mientras b ∈ [${rangeLoTxt}, ${rangeHiTxt}].</div>`;
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
