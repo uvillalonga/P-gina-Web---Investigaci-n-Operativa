@@ -92,6 +92,21 @@ table.tableau td.basic-var { font-weight:700; color:#67e8f9; font-family:'Inter'
   color: #6ee7b7 !important;
   outline: 2px solid #10b981;
 }
+.expl-cell.col-cancelled {
+  position: relative;
+  background: rgba(244, 63, 94, 0.05) !important;
+  color: #64748b !important;
+}
+.expl-cell.col-cancelled::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background:
+    linear-gradient(to top right, transparent calc(50% - 1.2px), rgba(244, 63, 94, 0.55) calc(50% - 0.5px), rgba(244, 63, 94, 0.55) calc(50% + 0.5px), transparent calc(50% + 1.2px)),
+    linear-gradient(to bottom right, transparent calc(50% - 1.2px), rgba(244, 63, 94, 0.55) calc(50% - 0.5px), rgba(244, 63, 94, 0.55) calc(50% + 0.5px), transparent calc(50% + 1.2px));
+  pointer-events: none;
+  z-index: 1;
+}
 .hl-current {
   background: rgba(6, 182, 212, 0.32) !important;
   color: #67e8f9 !important;
@@ -176,8 +191,10 @@ table.tableau td.basic-var { font-weight:700; color:#67e8f9; font-family:'Inter'
   border-radius: 12px;
   padding: .95rem 1.15rem;
   box-shadow: 0 16px 40px rgba(0,0,0,.75), 0 0 25px rgba(6,182,212,.2);
-  max-width: 440px;
+  min-width: 320px;
+  max-width: min(94vw, 760px);
   width: max-content;
+  box-sizing: border-box;
   pointer-events: auto;
   backdrop-filter: blur(14px);
   animation: fadeIn .15s ease;
@@ -247,17 +264,22 @@ table.tableau td.basic-var { font-weight:700; color:#67e8f9; font-family:'Inter'
   font-family: 'Fira Code', monospace;
   font-size: .86rem;
   margin-bottom: .45rem;
+  max-width: 100%;
+  overflow-x: auto;
+  box-sizing: border-box;
 }
 .stt-calc {
   color: #f1f5f9;
   font-family: 'Fira Code', monospace;
   font-size: .88rem;
   background: rgba(15, 23, 42, 0.8);
-  padding: .5rem .7rem;
+  padding: .55rem .75rem;
   border-radius: 6px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   margin-bottom: .45rem;
-  word-break: break-all;
+  max-width: 100%;
+  overflow-x: auto;
+  box-sizing: border-box;
 }
 .stt-note {
   color: var(--text2);
@@ -1227,6 +1249,7 @@ function solveSimplexEngine(n, m, objCoefs, consInput, isMax) {
       snapshots.push({
         A: A.map(r=>r.slice()), B: B.slice(), basisCol: basisCol.slice(),
         zjcj, Z, enterIdx: null, leaveRow: null, theta: null,
+        blocked: blocked.slice(),
         label: iter === 0 ? 'Tabla Inicial del Primal (TIP) — Ya Óptima' : 'Tabla Óptima del Primal (TOP)'
       });
       break;
@@ -1246,6 +1269,7 @@ function solveSimplexEngine(n, m, objCoefs, consInput, isMax) {
       snapshots.push({
         A: A.map(r=>r.slice()), B: B.slice(), basisCol: basisCol.slice(),
         zjcj, Z, enterIdx, leaveRow: null, theta,
+        blocked: blocked.slice(),
         label: iter === 0 ? 'Tabla Inicial del Primal (TIP) — Poliedro Abierto' : `Iteración ${iter} — Poliedro Abierto`
       });
       break;
@@ -1255,6 +1279,7 @@ function solveSimplexEngine(n, m, objCoefs, consInput, isMax) {
     snapshots.push({
       A: A.map(r=>r.slice()), B: B.slice(), basisCol: basisCol.slice(),
       zjcj, Z, enterIdx, leaveRow, theta,
+      blocked: blocked.slice(),
       label: iter === 0 ? `Tabla Inicial del Primal (TIP) — Entra ${colNames[enterIdx]}, Sale ${colNames[leavingCol]}`
                         : `Iteración ${iter} — Entra ${colNames[enterIdx]}, Sale ${colNames[leavingCol]}`
     });
@@ -1321,7 +1346,9 @@ function renderTableauSnapshot(result, snap, idx, isLast) {
     <th id="scell_${idx}_hdr_bk_0_0" class="expl-cell" onmouseenter="showSimplexExpl(event, ${idx}, 'hdr_bk', 0, 0)" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'hdr_bk', 0, 0)">Bk</th>`;
 
   colNames.forEach((c, j) => {
-    html += `<th id="scell_${idx}_hdr_col_0_${j}" class="expl-cell" onmouseenter="showSimplexExpl(event, ${idx}, 'hdr_col', 0, ${j})" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'hdr_col', 0, ${j})">${c}<br><span style="color:var(--text3);font-size:.68rem;">C=${fmt(result.colCost[j])}</span></th>`;
+    const isBlocked = snap.blocked && snap.blocked[j];
+    const blockedCls = isBlocked ? ' col-cancelled' : '';
+    html += `<th id="scell_${idx}_hdr_col_0_${j}" class="expl-cell${blockedCls}" onmouseenter="showSimplexExpl(event, ${idx}, 'hdr_col', 0, ${j})" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'hdr_col', 0, ${j})">${c}<br><span style="color:var(--text3);font-size:.68rem;">C=${fmt(result.colCost[j])}</span>${isBlocked ? '<br><span style="color:#f43f5e;font-size:.62rem;font-weight:800;letter-spacing:.3px;">✕ ANULADA</span>' : ''}</th>`;
   });
 
   html += `<th id="scell_${idx}_hdr_theta_0_0" class="expl-cell" onmouseenter="showSimplexExpl(event, ${idx}, 'hdr_theta', 0, 0)" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'hdr_theta', 0, 0)">Θ</th></tr>`;
@@ -1334,7 +1361,9 @@ function renderTableauSnapshot(result, snap, idx, isLast) {
 
     for (let j=0; j<colNames.length; j++) {
       const isPivot = (snap.enterIdx===j && snap.leaveRow===i);
-      html += `<td id="scell_${idx}_a_${i}_${j}" class="${isPivot?'pivot-cell ':''}expl-cell" onmouseenter="showSimplexExpl(event, ${idx}, 'a', ${i}, ${j})" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'a', ${i}, ${j})">${fmt(snap.A[i][j])}</td>`;
+      const isBlocked = snap.blocked && snap.blocked[j];
+      const blockedCls = isBlocked ? ' col-cancelled' : '';
+      html += `<td id="scell_${idx}_a_${i}_${j}" class="${isPivot?'pivot-cell ':''}expl-cell${blockedCls}" onmouseenter="showSimplexExpl(event, ${idx}, 'a', ${i}, ${j})" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'a', ${i}, ${j})">${fmt(snap.A[i][j])}</td>`;
     }
 
     html += `<td id="scell_${idx}_theta_${i}_0" class="expl-cell" onmouseenter="showSimplexExpl(event, ${idx}, 'theta', ${i}, 0)" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'theta', ${i}, 0)">${snap.theta && snap.theta[i]!==null ? fmt(snap.theta[i]) : ''}</td>`;
@@ -1343,7 +1372,9 @@ function renderTableauSnapshot(result, snap, idx, isLast) {
 
   html += `<tr class="z-row"><td id="scell_${idx}_z_0_0" colspan="3" class="expl-cell" onmouseenter="showSimplexExpl(event, ${idx}, 'z', 0, 0)" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'z', 0, 0)">Z = ${fmt(snap.Z)}</td>`;
   snap.zjcj.forEach((v, j) => {
-    html += `<td id="scell_${idx}_zjcj_0_${j}" class="expl-cell" onmouseenter="showSimplexExpl(event, ${idx}, 'zjcj', 0, ${j})" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'zjcj', 0, ${j})">${fmt(v)}</td>`;
+    const isBlocked = snap.blocked && snap.blocked[j];
+    const blockedCls = isBlocked ? ' col-cancelled' : '';
+    html += `<td id="scell_${idx}_zjcj_0_${j}" class="expl-cell${blockedCls}" onmouseenter="showSimplexExpl(event, ${idx}, 'zjcj', 0, ${j})" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'zjcj', 0, ${j})">${isBlocked ? '<span style="color:#f43f5e;font-weight:800;">✕</span>' : fmt(v)}</td>`;
   });
   html += `<td></td></tr>`;
   html += '</table></div>';
@@ -1395,6 +1426,14 @@ function getSimplexCellExpl(idx, type, i, j, snapshots, colNames, colCost, isMax
   if (type === 'hdr_col') {
     const varName = colNames[j];
     const cost = colCost[j];
+    if (snap.blocked && snap.blocked[j]) {
+      return {
+        badge: `Columna Anulada · ${varName}`,
+        formula: `$$\\mu \\text{ fuera de la base — columna anulada}$$`,
+        calc: `Variable artificial ${varName} eliminada del proceso`,
+        note: `<strong>Columna anulada (cátedra UTN):</strong> la variable artificial <strong>${varName}</strong> ya salió de la base. Como su único fin era dar una base inicial para restricciones $\\ge$ o $=$, una vez que sale queda definitivamente bloqueada con una cruz y nunca más puede volver a ingresar a la base.`
+      };
+    }
     return {
       badge: `Columna · ${varName}`,
       formula: `$$c_{${varName}} = ${fmt(cost)}$$`,
@@ -1463,6 +1502,14 @@ function getSimplexCellExpl(idx, type, i, j, snapshots, colNames, colCost, isMax
 
   if (type === 'a') {
     const colName = colNames[j];
+    if (snap.blocked && snap.blocked[j]) {
+      return {
+        badge: `Celda Anulada · Columna ${colName}`,
+        formula: `$$\\text{Columna Bloqueada } (\\mu \\notin X_k)$$`,
+        calc: `Valor residual: ${fmt(snap.A[i][j])}`,
+        note: `Esta columna corresponde a la variable artificial <strong>${colName}</strong> que ya abandonó la base. En la cátedra UTN se anula toda la columna con una cruz para indicar que ya no participa en el cálculo ni en la elección de pivotes.`
+      };
+    }
     if (idx === 0) {
       const isPivot = (snap.leaveRow === i && snap.enterIdx === j);
       return {
@@ -1579,6 +1626,14 @@ function getSimplexCellExpl(idx, type, i, j, snapshots, colNames, colCost, isMax
 
   if (type === 'zjcj') {
     const colName = colNames[j];
+    if (snap.blocked && snap.blocked[j]) {
+      return {
+        badge: `Criterio Anulado · ${colName}`,
+        formula: `$$z_{${colName}} - c_{${colName}} = \\text{Bloqueado (✕)}$$`,
+        calc: `Columna excluida para ingreso a la base`,
+        note: `Al haber salido la variable artificial <strong>${colName}</strong> de la base, toda su columna queda anulada con una cruz y no se evalúa para ingresar.`
+      };
+    }
     const cj = colCost[j];
     const terms = [];
     let zj = { c: 0, m: 0 };
@@ -1609,7 +1664,7 @@ function getSimplexCellExpl(idx, type, i, j, snapshots, colNames, colCost, isMax
     return {
       badge: `Evaluación del Funcional · z_j - c_j (${colName})`,
       formula: `$$z_j - c_j = \\left(\\sum_{i=1}^m C_{k,i} \\cdot a_{ij}\\right) - c_j$$`,
-      calc: `$$z_j = ${terms.join(' + ')} = ${fmt(zj)} \\implies ${fmt(zj)} - (${fmt(cj)}) = ${fmt(snap.zjcj[j])}$$`,
+      calc: `<div style="margin-bottom:.35rem;">$$z_j = ${terms.join(' + ')} = ${fmt(zj)}$$</div><div>$$z_j - c_j = ${fmt(zj)} - (${fmt(cj)}) = ${fmt(snap.zjcj[j])}$$</div>`,
       note
     };
   }
@@ -1839,7 +1894,7 @@ function updateTooltipContent(target, idx, type, i, j, isPinned = false) {
   if (isPinned) tt.classList.add('pinned');
   else tt.classList.remove('pinned');
 
-  positionTooltip(target, tt);
+  tt.style.display = 'block';
 
   if (typeof renderMathInElement !== 'undefined') {
     renderMathInElement(tt, {
@@ -1847,6 +1902,8 @@ function updateTooltipContent(target, idx, type, i, j, isPinned = false) {
       throwOnError: false
     });
   }
+
+  positionTooltip(target, tt);
 }
 
 function initTooltipDrag() {
