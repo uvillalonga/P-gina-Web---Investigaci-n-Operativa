@@ -75,6 +75,107 @@ table.tableau td.pivot-cell { background: rgba(244,63,94,.28); color:#fda4af; fo
 table.tableau tr.z-row td { background: rgba(6,182,212,.06); font-weight:700; color: var(--text); }
 table.tableau td.basic-var { font-weight:700; color:#67e8f9; font-family:'Inter',sans-serif; background: rgba(255,255,255,.02); }
 
+/* Tooltip Interactivo para Celdas del Tableau Simplex */
+.expl-cell {
+  cursor: pointer;
+  transition: background .15s ease, color .15s ease, outline .15s ease;
+  position: relative;
+}
+.expl-cell:hover {
+  background: rgba(6, 182, 212, 0.22) !important;
+  color: #67e8f9 !important;
+  outline: 1.5px solid #06b6d4;
+  z-index: 2;
+}
+.expl-cell.pinned-cell {
+  background: rgba(16, 185, 129, 0.25) !important;
+  color: #6ee7b7 !important;
+  outline: 2px solid #10b981;
+}
+.simplex-tooltip {
+  position: fixed;
+  display: none;
+  z-index: 9999;
+  background: #090e1a;
+  border: 1px solid rgba(6, 182, 212, 0.5);
+  border-radius: 12px;
+  padding: .95rem 1.15rem;
+  box-shadow: 0 16px 40px rgba(0,0,0,.75), 0 0 25px rgba(6,182,212,.2);
+  max-width: 440px;
+  width: max-content;
+  pointer-events: none;
+  backdrop-filter: blur(14px);
+  animation: fadeIn .15s ease;
+  font-family: 'Inter', sans-serif;
+}
+.simplex-tooltip.pinned {
+  pointer-events: auto;
+  border-color: #10b981;
+  box-shadow: 0 16px 40px rgba(0,0,0,.85), 0 0 25px rgba(16,185,129,.25);
+}
+.simplex-tooltip-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: .6rem;
+  gap: .8rem;
+}
+.stt-badge {
+  font-size: .74rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  padding: .25rem .6rem;
+  border-radius: 6px;
+  background: rgba(6, 182, 212, 0.15);
+  color: #67e8f9;
+  border: 1px solid rgba(6, 182, 212, 0.3);
+}
+.simplex-tooltip.pinned .stt-badge {
+  background: rgba(16, 185, 129, 0.15);
+  color: #6ee7b7;
+  border-color: rgba(16, 185, 129, 0.3);
+}
+.stt-close {
+  background: transparent;
+  border: none;
+  color: var(--text3);
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 0 .2rem;
+  line-height: 1;
+  display: none;
+}
+.simplex-tooltip.pinned .stt-close {
+  display: block;
+}
+.stt-close:hover {
+  color: #f43f5e;
+}
+.stt-formula {
+  color: #67e8f9;
+  font-weight: 700;
+  font-family: 'Fira Code', monospace;
+  font-size: .86rem;
+  margin-bottom: .45rem;
+}
+.stt-calc {
+  color: #f1f5f9;
+  font-family: 'Fira Code', monospace;
+  font-size: .88rem;
+  background: rgba(15, 23, 42, 0.8);
+  padding: .5rem .7rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: .45rem;
+  word-break: break-all;
+}
+.stt-note {
+  color: var(--text2);
+  font-size: .8rem;
+  line-height: 1.45;
+}
+
 .status-banner { padding: 1rem 1.2rem; border-radius: var(--radius); font-weight:700; margin: 1rem 0; font-size: .92rem; }
 .status-optimal { background: rgba(16,185,129,.14); border:1px solid rgba(16,185,129,.35); color:#6ee7b7; }
 .status-warn { background: rgba(245,158,11,.14); border:1px solid rgba(245,158,11,.35); color:#fbbf24; }
@@ -224,6 +325,9 @@ table.tableau td.basic-var { font-weight:700; color:#67e8f9; font-family:'Inter'
   <div id="mod2" class="mod-content">
     <div class="card">
       <h2>🧮 Resolvedor Simplex Paso a Paso</h2>
+      <p style="font-size:.84rem; color: var(--text3); margin: -.3rem 0 1.2rem; line-height:1.5;">
+        💡 <strong>Interactivo:</strong> Pasá el cursor (o hacé clic) sobre <em>cualquier celda</em> de los tableaus (<span style="color:#67e8f9;">$B_k$</span>, coeficientes tecnológicos, fila <span style="color:#67e8f9;">$Z$</span>, razones <span style="color:#67e8f9;">$\Theta$</span> o <span style="color:#67e8f9;">$z_j - c_j$</span>) para ver la fórmula y el cálculo aritmético exacto con el que se obtuvo (incluyendo la <strong>Regla del Rectángulo</strong> y la normalización de la fila pivote).
+      </p>
 
       <div class="prob-config">
         <div>
@@ -940,21 +1044,11 @@ function solveSimplexEngine(n, m, objCoefs, consInput, isMax) {
     return zjcj;
   }
 
-  function snapshot(enterIdx, leaveRow, theta, label) {
+  while (iter < maxIter) {
     const zjcj = computeZjCj();
     let Z = 0;
     for (let i=0;i<m;i++) Z += colCost[basisCol[i]] * B[i];
-    snapshots.push({
-      A: A.map(r=>r.slice()), B: B.slice(), basisCol: basisCol.slice(),
-      zjcj, Z, enterIdx, leaveRow, theta: theta ? theta.slice() : null, label
-    });
-  }
 
-  snapshot(null, null, null, 'Tabla Inicial del Primal (TIP)');
-
-  while (iter < maxIter) {
-    iter++;
-    const zjcj = computeZjCj();
     let enterIdx = -1, bestVal = 0;
     for (let j=0;j<totalCols;j++) {
       if (blocked[j]) continue;
@@ -962,7 +1056,16 @@ function solveSimplexEngine(n, m, objCoefs, consInput, isMax) {
       if (isMax) { if (zjcj[j] < bestVal - eps) { bestVal = zjcj[j]; enterIdx = j; } }
       else { if (zjcj[j] > bestVal + eps) { bestVal = zjcj[j]; enterIdx = j; } }
     }
-    if (enterIdx === -1) { status = 'optimal'; break; }
+
+    if (enterIdx === -1) {
+      status = 'optimal';
+      snapshots.push({
+        A: A.map(r=>r.slice()), B: B.slice(), basisCol: basisCol.slice(),
+        zjcj, Z, enterIdx: null, leaveRow: null, theta: null,
+        label: iter === 0 ? 'Tabla Inicial del Primal (TIP) — Ya Óptima' : 'Tabla Óptima del Primal (TOP)'
+      });
+      break;
+    }
 
     let theta = new Array(m).fill(null);
     let leaveRow = -1, bestTheta = Infinity;
@@ -972,9 +1075,25 @@ function solveSimplexEngine(n, m, objCoefs, consInput, isMax) {
         if (theta[i] < bestTheta - eps) { bestTheta = theta[i]; leaveRow = i; }
       }
     }
-    if (leaveRow === -1) { status = 'unbounded'; snapshot(enterIdx, null, theta, 'Sin razón Θ válida'); break; }
+
+    if (leaveRow === -1) {
+      status = 'unbounded';
+      snapshots.push({
+        A: A.map(r=>r.slice()), B: B.slice(), basisCol: basisCol.slice(),
+        zjcj, Z, enterIdx, leaveRow: null, theta,
+        label: iter === 0 ? 'Tabla Inicial del Primal (TIP) — Poliedro Abierto' : `Iteración ${iter} — Poliedro Abierto`
+      });
+      break;
+    }
 
     const leavingCol = basisCol[leaveRow];
+    snapshots.push({
+      A: A.map(r=>r.slice()), B: B.slice(), basisCol: basisCol.slice(),
+      zjcj, Z, enterIdx, leaveRow, theta,
+      label: iter === 0 ? `Tabla Inicial del Primal (TIP) — Entra ${colNames[enterIdx]}, Sale ${colNames[leavingCol]}`
+                        : `Iteración ${iter} — Entra ${colNames[enterIdx]}, Sale ${colNames[leavingCol]}`
+    });
+
     if (colIsArtificial[leavingCol]) blocked[leavingCol] = true;
 
     // pivoteo Gauss-Jordan
@@ -989,8 +1108,7 @@ function solveSimplexEngine(n, m, objCoefs, consInput, isMax) {
       B[i] -= factor * B[leaveRow];
     }
     basisCol[leaveRow] = enterIdx;
-
-    snapshot(enterIdx, leaveRow, theta, `Iteración ${iter} — Entra ${colNames[enterIdx]}, Sale ${colNames[leavingCol]}`);
+    iter++;
   }
   if (iter >= maxIter && status === 'optimal') {
     const zjcj = computeZjCj();
@@ -1025,28 +1143,398 @@ function solveSimplexEngine(n, m, objCoefs, consInput, isMax) {
 function renderTableauSnapshot(result, snap, idx, isLast) {
   const { colNames } = result;
   let label = snap.label;
-  if (isLast && result.status==='optimal') label = 'Tabla Óptima del Primal (TOP) — ' + label;
-  let html = `<div class="tableau-wrap"><div class="tableau-caption">${label}</div><table class="tableau"><tr><th>Ck</th><th>Xk</th><th>Bk</th>`;
-  colNames.forEach(c => html += `<th>${c}<br><span style="color:var(--text3);font-size:.68rem;">C=${fmt(result.colCost[colNames.indexOf(c)])}</span></th>`);
-  html += '<th>Θ</th></tr>';
-  for (let i=0;i<result.m;i++) {
+  if (isLast && result.status==='optimal' && !label.includes('TOP')) {
+    label = 'Tabla Óptima del Primal (TOP) — ' + label;
+  }
+  let html = `<div class="tableau-wrap"><div class="tableau-caption">${label}</div><table class="tableau"><tr>
+    <th class="expl-cell" onmouseenter="showSimplexExpl(event, ${idx}, 'hdr_ck', 0, 0)" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'hdr_ck', 0, 0)">Ck</th>
+    <th class="expl-cell" onmouseenter="showSimplexExpl(event, ${idx}, 'hdr_xk', 0, 0)" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'hdr_xk', 0, 0)">Xk</th>
+    <th class="expl-cell" onmouseenter="showSimplexExpl(event, ${idx}, 'hdr_bk', 0, 0)" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'hdr_bk', 0, 0)">Bk</th>`;
+
+  colNames.forEach((c, j) => {
+    html += `<th class="expl-cell" onmouseenter="showSimplexExpl(event, ${idx}, 'hdr_col', 0, ${j})" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'hdr_col', 0, ${j})">${c}<br><span style="color:var(--text3);font-size:.68rem;">C=${fmt(result.colCost[j])}</span></th>`;
+  });
+
+  html += `<th class="expl-cell" onmouseenter="showSimplexExpl(event, ${idx}, 'hdr_theta', 0, 0)" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'hdr_theta', 0, 0)">Θ</th></tr>`;
+
+  for (let i=0; i<result.m; i++) {
     html += '<tr>';
-    html += `<td>${fmt(result.colCost[snap.basisCol[i]])}</td>`;
-    html += `<td class="basic-var">${colNames[snap.basisCol[i]]}</td>`;
-    html += `<td>${fmt(snap.B[i])}</td>`;
-    for (let j=0;j<colNames.length;j++) {
+    html += `<td class="expl-cell" onmouseenter="showSimplexExpl(event, ${idx}, 'ck', ${i}, 0)" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'ck', ${i}, 0)">${fmt(result.colCost[snap.basisCol[i]])}</td>`;
+    html += `<td class="basic-var expl-cell" onmouseenter="showSimplexExpl(event, ${idx}, 'xk', ${i}, 0)" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'xk', ${i}, 0)">${colNames[snap.basisCol[i]]}</td>`;
+    html += `<td class="expl-cell" onmouseenter="showSimplexExpl(event, ${idx}, 'bk', ${i}, 0)" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'bk', ${i}, 0)">${fmt(snap.B[i])}</td>`;
+
+    for (let j=0; j<colNames.length; j++) {
       const isPivot = (snap.enterIdx===j && snap.leaveRow===i);
-      html += `<td class="${isPivot?'pivot-cell':''}">${fmt(snap.A[i][j])}</td>`;
+      html += `<td class="${isPivot?'pivot-cell':''} expl-cell" onmouseenter="showSimplexExpl(event, ${idx}, 'a', ${i}, ${j})" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'a', ${i}, ${j})">${fmt(snap.A[i][j])}</td>`;
     }
-    html += `<td>${snap.theta && snap.theta[i]!==null ? fmt(snap.theta[i]) : ''}</td>`;
+
+    html += `<td class="expl-cell" onmouseenter="showSimplexExpl(event, ${idx}, 'theta', ${i}, 0)" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'theta', ${i}, 0)">${snap.theta && snap.theta[i]!==null ? fmt(snap.theta[i]) : ''}</td>`;
     html += '</tr>';
   }
-  html += `<tr class="z-row"><td colspan="3">Z = ${fmt(snap.Z)}</td>`;
-  snap.zjcj.forEach(v => html += `<td>${fmt(v)}</td>`);
-  html += '<td></td></tr>';
+
+  html += `<tr class="z-row"><td colspan="3" class="expl-cell" onmouseenter="showSimplexExpl(event, ${idx}, 'z', 0, 0)" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'z', 0, 0)">Z = ${fmt(snap.Z)}</td>`;
+  snap.zjcj.forEach((v, j) => {
+    html += `<td class="expl-cell" onmouseenter="showSimplexExpl(event, ${idx}, 'zjcj', 0, ${j})" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'zjcj', 0, ${j})">${fmt(v)}</td>`;
+  });
+  html += `<td></td></tr>`;
   html += '</table></div>';
   return html;
 }
+
+// ═══════════════════════════════════════════════════════════════
+// MOTOR DE EXPLICACIÓN INTERACTIVA DE CADA CELDA SIMPLEX
+// ═══════════════════════════════════════════════════════════════
+let pinnedCellEl = null;
+
+function getSimplexCellExpl(idx, type, i, j, snapshots, colNames, colCost, isMax) {
+  const snap = snapshots[idx];
+  const m = snap.A.length;
+  const prevSnap = idx > 0 ? snapshots[idx - 1] : null;
+
+  if (type === 'hdr_ck') {
+    return {
+      badge: 'Encabezado · Ck',
+      formula: '$$C_k$$',
+      calc: 'Coeficientes del funcional',
+      note: 'Columna que indica el coeficiente en la función objetivo $c_j$ de cada variable que está actualmente en la base ($X_k$).'
+    };
+  }
+  if (type === 'hdr_xk') {
+    return {
+      badge: 'Encabezado · Xk',
+      formula: '$$X_k$$',
+      calc: 'Variables básicas actuales',
+      note: 'Columna con las variables que componen la base factible en esta iteración. Cada fila tiene una variable básica cuyo valor libre es su $B_k$.'
+    };
+  }
+  if (type === 'hdr_bk') {
+    return {
+      badge: 'Encabezado · Bk',
+      formula: '$$B_k$$',
+      calc: 'Términos independientes / Solución',
+      note: 'Columna de disponibilidades o cantidades que toman las variables básicas en esta solución. Las variables que no están en la base valen 0.'
+    };
+  }
+  if (type === 'hdr_theta') {
+    return {
+      badge: 'Encabezado · Razón Θ',
+      formula: '$$\\Theta_i = \\frac{B_i}{a_{i,\\text{piv}}} \\quad (a_{i,\\text{piv}} > 0)$$',
+      calc: 'Criterio de salida de la base',
+      note: 'Razón de salida: la fila que tenga el menor $\\Theta > 0$ es la que sale de la base para dar lugar a la variable entrante sin violar la no negatividad.'
+    };
+  }
+  if (type === 'hdr_col') {
+    const varName = colNames[j];
+    const cost = colCost[j];
+    return {
+      badge: `Columna · ${varName}`,
+      formula: `$$c_{${varName}} = ${fmt(cost)}$$`,
+      calc: `Variable ${varName} con aporte ${fmt(cost)} en z`,
+      note: varName.startsWith('x')
+        ? `Variable de decisión del modelo original.`
+        : (varName.startsWith('λ') ? `Variable de holgura/sobrante para la restricción ${varName.slice(1)}.` : `Variable artificial de Gran M (penalizada con M).`)
+    };
+  }
+
+  if (type === 'ck') {
+    const varName = colNames[snap.basisCol[i]];
+    const cost = colCost[snap.basisCol[i]];
+    return {
+      badge: `Coeficiente del Funcional · Fila ${i + 1}`,
+      formula: `$$C_k = c_{${varName}}$$`,
+      calc: `$$C_k = ${fmt(cost)}$$`,
+      note: `Aporte unitario de la variable básica actual <strong>${varName}</strong> a la función objetivo. Se multiplica por su fila para evaluar $Z$ y $z_j$.`
+    };
+  }
+
+  if (type === 'xk') {
+    const varName = colNames[snap.basisCol[i]];
+    const bVal = snap.B[i];
+    return {
+      badge: `Variable Básica · Fila ${i + 1}`,
+      formula: `$$${varName} = B_k$$`,
+      calc: `$$${varName} = ${fmt(bVal)}$$`,
+      note: `Variable en la base en la fila ${i + 1}. Toma el valor $B_k = ${fmt(bVal)}$. Las demás variables fuera de la base (no básicas) valen 0.`
+    };
+  }
+
+  if (type === 'bk') {
+    if (idx === 0) {
+      return {
+        badge: `Término Independiente Inicial (TIP) · Fila ${i + 1}`,
+        formula: `$$B_{${i + 1}} = b_{${i + 1}}$$`,
+        calc: `$$B_{${i + 1}} = ${fmt(snap.B[i])}$$`,
+        note: `Disponibilidad o cota inicial de la restricción ${i + 1} del modelo original.`
+      };
+    }
+    const prevLeaveRow = prevSnap.leaveRow;
+    const prevEnterIdx = prevSnap.enterIdx;
+    const pivot = prevSnap.A[prevLeaveRow][prevEnterIdx];
+    const prevBi = prevSnap.B[i];
+    const prevB_piv = prevSnap.B[prevLeaveRow];
+    const crossFactor = prevSnap.A[i][prevEnterIdx];
+
+    if (i === prevLeaveRow) {
+      return {
+        badge: `Fila Pivote Normalizada · B_{${i + 1}}`,
+        formula: `$$B'_i = \\frac{B_i^{\\text{ant}}}{\\text{Elemento Pivote}}$$`,
+        calc: `$$\\frac{${fmt(prevB_piv)}}{${fmt(pivot)}} = ${fmt(snap.B[i])}$$`,
+        note: `Nueva cantidad en la base para la variable entrante <strong>${colNames[prevEnterIdx]}</strong>, dividiendo el $B$ de la fila pivote anterior por el elemento pivote ($${fmt(pivot)}$$).`
+      };
+    } else {
+      const disc = (crossFactor * prevB_piv) / pivot;
+      return {
+        badge: `Regla del Rectángulo · B_{${i + 1}}`,
+        formula: `$$B'_i = B_i^{\\text{ant}} - \\frac{a_{i,\\text{piv}}^{\\text{ant}} \\cdot B_{\\text{piv}}^{\\text{ant}}}{\\text{Elemento Pivote}}$$`,
+        calc: `$$${fmt(prevBi)} - \\frac{${fmt(crossFactor)} \\cdot ${fmt(prevB_piv)}}{${fmt(pivot)}} = ${fmt(prevBi)} - ${fmt(disc)} = ${fmt(snap.B[i])}$$`,
+        note: `Regla del rectángulo (cátedra UTN): término anterior ($${fmt(prevBi)}$$) menos el producto cruzado con la fila pivote ($${fmt(crossFactor)} \\cdot ${fmt(prevB_piv)}$$) dividido por el pivote ($${fmt(pivot)}$$).`
+      };
+    }
+  }
+
+  if (type === 'a') {
+    const colName = colNames[j];
+    if (idx === 0) {
+      const isPivot = (snap.leaveRow === i && snap.enterIdx === j);
+      return {
+        badge: isPivot ? '¡Elemento Pivote Seleccionado! (TIP)' : `Coeficiente Tecnológico (TIP) · ${colName}, Fila ${i + 1}`,
+        formula: `$$a_{${i + 1},${j + 1}}$$`,
+        calc: `$$a = ${fmt(snap.A[i][j])}$$`,
+        note: isPivot
+          ? `<strong>¡Elemento Pivote de la TIP!</strong> Intersección de la variable entrante <strong>${colNames[snap.enterIdx]}</strong> (menor $z_j - c_j$) y la saliente <strong>${colNames[snap.basisCol[snap.leaveRow]]}</strong> (menor $\\Theta > 0$). Se normalizará a 1 en el siguiente paso.`
+          : `Coeficiente de la restricción ${i + 1} para la variable ${colName} en el modelo inicial.`
+      };
+    }
+
+    const prevLeaveRow = prevSnap.leaveRow;
+    const prevEnterIdx = prevSnap.enterIdx;
+    const pivot = prevSnap.A[prevLeaveRow][prevEnterIdx];
+    const prevA = prevSnap.A[i][j];
+
+    const isCurrentPivot = (snap.leaveRow === i && snap.enterIdx === j);
+    if (isCurrentPivot) {
+      return {
+        badge: `¡Elemento Pivote Seleccionado! (${colName}, Fila ${i + 1})`,
+        formula: `$$\\text{Pivote actual} = a_{${i + 1},${j + 1}} = ${fmt(snap.A[i][j])}$$`,
+        calc: `$$\\text{Pivote} = ${fmt(snap.A[i][j])}$$`,
+        note: `Intersección entre la variable que entra <strong>${colNames[snap.enterIdx]}</strong> y la que sale <strong>${colNames[snap.basisCol[snap.leaveRow]]}</strong>. Se usará como divisor en la siguiente iteración.`
+      };
+    }
+
+    if (i === prevLeaveRow && j === prevEnterIdx) {
+      return {
+        badge: `Pivote de Iteración Anterior Normalizado`,
+        formula: `$$a'_{ij} = \\frac{\\text{Pivote}}{\\text{Pivote}} = 1$$`,
+        calc: `$$\\frac{${fmt(pivot)}}{${fmt(pivot)}} = 1$$`,
+        note: `Normalizado a 1 mediante Gauss-Jordan para constituir el vector unitario canónico de <strong>${colNames[prevEnterIdx]}</strong> en la base.`
+      };
+    }
+
+    if (i === prevLeaveRow) {
+      return {
+        badge: `Fila Pivote Normalizada · ${colName}`,
+        formula: `$$a'_{ij} = \\frac{a_{ij}^{\\text{ant}}}{\\text{Elemento Pivote}}$$`,
+        calc: `$$\\frac{${fmt(prevA)}}{${fmt(pivot)}} = ${fmt(snap.A[i][j])}$$`,
+        note: `Fila de la variable saliente dividida miembro a miembro por el elemento pivote ($${fmt(pivot)}$$).`
+      };
+    }
+
+    if (j === prevEnterIdx) {
+      return {
+        badge: `Columna Pivote Anulada · Fila ${i + 1}`,
+        formula: `$$a'_{i,\\text{piv}} = a_{i,\\text{piv}}^{\\text{ant}} - a_{i,\\text{piv}}^{\\text{ant}} \\cdot 1 = 0$$`,
+        calc: `$$${fmt(prevA)} - \\frac{${fmt(prevA)} \\cdot ${fmt(pivot)}}{${fmt(pivot)}} = 0$$`,
+        note: `Se anula a 0 por eliminación Gauss-Jordan: la variable entrante forma una columna canónica con 1 en la fila pivote y 0 en las demás.`
+      };
+    }
+
+    const crossCol = prevSnap.A[i][prevEnterIdx];
+    const crossRow = prevSnap.A[prevLeaveRow][j];
+    const disc = (crossCol * crossRow) / pivot;
+    return {
+      badge: `Regla del Rectángulo · ${colName}, Fila ${i + 1}`,
+      formula: `$$a'_{ij} = a_{ij}^{\\text{ant}} - \\frac{a_{i,\\text{piv}}^{\\text{ant}} \\cdot a_{\\text{piv},j}^{\\text{ant}}}{\\text{Elemento Pivote}}$$`,
+      calc: `$$${fmt(prevA)} - \\frac{${fmt(crossCol)} \\cdot ${fmt(crossRow)}}{${fmt(pivot)}} = ${fmt(prevA)} - ${fmt(disc)} = ${fmt(snap.A[i][j])}$$`,
+      note: `Regla del rectángulo (cátedra UTN): elemento anterior ($${fmt(prevA)}$$) menos el producto de los opuestos del rectángulo ($${fmt(crossCol)} \\cdot ${fmt(crossRow)}$$) dividido por el pivote ($${fmt(pivot)}$$).`
+    };
+  }
+
+  if (type === 'theta') {
+    if (snap.enterIdx === null || snap.enterIdx === -1 || !snap.theta) {
+      return {
+        badge: 'Criterio de Salida · Columna Θ',
+        formula: `$$\\Theta \\text{ no calculable en tabla óptima}$$`,
+        calc: `$$\\text{Fin del algoritmo (óptimo alcanzado)}$$`,
+        note: `En la Tabla Óptima del Primal (TOP) no se calcula $\\Theta$ porque todos los $z_j - c_j$ cumplen el criterio de parada y no ingresa ninguna variable.`
+      };
+    }
+    const aVal = snap.A[i][snap.enterIdx];
+    const bVal = snap.B[i];
+    const enterName = colNames[snap.enterIdx];
+    const basisName = colNames[snap.basisCol[i]];
+
+    if (aVal > 1e-7) {
+      const isWinner = (i === snap.leaveRow);
+      return {
+        badge: isWinner ? `¡Mínimo Θ! · Fila Saliente ${i + 1} (${basisName})` : `Razón Θ · Fila ${i + 1} (${basisName})`,
+        formula: `$$\\Theta_i = \\frac{B_i}{a_{i,\\text{entrante}}}$$`,
+        calc: `$$\\frac{${fmt(bVal)}}{${fmt(aVal)}} = ${fmt(snap.theta[i])}$$`,
+        note: isWinner
+          ? `<strong>¡Menor razón positiva!</strong> Determina que la variable <strong>${basisName}</strong> es la primera en agotarse y debe SALIR de la base para mantener la factibilidad.`
+          : `Límite que impone la restricción ${i + 1} al crecimiento de <strong>${enterName}</strong>. Como no es el menor ($${fmt(snap.theta[i])} > ${fmt(snap.theta[snap.leaveRow])}$), esta variable no sale.`
+      };
+    } else {
+      return {
+        badge: `Razón Θ no aplicable · Fila ${i + 1}`,
+        formula: `$$\\Theta_i \\text{ no calculable (} a_{i,\\text{piv}} \\le 0 \\text{)}$$`,
+        calc: `$$a_{${i + 1},${enterName}} = ${fmt(aVal)} \\le 0$$`,
+        note: `No se calcula $\\Theta$ porque el coeficiente no es estrictamente positivo. Esta fila no limita el crecimiento de la variable entrante.`
+      };
+    }
+  }
+
+  if (type === 'z') {
+    const terms = [];
+    for (let k = 0; k < m; k++) {
+      const ck = colCost[snap.basisCol[k]];
+      const bk = snap.B[k];
+      terms.push(`${fmt(ck)} \\cdot ${fmt(bk)}`);
+    }
+    return {
+      badge: 'Valor Actual del Funcional · Z',
+      formula: `$$Z = \\sum_{i=1}^m C_{k,i} \\cdot B_i$$`,
+      calc: `$$Z = ${terms.join(' + ')} = ${fmt(snap.Z)}$$`,
+      note: `Beneficio o costo total actual: suma del producto entre los coeficientes del funcional de las variables básicas ($C_k$) y sus cantidades en la solución ($B_k$).`
+    };
+  }
+
+  if (type === 'zjcj') {
+    const colName = colNames[j];
+    const cj = colCost[j];
+    const terms = [];
+    let zj = 0;
+    for (let k = 0; k < m; k++) {
+      const ck = colCost[snap.basisCol[k]];
+      const aVal = snap.A[k][j];
+      zj += ck * aVal;
+      terms.push(`${fmt(ck)} \\cdot ${fmt(aVal)}`);
+    }
+    const isBasic = snap.basisCol.includes(j);
+    let note = '';
+    if (isBasic) {
+      note = `<strong>Variable básica:</strong> su $z_j - c_j$ es exactamente $0$ porque ya forma parte de la base.`;
+    } else if (Math.abs(snap.zjcj[j]) < 1e-5 && idx === snapshots.length - 1) {
+      note = `<strong>¡Cero alternativo (0*)!</strong> Como esta variable no está en la base y su $z_j - c_j = 0$, existen <strong>Soluciones Múltiples/Alternativas</strong> con el mismo $Z^*$.`;
+    } else if (colName.startsWith('x')) {
+      const enters = (j === snap.enterIdx);
+      note = `<strong>Costo de Oportunidad de ${colName}:</strong> variación marginal de $Z$ por unidad producida. ` +
+        (enters ? `<strong>¡Es el más favorable!</strong> Esta variable ENTRA a la base en el siguiente paso.` : ``);
+    } else if (colName.startsWith('λ')) {
+      note = `<strong>Valor Marginal de ${colName} (Precio Sombra Dual):</strong> beneficio neto que aportaría disponer de 1 unidad adicional de este recurso.`;
+    } else {
+      note = `Variable artificial $\\mu$ penalizada con la Gran M.`;
+    }
+
+    return {
+      badge: `Evaluación del Funcional · z_j - c_j (${colName})`,
+      formula: `$$z_j - c_j = \\left(\\sum_{i=1}^m C_{k,i} \\cdot a_{ij}\\right) - c_j$$`,
+      calc: `$$z_j = ${terms.join(' + ')} = ${fmt(zj)} \\implies ${fmt(zj)} - (${fmt(cj)}) = ${fmt(snap.zjcj[j])}$$`,
+      note
+    };
+  }
+
+  return null;
+}
+
+function showSimplexExpl(event, idx, type, i, j) {
+  if (pinnedCellEl) return;
+  updateTooltipContent(event.currentTarget, idx, type, i, j, false);
+}
+
+function pinSimplexExpl(event, idx, type, i, j) {
+  event.stopPropagation();
+  const target = event.currentTarget;
+  if (pinnedCellEl === target) {
+    closeSimplexExpl();
+    return;
+  }
+  if (pinnedCellEl) pinnedCellEl.classList.remove('pinned-cell');
+  pinnedCellEl = target;
+  pinnedCellEl.classList.add('pinned-cell');
+  updateTooltipContent(target, idx, type, i, j, true);
+}
+
+function hideSimplexExpl() {
+  if (pinnedCellEl) return;
+  const tt = document.getElementById('simplexCellTooltip');
+  if (tt) tt.style.display = 'none';
+}
+
+function closeSimplexExpl(event) {
+  if (event) event.stopPropagation();
+  if (pinnedCellEl) {
+    pinnedCellEl.classList.remove('pinned-cell');
+    pinnedCellEl = null;
+  }
+  const tt = document.getElementById('simplexCellTooltip');
+  if (tt) {
+    tt.style.display = 'none';
+    tt.classList.remove('pinned');
+  }
+}
+
+function positionTooltip(target, tt) {
+  const rect = target.getBoundingClientRect();
+  tt.style.display = 'block';
+  const ttWidth = tt.offsetWidth || 340;
+  const ttHeight = tt.offsetHeight || 160;
+
+  let left = rect.left + (rect.width / 2) - (ttWidth / 2);
+  let top = rect.top - ttHeight - 10;
+
+  if (left < 12) left = 12;
+  if (left + ttWidth > window.innerWidth - 12) left = window.innerWidth - ttWidth - 12;
+
+  if (top < 12) {
+    top = rect.bottom + 10;
+  }
+
+  tt.style.left = left + 'px';
+  tt.style.top = top + 'px';
+}
+
+function updateTooltipContent(target, idx, type, i, j, isPinned = false) {
+  if (!window._lastSimplexResult) return;
+  const res = window._lastSimplexResult;
+  const data = getSimplexCellExpl(idx, type, i, j, res.snapshots, res.colNames, res.colCost, simplex.isMax);
+  if (!data) return;
+
+  const tt = document.getElementById('simplexCellTooltip');
+  if (!tt) return;
+
+  document.getElementById('stt-badge').textContent = data.badge;
+  document.getElementById('stt-formula').innerHTML = data.formula;
+  document.getElementById('stt-calc').innerHTML = data.calc;
+  document.getElementById('stt-note').innerHTML = data.note;
+
+  if (isPinned) tt.classList.add('pinned');
+  else tt.classList.remove('pinned');
+
+  positionTooltip(target, tt);
+
+  if (typeof renderMathInElement !== 'undefined') {
+    renderMathInElement(tt, {
+      delimiters: [{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],
+      throwOnError: false
+    });
+  }
+}
+
+document.addEventListener('click', (e) => {
+  if (pinnedCellEl && !e.target.closest('#simplexCellTooltip') && !e.target.closest('.expl-cell')) {
+    closeSimplexExpl();
+  }
+});
 
 function runSimplex() {
   syncSimplexFromDOM();
@@ -1201,5 +1689,15 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 </script>
+<div id="simplexCellTooltip" class="simplex-tooltip">
+  <div class="simplex-tooltip-header">
+    <span id="stt-badge" class="stt-badge">Cálculo Simplex</span>
+    <button class="stt-close" onclick="closeSimplexExpl(event)">×</button>
+  </div>
+  <div id="stt-formula" class="stt-formula"></div>
+  <div id="stt-calc" class="stt-calc"></div>
+  <div id="stt-note" class="stt-note"></div>
+</div>
+
 </body>
 </html>
