@@ -186,9 +186,10 @@ table.tableau td.basic-var { font-weight:700; color:#67e8f9; font-family:'Inter'
       </div>
 
       <div id="graphConsRows"></div>
-      <div style="display:flex; gap:.6rem; margin: .8rem 0 1.2rem;">
+      <div style="display:flex; gap:.6rem; margin: .8rem 0 1.2rem; flex-wrap:wrap;">
         <button class="btn-secondary" onclick="addGraphCons()">+ Restricción</button>
-        <button class="btn-secondary" onclick="loadGraphExample()">↺ Cargar ejemplo (piezas A/B)</button>
+        <button class="btn-secondary" onclick="loadGraphExample()">↺ Ejemplo MAX (piezas A/B)</button>
+        <button class="btn-secondary" onclick="loadGraphExampleMin()">↺ Ejemplo MIN (dietético)</button>
         <button class="btn-primary" onclick="solveGraphical()">▶ Resolver</button>
       </div>
 
@@ -373,6 +374,7 @@ function setGraphSense(isMax) {
   graphIsMax = isMax;
   document.getElementById('g_max').classList.toggle('active', isMax);
   document.getElementById('g_min').classList.toggle('active', !isMax);
+  solveGraphical();
 }
 
 function renderGraphCons() {
@@ -392,6 +394,7 @@ function renderGraphCons() {
 }
 function addGraphCons() { graphCons.push({a1:1,a2:1,sign:'<=',b:10}); renderGraphCons(); }
 function removeGraphCons(i) { if (graphCons.length<=1) return; graphCons.splice(i,1); renderGraphCons(); }
+
 function loadGraphExample() {
   document.getElementById('g_c1').value = 400;
   document.getElementById('g_c2').value = 300;
@@ -400,6 +403,19 @@ function loadGraphExample() {
     {a1:9,a2:18,sign:'<=',b:720},
     {a1:16,a2:8,sign:'<=',b:640},
     {a1:10,a2:10,sign:'<=',b:480}
+  ];
+  renderGraphCons();
+  solveGraphical();
+}
+
+function loadGraphExampleMin() {
+  document.getElementById('g_c1').value = 0.5;
+  document.getElementById('g_c2').value = 0.9;
+  setGraphSense(false);
+  graphCons = [
+    {a1:2000,a2:5000,sign:'>=',b:3000},
+    {a1:400,a2:200,sign:'>=',b:250},
+    {a1:100,a2:100,sign:'>=',b:90}
   ];
   renderGraphCons();
   solveGraphical();
@@ -429,25 +445,56 @@ function satisfiesAll(pt, lines, eps) {
   });
 }
 
+let currentFeasiblePolygon = [];
+
+const feasibleRegionPlugin = {
+  id: 'feasibleRegionFill',
+  beforeDatasetsDraw(chart) {
+    if (!currentFeasiblePolygon || currentFeasiblePolygon.length < 3) return;
+    const { ctx, chartArea, scales: { x, y } } = chart;
+    if (!ctx || !chartArea || !x || !y) return;
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(chartArea.left, chartArea.top, chartArea.right - chartArea.left, chartArea.bottom - chartArea.top);
+    ctx.clip();
+
+    ctx.beginPath();
+    currentFeasiblePolygon.forEach((pt, idx) => {
+      const px = x.getPixelForValue(pt.x);
+      const py = y.getPixelForValue(pt.y);
+      if (idx === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    });
+    ctx.closePath();
+    ctx.fillStyle = graphIsMax ? 'rgba(6, 182, 212, 0.18)' : 'rgba(16, 185, 129, 0.18)';
+    ctx.fill();
+    ctx.strokeStyle = graphIsMax ? '#06b6d4' : '#10b981';
+    ctx.lineWidth = 1.8;
+    ctx.stroke();
+    ctx.restore();
+  }
+};
+
 let graphChartInstance = null;
 
 function solveGraphical() {
   syncGraphCons();
   const c1 = parseFloat(document.getElementById('g_c1').value) || 0;
   const c2 = parseFloat(document.getElementById('g_c2').value) || 0;
-  const allLines = graphCons.concat([{a1:1,a2:0,sign:'>=',b:0},{a1:0,a2:1,sign:'>=',b:0}]);
+  const baseLines = graphCons.concat([{a1:1,a2:0,sign:'>=',b:0},{a1:0,a2:1,sign:'>=',b:0}]);
 
   const eps = 1e-6;
   let candidates = [];
-  for (let i=0;i<allLines.length;i++) {
-    for (let j=i+1;j<allLines.length;j++) {
-      const p = lineIntersection(allLines[i], allLines[j]);
+  for (let i=0;i<baseLines.length;i++) {
+    for (let j=i+1;j<baseLines.length;j++) {
+      const p = lineIntersection(baseLines[i], baseLines[j]);
       if (!p) continue;
       if (p.x < -eps || p.y < -eps) continue;
-      if (satisfiesAll(p, allLines, 1e-4)) candidates.push({x: Math.max(0,p.x), y: Math.max(0,p.y)});
+      if (satisfiesAll(p, baseLines, 1e-4)) candidates.push({x: Math.max(0,p.x), y: Math.max(0,p.y)});
     }
   }
-  // dedupe
+
+  // Deduplicar vértices reales del problema
   let vertices = [];
   candidates.forEach(p => {
     if (!vertices.some(v => Math.abs(v.x-p.x)<1e-4 && Math.abs(v.y-p.y)<1e-4)) vertices.push(p);
@@ -458,36 +505,70 @@ function solveGraphical() {
   const msgEl = document.getElementById('graphMsg');
   if (vertices.length === 0) {
     document.getElementById('vtxTable').innerHTML = '';
-    msgEl.innerHTML = '<div class="status-banner status-error">No se encontró una región factible acotada con estas restricciones (posible caso infactible o poliedro abierto). Probá el Módulo 2 (Simplex) para confirmarlo.</div>';
+    msgEl.innerHTML = '<div class="status-banner status-error">No se encontró una región factible con estas restricciones (sistema infactible). Probá el Módulo 2 (Simplex) para confirmarlo.</div>';
+    currentFeasiblePolygon = [];
     if (graphChartInstance) { graphChartInstance.destroy(); graphChartInstance = null; }
     if (shadowChartInstance) { shadowChartInstance.destroy(); shadowChartInstance = null; }
     document.getElementById('shadowResult').innerHTML = '';
     return;
   }
 
-  // ordenar por ángulo alrededor del centroide (polígono convexo)
-  const cx = vertices.reduce((s,v)=>s+v.x,0)/vertices.length;
-  const cy = vertices.reduce((s,v)=>s+v.y,0)/vertices.length;
-  vertices.sort((a,b) => Math.atan2(a.y-cy,a.x-cx) - Math.atan2(b.y-cy,b.x-cx));
-
+  // Calcular valor del funcional z en los vértices del modelo
   vertices.forEach(v => v.z = c1*v.x + c2*v.y);
   const zVals = vertices.map(v=>v.z);
   const bestZ = graphIsMax ? Math.max(...zVals) : Math.min(...zVals);
   vertices.forEach(v => v.optimal = Math.abs(v.z-bestZ) < 1e-4);
 
+  // Ordenar vértices para mostrarlos en la tabla
+  const sortedTableVtx = vertices.slice().sort((a,b) => a.x !== b.x ? a.x - b.x : a.y - b.y);
+
   let th = '<tr><th>x₁</th><th>x₂</th><th>z</th></tr>';
-  vertices.forEach(v => {
+  sortedTableVtx.forEach(v => {
     th += `<tr class="${v.optimal?'optimal':''}"><td>${fmt(v.x)}</td><td>${fmt(v.y)}</td><td>${fmt(v.z)}</td></tr>`;
   });
   document.getElementById('vtxTable').innerHTML = th;
 
   const opt = vertices.find(v=>v.optimal);
-  msgEl.innerHTML = `<div class="status-banner status-optimal">Óptimo: x₁* = ${fmt(opt.x)}, x₂* = ${fmt(opt.y)}, z* = ${fmt(opt.z)}</div>`;
+  msgEl.innerHTML = `<div class="status-banner status-optimal">${graphIsMax ? 'Máximo' : 'Mínimo'} óptimo: x₁* = ${fmt(opt.x)}, x₂* = ${fmt(opt.y)}, z* = ${fmt(opt.z)}</div>`;
 
-  // Plot
-  const maxCoord = Math.max(...vertices.map(v=>Math.max(v.x,v.y)), 1) * 1.3;
-  const polyData = vertices.map(v=>({x:v.x,y:v.y})).concat([{x:vertices[0].x,y:vertices[0].y}]);
+  // Calcular escala del gráfico (maxCoord)
+  const coordCandidates = vertices.map(v => Math.max(v.x, v.y));
+  graphCons.forEach(c => {
+    if (Math.abs(c.a1) > 1e-6 && c.b / c.a1 > 0) coordCandidates.push(c.b / c.a1);
+    if (Math.abs(c.a2) > 1e-6 && c.b / c.a2 > 0) coordCandidates.push(c.b / c.a2);
+  });
+  const maxCoord = Math.max(...coordCandidates.filter(n => isFinite(n) && n > 0), 1) * 1.35;
 
+  // Delimitar el polígono de la región factible a pintar:
+  // En Maximización: encierra el área entre los ejes y las ecuaciones hacia el origen.
+  // En Minimización: pinta el área no encerrada por las ecuaciones (abierta hacia afuera y arriba).
+  const clipLines = baseLines.concat([
+    {a1:1, a2:0, sign:'<=', b:maxCoord},
+    {a1:0, a2:1, sign:'<=', b:maxCoord}
+  ]);
+
+  let polyPts = [];
+  for (let i=0; i<clipLines.length; i++) {
+    for (let j=i+1; j<clipLines.length; j++) {
+      const p = lineIntersection(clipLines[i], clipLines[j]);
+      if (!p || p.x < -eps || p.y < -eps || p.x > maxCoord + eps || p.y > maxCoord + eps) continue;
+      const pt = {x: Math.max(0, Math.min(maxCoord, p.x)), y: Math.max(0, Math.min(maxCoord, p.y))};
+      if (satisfiesAll(pt, clipLines, 1e-4)) {
+        if (!polyPts.some(v => Math.abs(v.x-pt.x)<1e-4 && Math.abs(v.y-pt.y)<1e-4)) {
+          polyPts.push(pt);
+        }
+      }
+    }
+  }
+
+  if (polyPts.length >= 3) {
+    const cx = polyPts.reduce((s,v)=>s+v.x,0)/polyPts.length;
+    const cy = polyPts.reduce((s,v)=>s+v.y,0)/polyPts.length;
+    polyPts.sort((a,b) => Math.atan2(a.y-cy,a.x-cx) - Math.atan2(b.y-cy,b.x-cx));
+  }
+  currentFeasiblePolygon = polyPts;
+
+  // Líneas de restricciones
   const lineDatasets = graphCons.map((c,i) => {
     let pts = [];
     if (Math.abs(c.a2) > 1e-9) {
@@ -496,9 +577,35 @@ function solveGraphical() {
       pts = [{x: c.b/c.a1, y:0}, {x: c.b/c.a1, y:maxCoord}];
     }
     const palette = ['#f43f5e','#f59e0b','#a855f7','#3b82f6','#10b981','#ec4899'];
-    return { type:'line', label:`R${i+1}: ${c.a1}x₁+${c.a2}x₂${c.sign==='<='?'≤':c.sign==='>='?'≥':'='}${c.b}`,
-      data: pts, borderColor: palette[i%palette.length], borderDash:[6,4], borderWidth:2, pointRadius:0, fill:false };
+    return {
+      type:'line',
+      label:`R${i+1}: ${fmt(c.a1)}x₁+${fmt(c.a2)}x₂ ${c.sign==='<='?'≤':c.sign==='>='?'≥':'='} ${fmt(c.b)}`,
+      data: pts,
+      borderColor: palette[i%palette.length],
+      borderDash:[6,4],
+      borderWidth:2,
+      pointRadius:0,
+      fill:false
+    };
   });
+
+  // Línea del funcional z*
+  let zLinePts = [];
+  if (Math.abs(c2) > 1e-9) {
+    zLinePts = [{x:0, y:opt.z/c2}, {x:maxCoord, y:(opt.z - c1*maxCoord)/c2}];
+  } else if (Math.abs(c1) > 1e-9) {
+    zLinePts = [{x:opt.z/c1, y:0}, {x:opt.z/c1, y:maxCoord}];
+  }
+  const zDataset = zLinePts.length > 0 ? [{
+    type:'line',
+    label:`z* = ${fmt(opt.z)} (Línea de nivel óptima)`,
+    data: zLinePts,
+    borderColor:'#ec4899',
+    borderWidth:2.2,
+    borderDash:[3,3],
+    pointRadius:0,
+    fill:false
+  }] : [];
 
   const ctx = document.getElementById('graphCanvas').getContext('2d');
   if (graphChartInstance) graphChartInstance.destroy();
@@ -506,15 +613,42 @@ function solveGraphical() {
     type: 'scatter',
     data: {
       datasets: [
-        { type:'line', label:'Región factible', data: polyData, borderColor:'#06b6d4', backgroundColor:'rgba(6,182,212,.15)', fill:true, pointRadius:0, borderWidth:2, tension:0 },
+        {
+          type:'line',
+          label: graphIsMax ? 'Región factible (encerrada hacia el origen)' : 'Región factible (no encerrada / exterior)',
+          data: [],
+          borderColor: graphIsMax ? '#06b6d4' : '#10b981',
+          backgroundColor: graphIsMax ? 'rgba(6,182,212,.18)' : 'rgba(16,185,129,.18)',
+          borderWidth:2
+        },
         ...lineDatasets,
-        { type:'scatter', label:'Vértices', data: vertices.map(v=>({x:v.x,y:v.y})), backgroundColor:'#67e8f9', pointRadius:5 },
-        { type:'scatter', label:'Óptimo', data:[{x:opt.x,y:opt.y}], backgroundColor:'#10b981', pointRadius:9, pointStyle:'star' }
+        ...zDataset,
+        {
+          type:'scatter',
+          label:'Vértices factibles',
+          data: vertices.map(v=>({x:v.x,y:v.y})),
+          backgroundColor:'#67e8f9',
+          pointRadius:5
+        },
+        {
+          type:'scatter',
+          label: graphIsMax ? 'Máximo óptimo' : 'Mínimo óptimo',
+          data:[{x:opt.x,y:opt.y}],
+          backgroundColor: graphIsMax ? '#06b6d4' : '#10b981',
+          borderColor: '#ffffff',
+          borderWidth: 2,
+          pointRadius:9,
+          pointStyle:'star'
+        }
       ]
     },
+    plugins: [feasibleRegionPlugin],
     options: {
-      responsive:true, maintainAspectRatio:false,
-      plugins: { legend: { labels: { color:'#94a3b8', boxWidth:12, font:{size:10} } } },
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins: {
+        legend: { labels: { color:'#94a3b8', boxWidth:12, font:{size:10} } }
+      },
       scales: {
         x: { min:0, max:maxCoord, title:{display:true,text:'x₁',color:'#94a3b8'}, ticks:{color:'#94a3b8'}, grid:{color:'rgba(148,163,184,.1)'} },
         y: { min:0, max:maxCoord, title:{display:true,text:'x₂',color:'#94a3b8'}, ticks:{color:'#94a3b8'}, grid:{color:'rgba(148,163,184,.1)'} }
