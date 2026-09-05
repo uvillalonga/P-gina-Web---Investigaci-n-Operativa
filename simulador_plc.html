@@ -92,6 +92,81 @@ table.tableau td.basic-var { font-weight:700; color:#67e8f9; font-family:'Inter'
   color: #6ee7b7 !important;
   outline: 2px solid #10b981;
 }
+.hl-current {
+  background: rgba(6, 182, 212, 0.32) !important;
+  color: #67e8f9 !important;
+  outline: 2.5px solid #06b6d4 !important;
+  outline-offset: -1px;
+  z-index: 4;
+  position: relative;
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.55);
+}
+.hl-pivot {
+  background: rgba(244, 63, 94, 0.32) !important;
+  color: #fda4af !important;
+  outline: 2.5px solid #f43f5e !important;
+  outline-offset: -1px;
+  z-index: 4;
+  position: relative;
+  box-shadow: 0 0 14px rgba(244, 63, 94, 0.65);
+  animation: pulsePivot 1.3s ease-in-out infinite alternate;
+}
+.hl-corner-old {
+  background: rgba(56, 189, 248, 0.28) !important;
+  color: #bae6fd !important;
+  outline: 2px solid #38bdf8 !important;
+  outline-offset: -1px;
+  z-index: 3;
+  position: relative;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.45);
+}
+.hl-corner-cross {
+  background: rgba(245, 158, 11, 0.28) !important;
+  color: #fde68a !important;
+  outline: 2px dashed #f59e0b !important;
+  outline-offset: -1px;
+  z-index: 3;
+  position: relative;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.45);
+}
+.hl-source {
+  background: rgba(168, 85, 247, 0.28) !important;
+  color: #e9d5ff !important;
+  outline: 2px solid #a855f7 !important;
+  outline-offset: -1px;
+  z-index: 3;
+  position: relative;
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.45);
+}
+@keyframes pulsePivot {
+  0% { box-shadow: 0 0 6px rgba(244, 63, 94, 0.3); }
+  100% { box-shadow: 0 0 16px rgba(244, 63, 94, 0.75); }
+}
+.stt-legend {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  margin: .45rem 0 .25rem 0;
+  padding: .3rem .55rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  font-size: .72rem;
+  color: var(--text2);
+  flex-wrap: wrap;
+}
+.stt-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  margin-right: 3px;
+  vertical-align: middle;
+}
+.dot-current { background: #06b6d4; }
+.dot-pivot { background: #f43f5e; }
+.dot-old { background: #38bdf8; }
+.dot-cross { background: #f59e0b; border: 1px dashed #f59e0b; }
+.dot-src { background: #a855f7; }
 .simplex-tooltip {
   position: fixed;
   display: none;
@@ -103,15 +178,19 @@ table.tableau td.basic-var { font-weight:700; color:#67e8f9; font-family:'Inter'
   box-shadow: 0 16px 40px rgba(0,0,0,.75), 0 0 25px rgba(6,182,212,.2);
   max-width: 440px;
   width: max-content;
-  pointer-events: none;
+  pointer-events: auto;
   backdrop-filter: blur(14px);
   animation: fadeIn .15s ease;
   font-family: 'Inter', sans-serif;
+  touch-action: none;
 }
 .simplex-tooltip.pinned {
-  pointer-events: auto;
   border-color: #10b981;
   box-shadow: 0 16px 40px rgba(0,0,0,.85), 0 0 25px rgba(16,185,129,.25);
+}
+.simplex-tooltip.is-dragging {
+  box-shadow: 0 24px 50px rgba(0,0,0,.9), 0 0 35px rgba(6,182,212,.35);
+  transition: none !important;
 }
 .simplex-tooltip-header {
   display: flex;
@@ -119,6 +198,19 @@ table.tableau td.basic-var { font-weight:700; color:#67e8f9; font-family:'Inter'
   align-items: center;
   margin-bottom: .6rem;
   gap: .8rem;
+  cursor: grab;
+  user-select: none;
+  padding: .1rem 0;
+}
+.simplex-tooltip-header:active, .simplex-tooltip.is-dragging .simplex-tooltip-header {
+  cursor: grabbing;
+}
+.stt-drag-handle {
+  color: var(--text3);
+  font-size: .95rem;
+  letter-spacing: -2px;
+  opacity: .7;
+  cursor: grab;
 }
 .stt-badge {
   font-size: .74rem;
@@ -144,9 +236,6 @@ table.tableau td.basic-var { font-weight:700; color:#67e8f9; font-family:'Inter'
   cursor: pointer;
   padding: 0 .2rem;
   line-height: 1;
-  display: none;
-}
-.simplex-tooltip.pinned .stt-close {
   display: block;
 }
 .stt-close:hover {
@@ -1147,34 +1236,34 @@ function renderTableauSnapshot(result, snap, idx, isLast) {
     label = 'Tabla Óptima del Primal (TOP) — ' + label;
   }
   let html = `<div class="tableau-wrap"><div class="tableau-caption">${label}</div><table class="tableau"><tr>
-    <th class="expl-cell" onmouseenter="showSimplexExpl(event, ${idx}, 'hdr_ck', 0, 0)" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'hdr_ck', 0, 0)">Ck</th>
-    <th class="expl-cell" onmouseenter="showSimplexExpl(event, ${idx}, 'hdr_xk', 0, 0)" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'hdr_xk', 0, 0)">Xk</th>
-    <th class="expl-cell" onmouseenter="showSimplexExpl(event, ${idx}, 'hdr_bk', 0, 0)" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'hdr_bk', 0, 0)">Bk</th>`;
+    <th id="scell_${idx}_hdr_ck_0_0" class="expl-cell" onmouseenter="showSimplexExpl(event, ${idx}, 'hdr_ck', 0, 0)" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'hdr_ck', 0, 0)">Ck</th>
+    <th id="scell_${idx}_hdr_xk_0_0" class="expl-cell" onmouseenter="showSimplexExpl(event, ${idx}, 'hdr_xk', 0, 0)" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'hdr_xk', 0, 0)">Xk</th>
+    <th id="scell_${idx}_hdr_bk_0_0" class="expl-cell" onmouseenter="showSimplexExpl(event, ${idx}, 'hdr_bk', 0, 0)" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'hdr_bk', 0, 0)">Bk</th>`;
 
   colNames.forEach((c, j) => {
-    html += `<th class="expl-cell" onmouseenter="showSimplexExpl(event, ${idx}, 'hdr_col', 0, ${j})" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'hdr_col', 0, ${j})">${c}<br><span style="color:var(--text3);font-size:.68rem;">C=${fmt(result.colCost[j])}</span></th>`;
+    html += `<th id="scell_${idx}_hdr_col_0_${j}" class="expl-cell" onmouseenter="showSimplexExpl(event, ${idx}, 'hdr_col', 0, ${j})" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'hdr_col', 0, ${j})">${c}<br><span style="color:var(--text3);font-size:.68rem;">C=${fmt(result.colCost[j])}</span></th>`;
   });
 
-  html += `<th class="expl-cell" onmouseenter="showSimplexExpl(event, ${idx}, 'hdr_theta', 0, 0)" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'hdr_theta', 0, 0)">Θ</th></tr>`;
+  html += `<th id="scell_${idx}_hdr_theta_0_0" class="expl-cell" onmouseenter="showSimplexExpl(event, ${idx}, 'hdr_theta', 0, 0)" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'hdr_theta', 0, 0)">Θ</th></tr>`;
 
   for (let i=0; i<result.m; i++) {
     html += '<tr>';
-    html += `<td class="expl-cell" onmouseenter="showSimplexExpl(event, ${idx}, 'ck', ${i}, 0)" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'ck', ${i}, 0)">${fmt(result.colCost[snap.basisCol[i]])}</td>`;
-    html += `<td class="basic-var expl-cell" onmouseenter="showSimplexExpl(event, ${idx}, 'xk', ${i}, 0)" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'xk', ${i}, 0)">${colNames[snap.basisCol[i]]}</td>`;
-    html += `<td class="expl-cell" onmouseenter="showSimplexExpl(event, ${idx}, 'bk', ${i}, 0)" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'bk', ${i}, 0)">${fmt(snap.B[i])}</td>`;
+    html += `<td id="scell_${idx}_ck_${i}_0" class="expl-cell" onmouseenter="showSimplexExpl(event, ${idx}, 'ck', ${i}, 0)" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'ck', ${i}, 0)">${fmt(result.colCost[snap.basisCol[i]])}</td>`;
+    html += `<td id="scell_${idx}_xk_${i}_0" class="basic-var expl-cell" onmouseenter="showSimplexExpl(event, ${idx}, 'xk', ${i}, 0)" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'xk', ${i}, 0)">${colNames[snap.basisCol[i]]}</td>`;
+    html += `<td id="scell_${idx}_bk_${i}_0" class="expl-cell" onmouseenter="showSimplexExpl(event, ${idx}, 'bk', ${i}, 0)" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'bk', ${i}, 0)">${fmt(snap.B[i])}</td>`;
 
     for (let j=0; j<colNames.length; j++) {
       const isPivot = (snap.enterIdx===j && snap.leaveRow===i);
-      html += `<td class="${isPivot?'pivot-cell':''} expl-cell" onmouseenter="showSimplexExpl(event, ${idx}, 'a', ${i}, ${j})" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'a', ${i}, ${j})">${fmt(snap.A[i][j])}</td>`;
+      html += `<td id="scell_${idx}_a_${i}_${j}" class="${isPivot?'pivot-cell ':''}expl-cell" onmouseenter="showSimplexExpl(event, ${idx}, 'a', ${i}, ${j})" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'a', ${i}, ${j})">${fmt(snap.A[i][j])}</td>`;
     }
 
-    html += `<td class="expl-cell" onmouseenter="showSimplexExpl(event, ${idx}, 'theta', ${i}, 0)" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'theta', ${i}, 0)">${snap.theta && snap.theta[i]!==null ? fmt(snap.theta[i]) : ''}</td>`;
+    html += `<td id="scell_${idx}_theta_${i}_0" class="expl-cell" onmouseenter="showSimplexExpl(event, ${idx}, 'theta', ${i}, 0)" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'theta', ${i}, 0)">${snap.theta && snap.theta[i]!==null ? fmt(snap.theta[i]) : ''}</td>`;
     html += '</tr>';
   }
 
-  html += `<tr class="z-row"><td colspan="3" class="expl-cell" onmouseenter="showSimplexExpl(event, ${idx}, 'z', 0, 0)" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'z', 0, 0)">Z = ${fmt(snap.Z)}</td>`;
+  html += `<tr class="z-row"><td id="scell_${idx}_z_0_0" colspan="3" class="expl-cell" onmouseenter="showSimplexExpl(event, ${idx}, 'z', 0, 0)" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'z', 0, 0)">Z = ${fmt(snap.Z)}</td>`;
   snap.zjcj.forEach((v, j) => {
-    html += `<td class="expl-cell" onmouseenter="showSimplexExpl(event, ${idx}, 'zjcj', 0, ${j})" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'zjcj', 0, ${j})">${fmt(v)}</td>`;
+    html += `<td id="scell_${idx}_zjcj_0_${j}" class="expl-cell" onmouseenter="showSimplexExpl(event, ${idx}, 'zjcj', 0, ${j})" onmouseleave="hideSimplexExpl()" onclick="pinSimplexExpl(event, ${idx}, 'zjcj', 0, ${j})">${fmt(v)}</td>`;
   });
   html += `<td></td></tr>`;
   html += '</table></div>';
@@ -1446,9 +1535,14 @@ function getSimplexCellExpl(idx, type, i, j, snapshots, colNames, colCost, isMax
   return null;
 }
 
+let isDragging = false;
+let dragStartX = 0, dragStartY = 0;
+let tooltipCustomPos = null;
+
 function showSimplexExpl(event, idx, type, i, j) {
+  window._lastHoveredCell = event.currentTarget;
   if (pinnedCellEl) return;
-  updateTooltipContent(event.currentTarget, idx, type, i, j, false);
+  highlightSimplexSources(idx, type, i, j);
 }
 
 function pinSimplexExpl(event, idx, type, i, j) {
@@ -1464,10 +1558,142 @@ function pinSimplexExpl(event, idx, type, i, j) {
   updateTooltipContent(target, idx, type, i, j, true);
 }
 
+window._simplexHighlightedCells = [];
+
+function clearSimplexHighlights() {
+  if (window._simplexHighlightedCells && window._simplexHighlightedCells.length) {
+    for (let k = 0; k < window._simplexHighlightedCells.length; k++) {
+      const item = window._simplexHighlightedCells[k];
+      if (item && item.el) {
+        item.el.classList.remove(item.cls);
+      }
+    }
+  }
+  window._simplexHighlightedCells = [];
+}
+
+function addCellHighlight(id, cls) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.classList.add(cls);
+    window._simplexHighlightedCells.push({ el, cls });
+  }
+}
+
+function highlightSimplexSources(idx, type, i, j) {
+  clearSimplexHighlights();
+  if (!window._lastSimplexResult) return;
+  const res = window._lastSimplexResult;
+  const snaps = res.snapshots;
+  const snap = snaps[idx];
+  if (!snap) return;
+
+  addCellHighlight(`scell_${idx}_${type}_${i}_${j}`, 'hl-current');
+
+  if (idx > 0) {
+    const prevSnap = snaps[idx - 1];
+    const prevLeave = prevSnap.leaveRow;
+    const prevEnter = prevSnap.enterIdx;
+    const hasPivot = (prevLeave !== null && prevLeave !== undefined && prevEnter !== null && prevEnter !== undefined);
+
+    if (type === 'bk') {
+      if (hasPivot) {
+        addCellHighlight(`scell_${idx - 1}_a_${prevLeave}_${prevEnter}`, 'hl-pivot');
+        if (i === prevLeave) {
+          addCellHighlight(`scell_${idx - 1}_bk_${prevLeave}_0`, 'hl-corner-old');
+        } else {
+          addCellHighlight(`scell_${idx - 1}_bk_${i}_0`, 'hl-corner-old');
+          addCellHighlight(`scell_${idx - 1}_bk_${prevLeave}_0`, 'hl-corner-cross');
+          addCellHighlight(`scell_${idx - 1}_a_${i}_${prevEnter}`, 'hl-corner-cross');
+        }
+      }
+    } else if (type === 'a') {
+      if (hasPivot) {
+        addCellHighlight(`scell_${idx - 1}_a_${prevLeave}_${prevEnter}`, 'hl-pivot');
+        if (i === prevLeave) {
+          addCellHighlight(`scell_${idx - 1}_a_${prevLeave}_${j}`, 'hl-corner-old');
+        } else {
+          addCellHighlight(`scell_${idx - 1}_a_${i}_${j}`, 'hl-corner-old');
+          addCellHighlight(`scell_${idx - 1}_a_${prevLeave}_${j}`, 'hl-corner-cross');
+          addCellHighlight(`scell_${idx - 1}_a_${i}_${prevEnter}`, 'hl-corner-cross');
+        }
+      }
+    }
+  }
+
+  if (idx === 0 && type === 'a' && snap.enterIdx === j && snap.leaveRow === i) {
+    addCellHighlight(`scell_${idx}_theta_${i}_0`, 'hl-source');
+    addCellHighlight(`scell_${idx}_zjcj_0_${j}`, 'hl-source');
+    addCellHighlight(`scell_${idx}_hdr_col_0_${j}`, 'hl-corner-cross');
+  }
+
+  if (type === 'theta') {
+    if (snap.enterIdx !== null && snap.enterIdx !== undefined) {
+      addCellHighlight(`scell_${idx}_bk_${i}_0`, 'hl-source');
+      addCellHighlight(`scell_${idx}_a_${i}_${snap.enterIdx}`, 'hl-pivot');
+      addCellHighlight(`scell_${idx}_hdr_col_0_${snap.enterIdx}`, 'hl-corner-cross');
+    }
+  } else if (type === 'z') {
+    for (let k = 0; k < res.m; k++) {
+      addCellHighlight(`scell_${idx}_ck_${k}_0`, 'hl-source');
+      addCellHighlight(`scell_${idx}_bk_${k}_0`, 'hl-corner-cross');
+    }
+  } else if (type === 'zjcj') {
+    addCellHighlight(`scell_${idx}_hdr_col_0_${j}`, 'hl-pivot');
+    for (let k = 0; k < res.m; k++) {
+      addCellHighlight(`scell_${idx}_ck_${k}_0`, 'hl-source');
+      addCellHighlight(`scell_${idx}_a_${k}_${j}`, 'hl-corner-cross');
+    }
+  } else if (type === 'ck') {
+    if (snap.basisCol && snap.basisCol[i] !== undefined) {
+      addCellHighlight(`scell_${idx}_hdr_col_0_${snap.basisCol[i]}`, 'hl-source');
+    }
+  } else if (type === 'xk') {
+    if (snap.basisCol && snap.basisCol[i] !== undefined) {
+      addCellHighlight(`scell_${idx}_hdr_col_0_${snap.basisCol[i]}`, 'hl-source');
+      addCellHighlight(`scell_${idx}_bk_${i}_0`, 'hl-corner-cross');
+    }
+  }
+}
+
+function updateSimplexLegend(idx, type, i, j, res) {
+  const legEl = document.getElementById('stt-legend');
+  if (!legEl) return;
+  const snap = res.snapshots[idx];
+  let html = '';
+
+  if (idx > 0 && (type === 'a' || type === 'bk')) {
+    const prev = res.snapshots[idx - 1];
+    if (i === prev.leaveRow) {
+      html = '<span class="stt-dot dot-current"></span> Fila pivote normalizada &nbsp; <span class="stt-dot dot-pivot"></span> Pivote ant. &nbsp; <span class="stt-dot dot-old"></span> Celda ant.';
+    } else {
+      html = '<span class="stt-dot dot-current"></span> Celda calculada &nbsp; <span class="stt-dot dot-pivot"></span> Pivote ant. &nbsp; <span class="stt-dot dot-old"></span> Celda ant. &nbsp; <span class="stt-dot dot-cross"></span> Celdas cruzadas';
+    }
+  } else if (idx === 0 && type === 'a' && snap.enterIdx === j && snap.leaveRow === i) {
+    html = '<span class="stt-dot dot-current"></span> Elemento pivote &nbsp; <span class="stt-dot dot-src"></span> Menor Θ &nbsp; <span class="stt-dot dot-src"></span> Variable entrante';
+  } else if (type === 'z') {
+    html = '<span class="stt-dot dot-current"></span> Z actual &nbsp; <span class="stt-dot dot-src"></span> Costos básicos Ck &nbsp; <span class="stt-dot dot-cross"></span> Cantidades Bk';
+  } else if (type === 'zjcj') {
+    html = '<span class="stt-dot dot-current"></span> zj - cj &nbsp; <span class="stt-dot dot-pivot"></span> Costo cj original &nbsp; <span class="stt-dot dot-src"></span> Ck &nbsp; <span class="stt-dot dot-cross"></span> Coeficientes a_ij';
+  } else if (type === 'theta') {
+    html = '<span class="stt-dot dot-current"></span> Razón Θ &nbsp; <span class="stt-dot dot-src"></span> Bk &nbsp; <span class="stt-dot dot-pivot"></span> a_i,piv';
+  } else if (type === 'ck' || type === 'xk') {
+    html = '<span class="stt-dot dot-current"></span> Fila base &nbsp; <span class="stt-dot dot-src"></span> Variable en encabezado';
+  }
+
+  if (html) {
+    legEl.innerHTML = html;
+    legEl.style.display = 'flex';
+  } else {
+    legEl.style.display = 'none';
+  }
+}
+
 function hideSimplexExpl() {
-  if (pinnedCellEl) return;
+  if (pinnedCellEl || isDragging || tooltipCustomPos) return;
   const tt = document.getElementById('simplexCellTooltip');
   if (tt) tt.style.display = 'none';
+  clearSimplexHighlights();
 }
 
 function closeSimplexExpl(event) {
@@ -1476,16 +1702,24 @@ function closeSimplexExpl(event) {
     pinnedCellEl.classList.remove('pinned-cell');
     pinnedCellEl = null;
   }
+  tooltipCustomPos = null;
   const tt = document.getElementById('simplexCellTooltip');
   if (tt) {
     tt.style.display = 'none';
     tt.classList.remove('pinned');
+    tt.classList.remove('is-dragging');
   }
+  clearSimplexHighlights();
 }
 
 function positionTooltip(target, tt) {
-  const rect = target.getBoundingClientRect();
   tt.style.display = 'block';
+  if (tooltipCustomPos) {
+    tt.style.left = tooltipCustomPos.left + 'px';
+    tt.style.top = tooltipCustomPos.top + 'px';
+    return;
+  }
+  const rect = target.getBoundingClientRect();
   const ttWidth = tt.offsetWidth || 340;
   const ttHeight = tt.offsetHeight || 160;
 
@@ -1517,6 +1751,9 @@ function updateTooltipContent(target, idx, type, i, j, isPinned = false) {
   document.getElementById('stt-calc').innerHTML = data.calc;
   document.getElementById('stt-note').innerHTML = data.note;
 
+  updateSimplexLegend(idx, type, i, j, res);
+  highlightSimplexSources(idx, type, i, j);
+
   if (isPinned) tt.classList.add('pinned');
   else tt.classList.remove('pinned');
 
@@ -1530,6 +1767,61 @@ function updateTooltipContent(target, idx, type, i, j, isPinned = false) {
   }
 }
 
+function initTooltipDrag() {
+  const tt = document.getElementById('simplexCellTooltip');
+  const header = document.getElementById('stt-header') || tt;
+  if (!tt || !header) return;
+
+  function onPointerDown(e) {
+    if (e.target.closest('.stt-close')) return;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const rect = tt.getBoundingClientRect();
+    isDragging = true;
+    dragStartX = clientX - rect.left;
+    dragStartY = clientY - rect.top;
+    tt.classList.add('is-dragging');
+    tt.classList.add('pinned');
+    if (!pinnedCellEl && window._lastHoveredCell) {
+      pinnedCellEl = window._lastHoveredCell;
+      pinnedCellEl.classList.add('pinned-cell');
+    }
+    if (e.type === 'touchstart') e.preventDefault();
+  }
+
+  function onPointerMove(e) {
+    if (!isDragging) return;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    let newLeft = clientX - dragStartX;
+    let newTop = clientY - dragStartY;
+
+    const maxLeft = window.innerWidth - tt.offsetWidth - 8;
+    const maxTop = window.innerHeight - tt.offsetHeight - 8;
+    newLeft = Math.max(8, Math.min(maxLeft, newLeft));
+    newTop = Math.max(8, Math.min(maxTop, newTop));
+
+    tt.style.left = newLeft + 'px';
+    tt.style.top = newTop + 'px';
+    tooltipCustomPos = { left: newLeft, top: newTop };
+    if (e.cancelable) e.preventDefault();
+  }
+
+  function onPointerUp() {
+    if (isDragging) {
+      isDragging = false;
+      tt.classList.remove('is-dragging');
+    }
+  }
+
+  header.addEventListener('mousedown', onPointerDown);
+  header.addEventListener('touchstart', onPointerDown, { passive: false });
+  window.addEventListener('mousemove', onPointerMove);
+  window.addEventListener('touchmove', onPointerMove, { passive: false });
+  window.addEventListener('mouseup', onPointerUp);
+  window.addEventListener('touchend', onPointerUp);
+}
+
 document.addEventListener('click', (e) => {
   if (pinnedCellEl && !e.target.closest('#simplexCellTooltip') && !e.target.closest('.expl-cell')) {
     closeSimplexExpl();
@@ -1537,6 +1829,7 @@ document.addEventListener('click', (e) => {
 });
 
 function runSimplex() {
+  closeSimplexExpl();
   syncSimplexFromDOM();
   const result = solveSimplexEngine(simplex.n, simplex.m, simplex.obj, simplex.cons, simplex.isMax);
   window._lastSimplexResult = result;
@@ -1681,6 +1974,7 @@ renderSimplexInputs();
 runSimplex();
 
 window.addEventListener('DOMContentLoaded', () => {
+  initTooltipDrag();
   if (typeof renderMathInElement !== 'undefined') {
     renderMathInElement(document.body, {
       delimiters: [{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],
@@ -1690,12 +1984,16 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 <div id="simplexCellTooltip" class="simplex-tooltip">
-  <div class="simplex-tooltip-header">
-    <span id="stt-badge" class="stt-badge">Cálculo Simplex</span>
-    <button class="stt-close" onclick="closeSimplexExpl(event)">×</button>
+  <div class="simplex-tooltip-header" id="stt-header" title="Arrastrar para mover">
+    <div style="display:flex; align-items:center; gap:.45rem;">
+      <span class="stt-drag-handle" title="Arrastrar">⋮⋮</span>
+      <span id="stt-badge" class="stt-badge">Cálculo Simplex</span>
+    </div>
+    <button class="stt-close" onclick="closeSimplexExpl(event)" title="Cerrar">×</button>
   </div>
   <div id="stt-formula" class="stt-formula"></div>
   <div id="stt-calc" class="stt-calc"></div>
+  <div id="stt-legend" class="stt-legend" style="display:none;"></div>
   <div id="stt-note" class="stt-note"></div>
 </div>
 
