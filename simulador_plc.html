@@ -376,11 +376,15 @@ table.tableau td.basic-var { font-weight:700; color:#67e8f9; font-family:'Inter'
       </div>
 
       <div id="graphConsRows"></div>
-      <div style="display:flex; gap:.6rem; margin: .8rem 0 1.2rem; flex-wrap:wrap;">
-        <button class="btn-secondary" onclick="addGraphCons()">+ Restricción</button>
-        <button class="btn-secondary" onclick="loadGraphExample()">↺ Ejemplo MAX (piezas A/B)</button>
-        <button class="btn-secondary" onclick="loadGraphExampleMin()">↺ Ejemplo MIN (dietético)</button>
-        <button class="btn-primary" onclick="solveGraphical()">▶ Resolver</button>
+      <div style="display:flex; gap:.6rem; margin: .8rem 0 1.2rem; flex-wrap:wrap; align-items:center; justify-content:space-between;">
+        <div style="display:flex; gap:.6rem; flex-wrap:wrap; align-items:center;">
+          <button class="btn-secondary" onclick="addGraphCons()">+ Restricción</button>
+          <button class="btn-primary" onclick="solveGraphical()">▶ Resolver</button>
+        </div>
+        <div style="display:flex; gap:.6rem; flex-wrap:wrap; align-items:center;">
+          <button class="btn-secondary" onclick="loadGraphExample()">↺ Ejemplo MAX (piezas A/B)</button>
+          <button class="btn-secondary" onclick="loadGraphExampleMin()">↺ Ejemplo MIN (dietético)</button>
+        </div>
       </div>
 
       <div class="graph-wrap">
@@ -418,21 +422,25 @@ table.tableau td.basic-var { font-weight:700; color:#67e8f9; font-family:'Inter'
         💡 <strong>Interactivo:</strong> Pasá el cursor (o hacé clic) sobre <em>cualquier celda</em> de los tableaus (<span style="color:#67e8f9;">$B_k$</span>, coeficientes tecnológicos, fila <span style="color:#67e8f9;">$Z$</span>, razones <span style="color:#67e8f9;">$\Theta$</span> o <span style="color:#67e8f9;">$z_j - c_j$</span>) para ver la fórmula y el cálculo aritmético exacto con el que se obtuvo (incluyendo la <strong>Regla del Rectángulo</strong> y la normalización de la fila pivote).
       </p>
 
-      <div class="prob-config">
-        <div>
-          <label style="color:var(--text2); font-size:.8rem; font-weight:700; display:block; margin-bottom:.3rem;">Variables (n)</label>
-          <div class="stepper"><button onclick="changeVars(-1)">−</button><span id="numVarsLbl">2</span><button onclick="changeVars(1)">+</button></div>
+      <div class="prob-config" style="justify-content:space-between; align-items:flex-end;">
+        <div style="display:flex; gap:1.2rem; flex-wrap:wrap; align-items:flex-end;">
+          <div>
+            <label style="color:var(--text2); font-size:.8rem; font-weight:700; display:block; margin-bottom:.3rem;">Variables (n)</label>
+            <div class="stepper"><button onclick="changeVars(-1)">−</button><span id="numVarsLbl">2</span><button onclick="changeVars(1)">+</button></div>
+          </div>
+          <div>
+            <label style="color:var(--text2); font-size:.8rem; font-weight:700; display:block; margin-bottom:.3rem;">Restricciones (m)</label>
+            <div class="stepper"><button onclick="changeCons(-1)">−</button><span id="numConsLbl">3</span><button onclick="changeCons(1)">+</button></div>
+          </div>
+          <div class="sense-toggle">
+            <button id="s_max" class="active" onclick="setSimplexSense(true)">Maximizar</button>
+            <button id="s_min" onclick="setSimplexSense(false)">Minimizar</button>
+          </div>
         </div>
-        <div>
-          <label style="color:var(--text2); font-size:.8rem; font-weight:700; display:block; margin-bottom:.3rem;">Restricciones (m)</label>
-          <div class="stepper"><button onclick="changeCons(-1)">−</button><span id="numConsLbl">3</span><button onclick="changeCons(1)">+</button></div>
+        <div style="display:flex; gap:.6rem; flex-wrap:wrap; align-items:center;">
+          <button class="btn-secondary" onclick="loadSimplexExampleA()">↺ Ejemplo MAX (piezas A/B)</button>
+          <button class="btn-secondary" onclick="loadSimplexExampleB()">↺ Ejemplo MIN (Gran M, dietético)</button>
         </div>
-        <div class="sense-toggle">
-          <button id="s_max" class="active" onclick="setSimplexSense(true)">Maximizar</button>
-          <button id="s_min" onclick="setSimplexSense(false)">Minimizar</button>
-        </div>
-        <button class="btn-secondary" onclick="loadSimplexExampleA()">↺ Ejemplo MAX (piezas A/B)</button>
-        <button class="btn-secondary" onclick="loadSimplexExampleB()">↺ Ejemplo MIN (Gran M, dietético)</button>
       </div>
 
       <div id="simplexObjRow" class="obj-row"></div>
@@ -551,10 +559,35 @@ function switchModule(id, btn) {
   document.getElementById(id).classList.add('active');
   btn.classList.add('active');
 }
-function fmt(n) {
+function fmtNum(n) {
+  if (n === null || n === undefined) return '';
   if (!isFinite(n)) return '—';
-  const r = Math.round(n*10000)/10000;
-  return r.toLocaleString('es-AR', {maximumFractionDigits:4});
+  const r = Math.round(n * 10000) / 10000;
+  return r.toLocaleString('es-AR', { maximumFractionDigits: 4 });
+}
+function fmt(n) {
+  if (n && typeof n === 'object' && ('c' in n || 'm' in n)) {
+    const c = n.c || 0;
+    const m = n.m || 0;
+    const hasC = Math.abs(c) > 1e-6;
+    const hasM = Math.abs(m) > 1e-6;
+    if (!hasC && !hasM) return '0';
+    if (!hasM) return fmtNum(c);
+    if (!hasC) {
+      if (Math.abs(m - 1) < 1e-6) return 'M';
+      if (Math.abs(m - (-1)) < 1e-6) return '-M';
+      return fmtNum(m) + 'M';
+    }
+    const cStr = fmtNum(c);
+    if (m > 0) {
+      const mStr = Math.abs(m - 1) < 1e-6 ? 'M' : fmtNum(m) + 'M';
+      return `${cStr} + ${mStr}`;
+    } else {
+      const mStr = Math.abs(Math.abs(m) - 1) < 1e-6 ? 'M' : fmtNum(Math.abs(m)) + 'M';
+      return `${cStr} - ${mStr}`;
+    }
+  }
+  return fmtNum(n);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1067,11 +1100,24 @@ function loadSimplexExampleB() {
   runSimplex();
 }
 
-// ── Motor Simplex genérico (Gran M numérico) ──
+function cmpM(v1, v2) {
+  const m1 = (v1 && typeof v1 === 'object') ? (v1.m || 0) : 0;
+  const m2 = (v2 && typeof v2 === 'object') ? (v2.m || 0) : 0;
+  const dm = m1 - m2;
+  if (Math.abs(dm) > 1e-7) return dm > 0 ? 1 : -1;
+  const c1 = (v1 && typeof v1 === 'object') ? (v1.c !== undefined ? v1.c : 0) : Number(v1);
+  const c2 = (v2 && typeof v2 === 'object') ? (v2.c !== undefined ? v2.c : 0) : Number(v2);
+  const dc = c1 - c2;
+  if (Math.abs(dc) > 1e-7) return dc > 0 ? 1 : -1;
+  return 0;
+}
+
+// ── Motor Simplex genérico (Gran M simbólica algebraica) ──
 function solveSimplexEngine(n, m, objCoefs, consInput, isMax) {
   // Preprocesar: b_i >= 0
   const cons = consInput.map(c => {
     let coefs = c.coefs.slice(), sign = c.sign, b = c.b;
+    sign = (sign === '<=' || sign === '>=' || sign === '=') ? sign : '<=';
     if (b < 0) {
       coefs = coefs.map(v=>-v); b = -b;
       sign = sign==='<=' ? '>=' : (sign==='>=' ? '<=' : '=');
@@ -1079,25 +1125,30 @@ function solveSimplexEngine(n, m, objCoefs, consInput, isMax) {
     return {coefs, sign, b};
   });
 
-  const maxAbs = Math.max(1, ...objCoefs.map(Math.abs), ...cons.map(c=>Math.max(Math.abs(c.b),...c.coefs.map(Math.abs))));
-  const M = maxAbs * 1000;
-
   // Construir columnas
   const colNames = [];
   const colCost = [];
   const colIsArtificial = [];
-  for (let j=0;j<n;j++) { colNames.push('x'+(j+1)); colCost.push(objCoefs[j]); colIsArtificial.push(false); }
+  for (let j=0;j<n;j++) {
+    colNames.push('x'+(j+1));
+    colCost.push({ c: objCoefs[j], m: 0 });
+    colIsArtificial.push(false);
+  }
   const lambdaColIdx = new Array(m).fill(-1);
   const muColIdx = new Array(m).fill(-1);
   cons.forEach((c,i) => {
     if (c.sign==='<=' || c.sign==='>=') {
-      colNames.push('λ'+(i+1)); colCost.push(0); colIsArtificial.push(false);
+      colNames.push('λ'+(i+1));
+      colCost.push({ c: 0, m: 0 });
+      colIsArtificial.push(false);
       lambdaColIdx[i] = colNames.length-1;
     }
   });
   cons.forEach((c,i) => {
     if (c.sign==='>=' || c.sign==='=') {
-      colNames.push('μ'+(i+1)); colCost.push(isMax ? -M : M); colIsArtificial.push(true);
+      colNames.push('μ'+(i+1));
+      colCost.push({ c: 0, m: isMax ? -1 : 1 });
+      colIsArtificial.push(true);
       muColIdx[i] = colNames.length-1;
     }
   });
@@ -1119,31 +1170,56 @@ function solveSimplexEngine(n, m, objCoefs, consInput, isMax) {
   const blocked = new Array(totalCols).fill(false);
   const snapshots = [];
   const eps = 1e-7;
+  const ZERO_M = { c: 0, m: 0 };
   let status = 'optimal';
   let iter = 0;
   const maxIter = 40;
 
   function computeZjCj() {
-    let zjcj = new Array(totalCols).fill(0);
+    let zjcj = new Array(totalCols).fill(null);
     for (let j=0;j<totalCols;j++) {
-      let zj = 0;
-      for (let i=0;i<m;i++) zj += colCost[basisCol[i]] * A[i][j];
-      zjcj[j] = zj - colCost[j];
+      let zjc = 0, zjm = 0;
+      for (let i=0;i<m;i++) {
+        zjc += colCost[basisCol[i]].c * A[i][j];
+        zjm += colCost[basisCol[i]].m * A[i][j];
+      }
+      zjcj[j] = { c: zjc - colCost[j].c, m: zjm - colCost[j].m };
     }
     return zjcj;
   }
 
+  function computeZ() {
+    let zc = 0, zm = 0;
+    for (let i=0;i<m;i++) {
+      zc += colCost[basisCol[i]].c * B[i];
+      zm += colCost[basisCol[i]].m * B[i];
+    }
+    return { c: zc, m: zm };
+  }
+
   while (iter < maxIter) {
     const zjcj = computeZjCj();
-    let Z = 0;
-    for (let i=0;i<m;i++) Z += colCost[basisCol[i]] * B[i];
+    const Z = computeZ();
 
-    let enterIdx = -1, bestVal = 0;
+    let enterIdx = -1, bestVal = null;
     for (let j=0;j<totalCols;j++) {
       if (blocked[j]) continue;
       if (basisCol.includes(j)) continue;
-      if (isMax) { if (zjcj[j] < bestVal - eps) { bestVal = zjcj[j]; enterIdx = j; } }
-      else { if (zjcj[j] > bestVal + eps) { bestVal = zjcj[j]; enterIdx = j; } }
+      if (isMax) {
+        if (cmpM(zjcj[j], ZERO_M) < 0) {
+          if (bestVal === null || cmpM(zjcj[j], bestVal) < 0) {
+            bestVal = zjcj[j];
+            enterIdx = j;
+          }
+        }
+      } else {
+        if (cmpM(zjcj[j], ZERO_M) > 0) {
+          if (bestVal === null || cmpM(zjcj[j], bestVal) > 0) {
+            bestVal = zjcj[j];
+            enterIdx = j;
+          }
+        }
+      }
     }
 
     if (enterIdx === -1) {
@@ -1201,9 +1277,14 @@ function solveSimplexEngine(n, m, objCoefs, consInput, isMax) {
   }
   if (iter >= maxIter && status === 'optimal') {
     const zjcj = computeZjCj();
-    let stillNeg = false;
-    for (let j=0;j<totalCols;j++) { if (!blocked[j] && !basisCol.includes(j)) { if (isMax && zjcj[j] < -eps) stillNeg=true; if (!isMax && zjcj[j] > eps) stillNeg=true; } }
-    if (stillNeg) status = 'cycling';
+    let stillViolating = false;
+    for (let j=0;j<totalCols;j++) {
+      if (!blocked[j] && !basisCol.includes(j)) {
+        if (isMax && cmpM(zjcj[j], ZERO_M) < 0) stillViolating = true;
+        if (!isMax && cmpM(zjcj[j], ZERO_M) > 0) stillViolating = true;
+      }
+    }
+    if (stillViolating) status = 'cycling';
   }
 
   // Chequear infactibilidad: artificial en base con valor > eps
@@ -1217,14 +1298,13 @@ function solveSimplexEngine(n, m, objCoefs, consInput, isMax) {
     for (let i=0;i<m;i++) if (Math.abs(B[i]) < 1e-6) degenerate = true;
     const finalZjCj = computeZjCj();
     for (let j=0;j<totalCols;j++) {
-      if (!basisCol.includes(j) && !blocked[j] && Math.abs(finalZjCj[j]) < 1e-5) alternate = true;
+      if (!basisCol.includes(j) && !blocked[j] && cmpM(finalZjCj[j], ZERO_M) === 0) alternate = true;
     }
   }
 
   const solution = new Array(totalCols).fill(0);
   for (let i=0;i<m;i++) solution[basisCol[i]] = B[i];
-  let Zfinal = 0;
-  for (let i=0;i<m;i++) Zfinal += colCost[basisCol[i]] * B[i];
+  const Zfinal = computeZ();
 
   return { colNames, colCost, colIsArtificial, snapshots, status, solution, Zfinal, n, m, lambdaColIdx, basisCol, degenerate, alternate };
 }
@@ -1501,18 +1581,20 @@ function getSimplexCellExpl(idx, type, i, j, snapshots, colNames, colCost, isMax
     const colName = colNames[j];
     const cj = colCost[j];
     const terms = [];
-    let zj = 0;
+    let zj = { c: 0, m: 0 };
     for (let k = 0; k < m; k++) {
       const ck = colCost[snap.basisCol[k]];
       const aVal = snap.A[k][j];
-      zj += ck * aVal;
+      zj.c += (ck.c !== undefined ? ck.c : ck) * aVal;
+      zj.m += (ck.m !== undefined ? ck.m : 0) * aVal;
       terms.push(`${fmt(ck)} \\cdot ${fmt(aVal)}`);
     }
     const isBasic = snap.basisCol.includes(j);
     let note = '';
+    const isZeroZjCj = (Math.abs(snap.zjcj[j].m || 0) < 1e-5 && Math.abs(snap.zjcj[j].c !== undefined ? snap.zjcj[j].c : snap.zjcj[j]) < 1e-5);
     if (isBasic) {
       note = `<strong>Variable básica:</strong> su $z_j - c_j$ es exactamente $0$ porque ya forma parte de la base.`;
-    } else if (Math.abs(snap.zjcj[j]) < 1e-5 && idx === snapshots.length - 1) {
+    } else if (isZeroZjCj && idx === snapshots.length - 1) {
       note = `<strong>¡Cero alternativo (0*)!</strong> Como esta variable no está en la base y su $z_j - c_j = 0$, existen <strong>Soluciones Múltiples/Alternativas</strong> con el mismo $Z^*$.`;
     } else if (colName.startsWith('x')) {
       const enters = (j === snap.enterIdx);
