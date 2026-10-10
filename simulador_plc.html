@@ -12,6 +12,7 @@
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 
 <style>
 /* ── EXCLUSIVE STYLES FOR UNIDAD 6 · PROGRAMACIÓN LINEAL CONTINUA ── */
@@ -64,6 +65,33 @@ table.vtx-table { width:100%; border-collapse:collapse; font-size:.82rem; }
 table.vtx-table th, table.vtx-table td { border:1px solid var(--border-med); padding:.5rem; text-align:center; font-family:'Fira Code',monospace; }
 table.vtx-table th { background: rgba(255,255,255,.03); color: var(--text2); font-family:'Inter',sans-serif; }
 table.vtx-table tr.optimal td { background: rgba(16,185,129,.16); color:#6ee7b7; font-weight:800; }
+
+/* ── MÓDULO 1: ESTILOS 3D ── */
+.dim-toggle-bar { display:flex; justify-content:center; gap:.75rem; margin-bottom:1.5rem; flex-wrap:wrap; }
+.dim-btn {
+  background: var(--surface); border: 1px solid var(--border-med); color: var(--text2);
+  padding: .6rem 1.1rem; border-radius: 10px; font-weight: 700; font-size: .84rem;
+  cursor: pointer; transition: all .2s ease; display:flex; align-items:center; gap:6px;
+  font-family: 'Inter', sans-serif;
+}
+.dim-btn:hover { color: var(--text); border-color: rgba(6,182,212,.4); }
+.dim-btn.active { background: rgba(6,182,212,.18); border-color: #06b6d4; color: #67e8f9; box-shadow: 0 2px 14px rgba(6,182,212,.2); }
+
+.cam-btn-bar { display:flex; gap:.4rem; flex-wrap:wrap; margin-top:.4rem; }
+.cam-btn {
+  background: rgba(15,23,42,.6); border: 1px solid var(--border-med); color: var(--text2);
+  padding: .35rem .65rem; border-radius: 6px; font-size: .76rem; font-weight: 600;
+  cursor: pointer; transition: all .2s ease;
+}
+.cam-btn:hover { color: #67e8f9; border-color: #06b6d4; }
+
+.layer-toggle-bar { display:flex; gap:1rem; flex-wrap:wrap; margin-top:.4rem; font-size:.8rem; color:var(--text2); align-items:center; }
+.layer-toggle-bar label { display:flex; align-items:center; gap:.35rem; cursor:pointer; }
+.layer-toggle-bar input[type="checkbox"] { accent-color: #06b6d4; cursor:pointer; }
+
+.vtx3d-badge-opt {
+  background: rgba(16,185,129,.2); color: #34d399; padding: 2px 6px; border-radius: 4px; font-size: .72rem; font-weight: 800; border: 1px solid rgba(16,185,129,.35);
+}
 
 /* TABLEAU SIMPLEX */
 .tableau-wrap { overflow-x:auto; margin-bottom: 1.6rem; border:1px solid var(--border-med); border-radius: var(--radius); }
@@ -383,57 +411,132 @@ table.tableau td.basic-var { font-weight:700; color:#67e8f9; font-family:'Inter'
 
   <!-- ══════════════════════ MÓDULO 1: MÉTODO GRÁFICO ══════════════════════ -->
   <div id="mod1" class="mod-content">
-    <div class="card">
-      <h2>📈 Método Gráfico Interactivo (2 variables)</h2>
-      <p>Pensado para regiones acotadas típicas de examen. Para casos de poliedro abierto/infactible usá el Módulo 2 (Simplex), que sí los detecta explícitamente.</p>
+    <div class="dim-toggle-bar">
+      <button id="btnDim2D" class="dim-btn active" onclick="setGraphDimension(2)">
+        <span>📊</span> Modo 2D (2 Variables: x₁, x₂)
+      </button>
+      <button id="btnDim3D" class="dim-btn" onclick="setGraphDimension(3)">
+        <span>🧊</span> Modo 3D (3 Variables: x₁, x₂, x₃)
+      </button>
+    </div>
 
-      <div class="obj-row">
-        <strong>z =</strong>
-        <input type="number" class="coef-input" id="g_c1" value="400"> x₁ +
-        <input type="number" class="coef-input" id="g_c2" value="300"> x₂
-        <div class="sense-toggle">
-          <button id="g_max" class="active" onclick="setGraphSense(true)">Maximizar</button>
-          <button id="g_min" onclick="setGraphSense(false)">Minimizar</button>
+    <!-- ── VISTA 2D ── -->
+    <div id="viewDim2D">
+      <div class="card">
+        <h2>📈 Método Gráfico Interactivo (2 variables)</h2>
+        <p>Pensado para regiones acotadas típicas de examen. Para casos de poliedro abierto/infactible usá el Módulo 2 (Simplex), que sí los detecta explícitamente.</p>
+
+        <div class="obj-row">
+          <strong>z =</strong>
+          <input type="number" class="coef-input" id="g_c1" value="400"> x₁ +
+          <input type="number" class="coef-input" id="g_c2" value="300"> x₂
+          <div class="sense-toggle">
+            <button id="g_max" class="active" onclick="setGraphSense(true)">Maximizar</button>
+            <button id="g_min" onclick="setGraphSense(false)">Minimizar</button>
+          </div>
+        </div>
+
+        <div id="graphConsRows"></div>
+        <div style="display:flex; gap:.6rem; margin: .8rem 0 1.2rem; flex-wrap:wrap; align-items:center; justify-content:space-between;">
+          <div style="display:flex; gap:.6rem; flex-wrap:wrap; align-items:center;">
+            <button class="btn-secondary" onclick="addGraphCons()">+ Restricción</button>
+            <button class="btn-primary" onclick="solveGraphical()">▶ Resolver</button>
+            <button class="btn-secondary" onclick="transferGraphToSimplex()" title="Copia estas ecuaciones al Módulo 2 y resuelve por Simplex">📲 Pasar al Módulo 2 (Simplex)</button>
+          </div>
+          <div style="display:flex; gap:.6rem; flex-wrap:wrap; align-items:center;">
+            <button class="btn-secondary" onclick="loadGraphExample()">↺ Ejemplo MAX (piezas A/B)</button>
+            <button class="btn-secondary" onclick="loadGraphExampleMin()">↺ Ejemplo MIN (dietético)</button>
+          </div>
+        </div>
+
+        <div class="graph-wrap">
+          <div class="graph-canvas-box"><canvas id="graphCanvas"></canvas></div>
+          <div class="vertex-panel">
+            <h3 style="margin-top:0;">Vértices factibles</h3>
+            <table class="vtx-table" id="vtxTable"></table>
+            <div id="graphMsg" style="margin-top:1rem;"></div>
+          </div>
         </div>
       </div>
 
-      <div id="graphConsRows"></div>
-      <div style="display:flex; gap:.6rem; margin: .8rem 0 1.2rem; flex-wrap:wrap; align-items:center; justify-content:space-between;">
-        <div style="display:flex; gap:.6rem; flex-wrap:wrap; align-items:center;">
-          <button class="btn-secondary" onclick="addGraphCons()">+ Restricción</button>
-          <button class="btn-primary" onclick="solveGraphical()">▶ Resolver</button>
-          <button class="btn-secondary" onclick="transferGraphToSimplex()" title="Copia estas ecuaciones al Módulo 2 y resuelve por Simplex">📲 Pasar al Módulo 2 (Simplex)</button>
-        </div>
-        <div style="display:flex; gap:.6rem; flex-wrap:wrap; align-items:center;">
-          <button class="btn-secondary" onclick="loadGraphExample()">↺ Ejemplo MAX (piezas A/B)</button>
-          <button class="btn-secondary" onclick="loadGraphExampleMin()">↺ Ejemplo MIN (dietético)</button>
-        </div>
-      </div>
+      <div class="card">
+        <h2>📈 Precio Sombra — ¿cuánto vale una unidad más de cada recurso?</h2>
+        <p>El precio sombra y_i* de una restricción es cuánto mejora z* si le das <strong>una unidad más</strong> de disponibilidad (b_i) a ese recurso, dejando todo lo demás igual. No es una constante del problema: solo vale mientras la <strong>región factible siga tocando el mismo vértice óptimo "vecino"</strong> — apenas la recta de esa restricción se corre lo suficiente, el vértice ganador cambia y el precio sombra cambia con él (casi siempre hacia abajo). Graficando z* en función de b_i el resultado es una curva escalonada de pendiente decreciente: la forma de una <strong>curva de utilidad/demanda marginal decreciente</strong> — cuanto más tenés de un recurso, menos vale la unidad extra.</p>
+        <p style="font-size:.82rem; color: var(--text3);">Elegí abajo qué restricción analizar: el gráfico recalcula el óptimo barriendo su b_i (dejando fijas las demás restricciones y el funcional) y detecta automáticamente dónde cambia de vértice — sin tocar la tabla Simplex, solo re-resolviendo el gráfico muchas veces.</p>
 
-      <div class="graph-wrap">
-        <div class="graph-canvas-box"><canvas id="graphCanvas"></canvas></div>
-        <div class="vertex-panel">
-          <h3 style="margin-top:0;">Vértices factibles</h3>
-          <table class="vtx-table" id="vtxTable"></table>
-          <div id="graphMsg" style="margin-top:1rem;"></div>
+        <div class="prob-config" style="margin-bottom:.5rem;">
+          <div>
+            <label style="color:var(--text2); font-size:.8rem; font-weight:700; display:block; margin-bottom:.3rem;">Restricción a analizar</label>
+            <select class="sign-select" id="shadowConsSelect" onchange="analyzeShadowPrice()"></select>
+          </div>
         </div>
+
+        <div class="graph-canvas-box" style="height:280px;"><canvas id="shadowCanvas"></canvas></div>
+        <div id="shadowResult" style="margin-top:1rem;"></div>
       </div>
     </div>
 
-    <div class="card">
-      <h2>📈 Precio Sombra — ¿cuánto vale una unidad más de cada recurso?</h2>
-      <p>El precio sombra y_i* de una restricción es cuánto mejora z* si le das <strong>una unidad más</strong> de disponibilidad (b_i) a ese recurso, dejando todo lo demás igual. No es una constante del problema: solo vale mientras la <strong>región factible siga tocando el mismo vértice óptimo "vecino"</strong> — apenas la recta de esa restricción se corre lo suficiente, el vértice ganador cambia y el precio sombra cambia con él (casi siempre hacia abajo). Graficando z* en función de b_i el resultado es una curva escalonada de pendiente decreciente: la forma de una <strong>curva de utilidad/demanda marginal decreciente</strong> — cuanto más tenés de un recurso, menos vale la unidad extra.</p>
-      <p style="font-size:.82rem; color: var(--text3);">Elegí abajo qué restricción analizar: el gráfico recalcula el óptimo barriendo su b_i (dejando fijas las demás restricciones y el funcional) y detecta automáticamente dónde cambia de vértice — sin tocar la tabla Simplex, solo re-resolviendo el gráfico muchas veces.</p>
+    <!-- ── VISTA 3D ── -->
+    <div id="viewDim3D" style="display:none;">
+      <div class="card">
+        <h2>🧊 Método Gráfico Tridimensional (3 variables: x₁, x₂, x₃)</h2>
+        <p>Visualización del espacio euclídeo $\mathbb{R}^3$ para modelos lineales de tres variables. Cada restricción define un semiespacio limitado por un plano. La intersección de las restricciones junto con la no negatividad ($x_1, x_2, x_3 \ge 0$) engendra el <strong>poliedro convexo factible</strong>. Podés rotar el espacio 3D manteniendo presionado el botón izquierdo del mouse, hacer zoom con la rueda y desplazar con clic derecho.</p>
 
-      <div class="prob-config" style="margin-bottom:.5rem;">
-        <div>
-          <label style="color:var(--text2); font-size:.8rem; font-weight:700; display:block; margin-bottom:.3rem;">Restricción a analizar</label>
-          <select class="sign-select" id="shadowConsSelect" onchange="analyzeShadowPrice()"></select>
+        <div class="obj-row">
+          <strong>z =</strong>
+          <input type="number" class="coef-input" id="g3_c1" value="2"> x₁ +
+          <input type="number" class="coef-input" id="g3_c2" value="3"> x₂ +
+          <input type="number" class="coef-input" id="g3_c3" value="4"> x₃
+          <div class="sense-toggle">
+            <button id="g3_max" class="active" onclick="setGraph3dSense(true)">Maximizar</button>
+            <button id="g3_min" onclick="setGraph3dSense(false)">Minimizar</button>
+          </div>
+        </div>
+
+        <div id="graph3dConsRows"></div>
+
+        <div style="display:flex; gap:.6rem; margin: .8rem 0 1.2rem; flex-wrap:wrap; align-items:center; justify-content:space-between;">
+          <div style="display:flex; gap:.6rem; flex-wrap:wrap; align-items:center;">
+            <button class="btn-secondary" onclick="addGraph3dCons()">+ Restricción</button>
+            <button class="btn-primary" onclick="solveGraphical3D()">▶ Resolver y Graficar 3D</button>
+            <button class="btn-secondary" onclick="transferGraph3dToSimplex()" title="Copia este problema de 3 variables al Módulo 2 y lo resuelve por Simplex">📲 Pasar al Módulo 2 (Simplex)</button>
+          </div>
+          <div style="display:flex; gap:.6rem; flex-wrap:wrap; align-items:center;">
+            <button class="btn-secondary" onclick="loadGraph3dExampleUser()">↺ Ejemplo Usuario (4 restricciones)</button>
+            <button class="btn-secondary" onclick="loadGraph3dExampleSolid()">↺ Ejemplo Poliedro Sólido (Caja 3D)</button>
+          </div>
+        </div>
+
+        <div class="graph-wrap">
+          <div class="graph-canvas-box" style="height:auto; min-height:550px; flex:2;">
+            <div id="graph3dPlot" style="width:100%; height:500px; border-radius:10px; overflow:hidden;"></div>
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.8rem; margin-top:.8rem; padding-top:.6rem; border-top:1px solid var(--border-med);">
+              <div class="cam-btn-bar">
+                <span style="font-size:.78rem; color:var(--text3); align-self:center; font-weight:600; margin-right:.2rem;">Vistas:</span>
+                <button class="cam-btn" onclick="set3dCamera('iso')">📷 Isométrica</button>
+                <button class="cam-btn" onclick="set3dCamera('top')">📷 Superior (x₁-x₂)</button>
+                <button class="cam-btn" onclick="set3dCamera('front')">📷 Frontal (x₁-x₃)</button>
+                <button class="cam-btn" onclick="set3dCamera('side')">📷 Lateral (x₂-x₃)</button>
+              </div>
+              <div class="layer-toggle-bar">
+                <label><input type="checkbox" id="chk3dMesh" checked onchange="update3dLayers()"> Caras (Mesh)</label>
+                <label><input type="checkbox" id="chk3dEdges" checked onchange="update3dLayers()"> Aristas</label>
+                <label><input type="checkbox" id="chk3dVerts" checked onchange="update3dLayers()"> Vértices</label>
+                <label><input type="checkbox" id="chk3dPlanes" onchange="update3dLayers()"> Planos</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="vertex-panel" style="flex:1; min-width:280px;">
+            <h3 style="margin-top:0;">Vértices factibles en 3D</h3>
+            <div style="max-height:280px; overflow-y:auto; border:1px solid var(--border-med); border-radius:8px;">
+              <table class="vtx-table" id="vtx3dTable"></table>
+            </div>
+            <div id="graph3dMsg" style="margin-top:1rem;"></div>
+          </div>
         </div>
       </div>
-
-      <div class="graph-canvas-box" style="height:280px;"><canvas id="shadowCanvas"></canvas></div>
-      <div id="shadowResult" style="margin-top:1rem;"></div>
     </div>
   </div>
 
@@ -582,6 +685,9 @@ function switchModule(id, btn) {
   document.querySelectorAll('.mod-tab-btn').forEach(el => el.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   btn.classList.add('active');
+  if (id === 'mod1' && typeof currentGraphDim !== 'undefined' && currentGraphDim === 3 && typeof Plotly !== 'undefined') {
+    setTimeout(() => Plotly.Plots.resize('graph3dPlot'), 120);
+  }
 }
 function fmtNum(n) {
   if (n === null || n === undefined) return '';
@@ -2093,6 +2199,500 @@ function switchToModule(id) {
   if (btn) btn.classList.add('active');
   const tabBar = document.querySelector('.mod-tab-bar');
   if (tabBar) tabBar.scrollIntoView({behavior:'smooth', block:'start'});
+  if (id === 'mod1' && typeof currentGraphDim !== 'undefined' && currentGraphDim === 3 && typeof Plotly !== 'undefined') {
+    setTimeout(() => Plotly.Plots.resize('graph3dPlot'), 120);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MÓDULO 1 (3D): MOTOR Y VISOR TRIDIMENSIONAL
+// ═══════════════════════════════════════════════════════════════
+let currentGraphDim = 2;
+let graph3dInitialized = false;
+let graph3dIsMax = true;
+let graph3dCons = [
+  { a1: 1, a2: 2, a3: 1, sign: '<=', b: 300 },
+  { a1: 2, a2: 1, a3: 1, sign: '<=', b: 400 },
+  { a1: 1, a2: 0, a3: 3, sign: '>=', b: 120 },
+  { a1: 0, a2: 1, a3: 1, sign: '=',  b: 80 }
+];
+let last3dResult = null;
+
+function setGraphDimension(dim) {
+  currentGraphDim = dim;
+  const btn2 = document.getElementById('btnDim2D');
+  const btn3 = document.getElementById('btnDim3D');
+  const view2 = document.getElementById('viewDim2D');
+  const view3 = document.getElementById('viewDim3D');
+  if (dim === 2) {
+    if (btn2) btn2.classList.add('active');
+    if (btn3) btn3.classList.remove('active');
+    if (view2) view2.style.display = 'block';
+    if (view3) view3.style.display = 'none';
+  } else {
+    if (btn2) btn2.classList.remove('active');
+    if (btn3) btn3.classList.add('active');
+    if (view2) view2.style.display = 'none';
+    if (view3) view3.style.display = 'block';
+    if (!graph3dInitialized) {
+      renderGraph3dCons();
+      solveGraphical3D();
+      graph3dInitialized = true;
+    } else if (typeof Plotly !== 'undefined') {
+      setTimeout(() => Plotly.Plots.resize('graph3dPlot'), 100);
+    }
+  }
+}
+
+function setGraph3dSense(isMax) {
+  graph3dIsMax = isMax;
+  const bMax = document.getElementById('g3_max');
+  const bMin = document.getElementById('g3_min');
+  if (bMax) bMax.classList.toggle('active', isMax);
+  if (bMin) bMin.classList.toggle('active', !isMax);
+}
+
+function renderGraph3dCons() {
+  const container = document.getElementById('graph3dConsRows');
+  if (!container) return;
+  container.innerHTML = graph3dCons.map((c, i) => `
+    <div class="cons-row">
+      <span style="color:var(--text3); font-size:.8rem; min-width:24px;">R${i+1}</span>
+      <input type="number" class="coef-input" id="g3_a1_${i}" value="${c.a1}"> x₁ +
+      <input type="number" class="coef-input" id="g3_a2_${i}" value="${c.a2}"> x₂ +
+      <input type="number" class="coef-input" id="g3_a3_${i}" value="${c.a3}"> x₃
+      <select class="sign-select" id="g3_sign_${i}">
+        <option value="<=" ${c.sign==='<='?'selected':''}>≤</option>
+        <option value=">=" ${c.sign==='>='?'selected':''}>≥</option>
+        <option value="=" ${c.sign==='='?'selected':''}>=</option>
+      </select>
+      <input type="number" class="coef-input" id="g3_b_${i}" value="${c.b}">
+      <button class="btn-secondary" style="padding:.35rem .6rem; color:#f43f5e;" onclick="removeGraph3dCons(${i})" title="Eliminar restricción">✕</button>
+    </div>
+  `).join('');
+}
+
+function addGraph3dCons() {
+  syncGraph3dCons();
+  graph3dCons.push({ a1: 1, a2: 1, a3: 1, sign: '<=', b: 100 });
+  renderGraph3dCons();
+}
+
+function removeGraph3dCons(idx) {
+  syncGraph3dCons();
+  if (graph3dCons.length <= 1) {
+    alert('Debe quedar al menos 1 restricción.');
+    return;
+  }
+  graph3dCons.splice(idx, 1);
+  renderGraph3dCons();
+  solveGraphical3D();
+}
+
+function syncGraph3dCons() {
+  graph3dCons.forEach((c, i) => {
+    const a1 = document.getElementById(`g3_a1_${i}`);
+    const a2 = document.getElementById(`g3_a2_${i}`);
+    const a3 = document.getElementById(`g3_a3_${i}`);
+    const sign = document.getElementById(`g3_sign_${i}`);
+    const b = document.getElementById(`g3_b_${i}`);
+    if (a1) c.a1 = parseFloat(a1.value) || 0;
+    if (a2) c.a2 = parseFloat(a2.value) || 0;
+    if (a3) c.a3 = parseFloat(a3.value) || 0;
+    if (sign) c.sign = sign.value;
+    if (b) c.b = parseFloat(b.value) || 0;
+  });
+}
+
+function loadGraph3dExampleUser() {
+  document.getElementById('g3_c1').value = 2;
+  document.getElementById('g3_c2').value = 3;
+  document.getElementById('g3_c3').value = 4;
+  setGraph3dSense(true);
+  graph3dCons = [
+    { a1: 1, a2: 2, a3: 1, sign: '<=', b: 300 },
+    { a1: 2, a2: 1, a3: 1, sign: '<=', b: 400 },
+    { a1: 1, a2: 0, a3: 3, sign: '>=', b: 120 },
+    { a1: 0, a2: 1, a3: 1, sign: '=',  b: 80 }
+  ];
+  renderGraph3dCons();
+  solveGraphical3D();
+}
+
+function loadGraph3dExampleSolid() {
+  document.getElementById('g3_c1').value = 3;
+  document.getElementById('g3_c2').value = 4;
+  document.getElementById('g3_c3').value = 2;
+  setGraph3dSense(true);
+  graph3dCons = [
+    { a1: 1, a2: 1, a3: 1, sign: '<=', b: 100 },
+    { a1: 2, a2: 1, a3: 0, sign: '<=', b: 120 },
+    { a1: 0, a2: 1, a3: 2, sign: '<=', b: 140 }
+  ];
+  renderGraph3dCons();
+  solveGraphical3D();
+}
+
+function det3Mat(m) {
+  return m[0][0]*(m[1][1]*m[2][2] - m[1][2]*m[2][1])
+       - m[0][1]*(m[1][0]*m[2][2] - m[1][2]*m[2][0])
+       + m[0][2]*(m[1][0]*m[2][1] - m[1][1]*m[2][0]);
+}
+
+function solve3Planes(p1, p2, p3) {
+  const M = [ [p1[0], p1[1], p1[2]], [p2[0], p2[1], p2[2]], [p3[0], p3[1], p3[2]] ];
+  const D = det3Mat(M);
+  if (Math.abs(D) < 1e-7) return null;
+  const Dx = det3Mat([ [p1[3], p1[1], p1[2]], [p2[3], p2[1], p2[2]], [p3[3], p3[1], p3[2]] ]);
+  const Dy = det3Mat([ [p1[0], p1[3], p1[2]], [p2[0], p2[3], p2[2]], [p3[0], p3[3], p3[2]] ]);
+  const Dz = det3Mat([ [p1[0], p1[1], p1[3]], [p2[0], p2[1], p2[3]], [p3[0], p3[1], p3[3]] ]);
+  return [Dx/D, Dy/D, Dz/D];
+}
+
+function solveGraphical3D() {
+  syncGraph3dCons();
+  const c1 = parseFloat(document.getElementById('g3_c1').value) || 0;
+  const c2 = parseFloat(document.getElementById('g3_c2').value) || 0;
+  const c3 = parseFloat(document.getElementById('g3_c3').value) || 0;
+
+  const allCons = graph3dCons.map(c => ({
+    a: [c.a1, c.a2, c.a3],
+    op: c.sign || '<=',
+    b: c.b
+  }));
+  // Non-negativity
+  allCons.push({ a: [1, 0, 0], op: '>=', b: 0 });
+  allCons.push({ a: [0, 1, 0], op: '>=', b: 0 });
+  allCons.push({ a: [0, 0, 1], op: '>=', b: 0 });
+
+  const planes = allCons.map(c => [...c.a, c.b]);
+  const vertices = [];
+
+  for (let i = 0; i < planes.length; i++) {
+    for (let j = i + 1; j < planes.length; j++) {
+      for (let k = j + 1; k < planes.length; k++) {
+        const pt = solve3Planes(planes[i], planes[j], planes[k]);
+        if (!pt) continue;
+        const eps = 1e-4;
+        let ok = true;
+        for (const c of allCons) {
+          const val = c.a[0]*pt[0] + c.a[1]*pt[1] + c.a[2]*pt[2];
+          if (c.op === '<=' && val > c.b + eps) { ok = false; break; }
+          if (c.op === '>=' && val < c.b - eps) { ok = false; break; }
+          if (c.op === '='  && Math.abs(val - c.b) > eps) { ok = false; break; }
+        }
+        if (ok) {
+          const rounded = pt.map(v => Math.round(v * 1000) / 1000);
+          const exists = vertices.some(v => Math.hypot(v[0]-rounded[0], v[1]-rounded[1], v[2]-rounded[2]) < 1e-3);
+          if (!exists) vertices.push(rounded);
+        }
+      }
+    }
+  }
+
+  const msgDiv = document.getElementById('graph3dMsg');
+  const tbl = document.getElementById('vtx3dTable');
+
+  if (vertices.length === 0) {
+    if (tbl) tbl.innerHTML = '';
+    if (msgDiv) {
+      msgDiv.innerHTML = `
+        <div style="background:rgba(244,63,94,.12); border:1px solid #f43f5e; border-radius:10px; padding:1rem; color:#fda4af;">
+          <strong>🚫 Problema Incompatible (Infactible):</strong><br>
+          No existe ningún punto en $\\mathbb{R}^3$ que satisfaga simultáneamente todas las restricciones y la no negatividad. La región factible es el conjunto vacío ($R = \\emptyset$).
+        </div>`;
+      if (typeof renderMathInElement !== 'undefined') renderMathInElement(msgDiv);
+    }
+    if (typeof Plotly !== 'undefined') Plotly.purge('graph3dPlot');
+    return;
+  }
+
+  // Calculate Z for each vertex
+  const vtxData = vertices.map((v, idx) => {
+    const z = c1*v[0] + c2*v[1] + c3*v[2];
+    return { id: idx + 1, x1: v[0], x2: v[1], x3: v[2], z };
+  });
+
+  // Find optimum
+  let optVal = graph3dIsMax ? -Infinity : Infinity;
+  vtxData.forEach(v => {
+    if (graph3dIsMax ? v.z > optVal : v.z < optVal) optVal = v.z;
+  });
+  const optVertices = vtxData.filter(v => Math.abs(v.z - optVal) < 1e-4);
+  const bestVtx = optVertices[0];
+
+  // Table of vertices
+  if (tbl) {
+    let tblHtml = `<thead><tr><th>Vértice</th><th>x₁</th><th>x₂</th><th>x₃</th><th>Z (${graph3dIsMax?'Max':'Min'})</th></tr></thead><tbody>`;
+    vtxData.forEach(v => {
+      const isOpt = Math.abs(v.z - optVal) < 1e-4;
+      tblHtml += `<tr class="${isOpt?'optimal':''}">
+        <td><strong>V${v.id}</strong> ${isOpt?'<span class="vtx3d-badge-opt">★ ÓPTIMO</span>':''}</td>
+        <td>${fmtNum(v.x1)}</td>
+        <td>${fmtNum(v.x2)}</td>
+        <td>${fmtNum(v.x3)}</td>
+        <td><strong>${fmtNum(v.z)}</strong></td>
+      </tr>`;
+    });
+    tblHtml += `</tbody>`;
+    tbl.innerHTML = tblHtml;
+  }
+
+  // Active constraints in bestVtx
+  const activeCons = [];
+  graph3dCons.forEach((c, idx) => {
+    const val = c.a1*bestVtx.x1 + c.a2*bestVtx.x2 + c.a3*bestVtx.x3;
+    if (Math.abs(val - c.b) < 1e-2) activeCons.push(`R${idx+1}`);
+  });
+  ['x₁=0', 'x₂=0', 'x₃=0'].forEach((ax, i) => {
+    if (Math.abs([bestVtx.x1, bestVtx.x2, bestVtx.x3][i]) < 1e-2) activeCons.push(ax);
+  });
+
+  if (msgDiv) {
+    msgDiv.innerHTML = `
+      <div style="background:rgba(16,185,129,.12); border:1px solid #10b981; border-radius:10px; padding:1rem; color:#6ee7b7; font-size:.86rem; line-height:1.6;">
+        <div style="font-size:.95rem; font-weight:800; color:#34d399; margin-bottom:.3rem;">
+          ✨ Solución Óptima: Z* = ${fmtNum(optVal)}
+        </div>
+        <strong>Vértice Óptimo:</strong> V${bestVtx.id} = (${fmtNum(bestVtx.x1)}, ${fmtNum(bestVtx.x2)}, ${fmtNum(bestVtx.x3)})<br>
+        <strong>Planos activos concurrentes:</strong> ${activeCons.join(', ')}<br>
+        <span style="color:var(--text3); font-size:.8rem;">${optVertices.length > 1 ? '⚠️ Solución Alternativa: Múltiples vértices alcanzan el mismo Z* óptimo.' : 'Vértice extremo único del poliedro.'}</span>
+      </div>`;
+    if (typeof renderMathInElement !== 'undefined') renderMathInElement(msgDiv);
+  }
+
+  // Find edges
+  const edges = [];
+  for (let i = 0; i < vertices.length; i++) {
+    const actI = [];
+    allCons.forEach((c, idx) => {
+      const val = c.a[0]*vertices[i][0] + c.a[1]*vertices[i][1] + c.a[2]*vertices[i][2];
+      if (Math.abs(val - c.b) < 1e-3) actI.push(idx);
+    });
+    for (let j = i + 1; j < vertices.length; j++) {
+      const actJ = [];
+      allCons.forEach((c, idx) => {
+        const val = c.a[0]*vertices[j][0] + c.a[1]*vertices[j][1] + c.a[2]*vertices[j][2];
+        if (Math.abs(val - c.b) < 1e-3) actJ.push(idx);
+      });
+      const common = actI.filter(p => actJ.includes(p));
+      if (common.length >= 2) {
+        let between = false;
+        const vi = vertices[i], vj = vertices[j];
+        const dTotal = Math.hypot(vj[0]-vi[0], vj[1]-vi[1], vj[2]-vi[2]);
+        for (let k = 0; k < vertices.length; k++) {
+          if (k === i || k === j) continue;
+          const vk = vertices[k];
+          const d1 = Math.hypot(vk[0]-vi[0], vk[1]-vi[1], vk[2]-vi[2]);
+          const d2 = Math.hypot(vj[0]-vk[0], vj[1]-vk[1], vj[2]-vk[2]);
+          if (Math.abs(d1 + d2 - dTotal) < 1e-3) { between = true; break; }
+        }
+        if (!between) edges.push([i, j]);
+      }
+    }
+  }
+
+  // Triangles for mesh
+  const triangles = [];
+  allCons.forEach((c) => {
+    const faceVerts = [];
+    vertices.forEach((v, vIdx) => {
+      const val = c.a[0]*v[0] + c.a[1]*v[1] + c.a[2]*v[2];
+      if (Math.abs(val - c.b) < 1e-3) faceVerts.push(vIdx);
+    });
+    if (faceVerts.length >= 3) {
+      const center = [0, 0, 0];
+      faceVerts.forEach(vi => {
+        center[0] += vertices[vi][0] / faceVerts.length;
+        center[1] += vertices[vi][1] / faceVerts.length;
+        center[2] += vertices[vi][2] / faceVerts.length;
+      });
+      const norm = [c.a[0], c.a[1], c.a[2]];
+      const len = Math.hypot(...norm) || 1;
+      const n = norm.map(v => v/len);
+      let ref = Math.abs(n[0]) > 0.9 ? [0, 1, 0] : [1, 0, 0];
+      const u = [
+        n[1]*ref[2] - n[2]*ref[1],
+        n[2]*ref[0] - n[0]*ref[2],
+        n[0]*ref[1] - n[1]*ref[0]
+      ];
+      const uLen = Math.hypot(...u) || 1;
+      const uNorm = u.map(x => x/uLen);
+      const v = [
+        n[1]*uNorm[2] - n[2]*uNorm[1],
+        n[2]*uNorm[0] - n[0]*uNorm[2],
+        n[0]*uNorm[1] - n[1]*uNorm[0]
+      ];
+      faceVerts.sort((a, b) => {
+        const pa = vertices[a], pb = vertices[b];
+        const da = [pa[0]-center[0], pa[1]-center[1], pa[2]-center[2]];
+        const db = [pb[0]-center[0], pb[1]-center[1], pb[2]-center[2]];
+        const angleA = Math.atan2(da[0]*v[0] + da[1]*v[1] + da[2]*v[2], da[0]*uNorm[0] + da[1]*uNorm[1] + da[2]*uNorm[2]);
+        const angleB = Math.atan2(db[0]*v[0] + db[1]*v[1] + db[2]*v[2], db[0]*uNorm[0] + db[1]*uNorm[1] + db[2]*uNorm[2]);
+        return angleA - angleB;
+      });
+      for (let t = 1; t < faceVerts.length - 1; t++) {
+        triangles.push([faceVerts[0], faceVerts[t], faceVerts[t+1]]);
+      }
+    }
+  });
+
+  last3dResult = {
+    vertices,
+    vtxData,
+    optVal,
+    bestVtx,
+    optVertices,
+    edges,
+    triangles,
+    allCons
+  };
+
+  render3dPlotly();
+}
+
+function render3dPlotly() {
+  if (typeof Plotly === 'undefined' || !last3dResult) return;
+  const { vertices, vtxData, bestVtx, edges, triangles } = last3dResult;
+
+  const showMesh = document.getElementById('chk3dMesh')?.checked ?? true;
+  const showEdges = document.getElementById('chk3dEdges')?.checked ?? true;
+  const showVerts = document.getElementById('chk3dVerts')?.checked ?? true;
+
+  const traces = [];
+
+  // Trace 1: Mesh (faces)
+  if (showMesh && triangles.length > 0) {
+    const meshI = triangles.map(t => t[0]);
+    const meshJ = triangles.map(t => t[1]);
+    const meshK = triangles.map(t => t[2]);
+    traces.push({
+      type: 'mesh3d',
+      name: 'Poliedro Factible',
+      x: vertices.map(v => v[0]),
+      y: vertices.map(v => v[1]),
+      z: vertices.map(v => v[2]),
+      i: meshI,
+      j: meshJ,
+      k: meshK,
+      opacity: 0.38,
+      color: '#06b6d4',
+      flatshading: true,
+      hoverinfo: 'skip'
+    });
+  }
+
+  // Trace 2: Edges (lines)
+  if (showEdges && edges.length > 0) {
+    const edgeX = [], edgeY = [], edgeZ = [];
+    edges.forEach(e => {
+      edgeX.push(vertices[e[0]][0], vertices[e[1]][0], null);
+      edgeY.push(vertices[e[0]][1], vertices[e[1]][1], null);
+      edgeZ.push(vertices[e[0]][2], vertices[e[1]][2], null);
+    });
+    traces.push({
+      type: 'scatter3d',
+      mode: 'lines',
+      name: 'Aristas Factibles',
+      x: edgeX,
+      y: edgeY,
+      z: edgeZ,
+      line: { color: '#38bdf8', width: 4.5 },
+      hoverinfo: 'skip'
+    });
+  }
+
+  // Trace 3: Vertices (markers)
+  if (showVerts) {
+    traces.push({
+      type: 'scatter3d',
+      mode: 'markers+text',
+      name: 'Vértices Factibles',
+      x: vtxData.map(v => v.x1),
+      y: vtxData.map(v => v.x2),
+      z: vtxData.map(v => v.x3),
+      text: vtxData.map(v => `V${v.id}`),
+      textposition: 'top center',
+      textfont: { color: '#94a3b8', size: 10 },
+      marker: {
+        size: 5.5,
+        color: '#06b6d4',
+        opacity: 0.95
+      },
+      hovertext: vtxData.map(v => `V${v.id}: (${fmtNum(v.x1)}, ${fmtNum(v.x2)}, ${fmtNum(v.x3)})<br>Z = ${fmtNum(v.z)}`),
+      hoverinfo: 'text'
+    });
+  }
+
+  // Trace 4: Optimal Vertex
+  if (bestVtx) {
+    traces.push({
+      type: 'scatter3d',
+      mode: 'markers+text',
+      name: `Óptimo Z*=${fmtNum(bestVtx.z)}`,
+      x: [bestVtx.x1],
+      y: [bestVtx.x2],
+      z: [bestVtx.x3],
+      text: [`★ V${bestVtx.id} ÓPTIMO`],
+      textposition: 'bottom center',
+      textfont: { color: '#34d399', size: 12, family: 'Inter' },
+      marker: {
+        size: 9,
+        color: '#10b981',
+        symbol: 'diamond',
+        line: { color: '#ecfdf5', width: 2 }
+      },
+      hovertext: [`ÓPTIMO V${bestVtx.id}: (${fmtNum(bestVtx.x1)}, ${fmtNum(bestVtx.x2)}, ${fmtNum(bestVtx.x3)})<br>Z* = ${fmtNum(bestVtx.z)}`],
+      hoverinfo: 'text'
+    });
+  }
+
+  const layout = {
+    paper_bgcolor: 'rgba(0,0,0,0)',
+    plot_bgcolor: 'rgba(0,0,0,0)',
+    margin: { l: 0, r: 0, b: 0, t: 25 },
+    scene: {
+      xaxis: { title: 'x₁', color: '#94a3b8', gridcolor: 'rgba(148,163,184,0.15)', backgroundcolor: 'rgba(15,23,42,0.45)', zerolinecolor: '#06b6d4' },
+      yaxis: { title: 'x₂', color: '#94a3b8', gridcolor: 'rgba(148,163,184,0.15)', backgroundcolor: 'rgba(15,23,42,0.45)', zerolinecolor: '#06b6d4' },
+      zaxis: { title: 'x₃', color: '#94a3b8', gridcolor: 'rgba(148,163,184,0.15)', backgroundcolor: 'rgba(15,23,42,0.45)', zerolinecolor: '#06b6d4' },
+      camera: {
+        eye: { x: 1.6, y: 1.6, z: 1.25 }
+      }
+    },
+    showlegend: true,
+    legend: {
+      x: 0.02, y: 0.98,
+      font: { color: '#cbd5e1', size: 10 },
+      bgcolor: 'rgba(15, 23, 42, 0.75)',
+      bordercolor: 'rgba(148, 163, 184, 0.2)',
+      borderwidth: 1
+    }
+  };
+
+  const config = {
+    responsive: true,
+    displayModeBar: true,
+    displaylogo: false,
+    modeBarButtonsToRemove: ['toImage', 'sendDataToCloud']
+  };
+
+  Plotly.newPlot('graph3dPlot', traces, layout, config);
+}
+
+function update3dLayers() {
+  render3dPlotly();
+}
+
+function set3dCamera(viewType) {
+  if (typeof Plotly === 'undefined') return;
+  const eyes = {
+    iso:   { x: 1.6, y: 1.6, z: 1.25 },
+    top:   { x: 0.01, y: 0.01, z: 2.6 },
+    front: { x: 0.01, y: 2.6, z: 0.01 },
+    side:  { x: 2.6, y: 0.01, z: 0.01 }
+  };
+  const targetEye = eyes[viewType] || eyes.iso;
+  Plotly.relayout('graph3dPlot', { 'scene.camera.eye': targetEye });
 }
 
 function transferGraphToSimplex() {
@@ -2118,23 +2718,66 @@ function transferGraphToSimplex() {
   switchToModule('mod2');
 }
 
+function transferGraph3dToSimplex() {
+  syncGraph3dCons();
+  const c1 = parseFloat(document.getElementById('g3_c1').value) || 0;
+  const c2 = parseFloat(document.getElementById('g3_c2').value) || 0;
+  const c3 = parseFloat(document.getElementById('g3_c3').value) || 0;
+
+  simplex = {
+    n: 3,
+    m: graph3dCons.length,
+    isMax: graph3dIsMax,
+    obj: [c1, c2, c3],
+    cons: graph3dCons.map(c => ({
+      coefs: [c.a1, c.a2, c.a3],
+      sign: c.sign || '<=',
+      b: c.b
+    }))
+  };
+  document.getElementById('numVarsLbl').textContent = simplex.n;
+  document.getElementById('numConsLbl').textContent = simplex.m;
+  setSimplexSense(simplex.isMax);
+  renderSimplexInputs();
+  runSimplex();
+  switchToModule('mod2');
+}
+
 function transferSimplexToGraph() {
   syncSimplexFromDOM();
-  if (simplex.n !== 2) {
-    alert('El Método Gráfico (Módulo 1) solo soporta problemas de 2 variables de decisión (x₁ y x₂). Tu modelo actual en Simplex tiene ' + simplex.n + ' variables.');
-    return;
+  if (simplex.n === 2) {
+    setGraphDimension(2);
+    document.getElementById('g_c1').value = simplex.obj[0];
+    document.getElementById('g_c2').value = simplex.obj[1];
+    graphCons = simplex.cons.map(c => ({
+      a1: c.coefs[0],
+      a2: c.coefs[1],
+      sign: c.sign || '<=',
+      b: c.b
+    }));
+    renderGraphCons();
+    setGraphSense(simplex.isMax);
+    solveGraphical();
+    switchToModule('mod1');
+  } else if (simplex.n === 3) {
+    setGraphDimension(3);
+    document.getElementById('g3_c1').value = simplex.obj[0];
+    document.getElementById('g3_c2').value = simplex.obj[1];
+    document.getElementById('g3_c3').value = simplex.obj[2];
+    graph3dCons = simplex.cons.map(c => ({
+      a1: c.coefs[0],
+      a2: c.coefs[1],
+      a3: c.coefs[2],
+      sign: c.sign || '<=',
+      b: c.b
+    }));
+    setGraph3dSense(simplex.isMax);
+    renderGraph3dCons();
+    solveGraphical3D();
+    switchToModule('mod1');
+  } else {
+    alert('El Método Gráfico soporta problemas de 2 variables (Plano 2D) o 3 variables (Espacio 3D). Tu modelo actual en Simplex tiene ' + simplex.n + ' variables (hiperespacio de dimensión ' + simplex.n + ' no representable geométricamente).');
   }
-  document.getElementById('g_c1').value = simplex.obj[0];
-  document.getElementById('g_c2').value = simplex.obj[1];
-  graphCons = simplex.cons.map(c => ({
-    a1: c.coefs[0],
-    a2: c.coefs[1],
-    sign: c.sign || '<=',
-    b: c.b
-  }));
-  renderGraphCons();
-  setGraphSense(simplex.isMax);
-  switchToModule('mod1');
 }
 
 function goToSimplexWithCase(key) {
@@ -2158,6 +2801,7 @@ graphCons = [
 ];
 renderGraphCons();
 solveGraphical();
+renderGraph3dCons();
 
 renderSimplexInputs();
 runSimplex();
