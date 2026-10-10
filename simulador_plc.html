@@ -402,6 +402,7 @@ table.tableau td.basic-var { font-weight:700; color:#67e8f9; font-family:'Inter'
         <div style="display:flex; gap:.6rem; flex-wrap:wrap; align-items:center;">
           <button class="btn-secondary" onclick="addGraphCons()">+ Restricción</button>
           <button class="btn-primary" onclick="solveGraphical()">▶ Resolver</button>
+          <button class="btn-secondary" onclick="transferGraphToSimplex()" title="Copia estas ecuaciones al Módulo 2 y resuelve por Simplex">📲 Pasar al Módulo 2 (Simplex)</button>
         </div>
         <div style="display:flex; gap:.6rem; flex-wrap:wrap; align-items:center;">
           <button class="btn-secondary" onclick="loadGraphExample()">↺ Ejemplo MAX (piezas A/B)</button>
@@ -468,8 +469,9 @@ table.tableau td.basic-var { font-weight:700; color:#67e8f9; font-family:'Inter'
       <div id="simplexObjRow" class="obj-row"></div>
       <div id="simplexConsRows"></div>
 
-      <div style="text-align:center; margin: 1.2rem 0;">
+      <div style="text-align:center; margin: 1.2rem 0; display:flex; justify-content:center; gap:.8rem; flex-wrap:wrap;">
         <button class="btn-primary" onclick="runSimplex()">▶ Resolver con Simplex</button>
+        <button class="btn-secondary" onclick="transferSimplexToGraph()" title="Copia este problema al Módulo 1 y genera el gráfico (requiere 2 variables)">📈 Pasar al Módulo 1 (Gráfico)</button>
       </div>
 
       <div id="simplexStatus"></div>
@@ -2082,6 +2084,59 @@ const specialCases = {
   ]}
 };
 
+function switchToModule(id) {
+  document.querySelectorAll('.mod-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.mod-tab-btn').forEach(el => el.classList.remove('active'));
+  const target = document.getElementById(id);
+  if (target) target.classList.add('active');
+  const btn = document.querySelector(`.mod-tab-btn[onclick*="${id}"]`);
+  if (btn) btn.classList.add('active');
+  const tabBar = document.querySelector('.mod-tab-bar');
+  if (tabBar) tabBar.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function transferGraphToSimplex() {
+  syncGraphCons();
+  const c1 = parseFloat(document.getElementById('g_c1').value) || 0;
+  const c2 = parseFloat(document.getElementById('g_c2').value) || 0;
+  simplex = {
+    n: 2,
+    m: graphCons.length,
+    isMax: (typeof graphIsMax !== 'undefined') ? graphIsMax : true,
+    obj: [c1, c2],
+    cons: graphCons.map(c => ({
+      coefs: [c.a1, c.a2],
+      sign: c.sign || '<=',
+      b: c.b
+    }))
+  };
+  document.getElementById('numVarsLbl').textContent = simplex.n;
+  document.getElementById('numConsLbl').textContent = simplex.m;
+  setSimplexSense(simplex.isMax);
+  renderSimplexInputs();
+  runSimplex();
+  switchToModule('mod2');
+}
+
+function transferSimplexToGraph() {
+  syncSimplexFromDOM();
+  if (simplex.n !== 2) {
+    alert('El Método Gráfico (Módulo 1) solo soporta problemas de 2 variables de decisión (x₁ y x₂). Tu modelo actual en Simplex tiene ' + simplex.n + ' variables.');
+    return;
+  }
+  document.getElementById('g_c1').value = simplex.obj[0];
+  document.getElementById('g_c2').value = simplex.obj[1];
+  graphCons = simplex.cons.map(c => ({
+    a1: c.coefs[0],
+    a2: c.coefs[1],
+    sign: c.sign || '<=',
+    b: c.b
+  }));
+  renderGraphCons();
+  setGraphSense(simplex.isMax);
+  switchToModule('mod1');
+}
+
 function goToSimplexWithCase(key) {
   const cfg = specialCases[key];
   simplex = JSON.parse(JSON.stringify(cfg));
@@ -2090,12 +2145,7 @@ function goToSimplexWithCase(key) {
   setSimplexSense(simplex.isMax);
   renderSimplexInputs();
   runSimplex();
-
-  document.querySelectorAll('.mod-content').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.mod-tab-btn').forEach(el => el.classList.remove('active'));
-  document.getElementById('mod2').classList.add('active');
-  document.querySelectorAll('.mod-tab-btn')[2].classList.add('active');
-  document.querySelector('.mod-tab-bar').scrollIntoView({behavior:'smooth', block:'start'});
+  switchToModule('mod2');
 }
 
 // ═══════════════════════════════════════════════════════════════
